@@ -1,0 +1,150 @@
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Composer dependencies
+/vendor/
+composer.phar
+
+# IDE and editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs and databases
+*.log
+*.sql
+*.sqlite
+/storage/logs/
+error_log
+
+# User uploaded files
+/uploads/
+/public/uploads/
+/uploads/products/
+
+# Cache and temporary files
+/cache/
+/tmp/
+*.cache
+.phpunit.result.cache
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
+
+# Backup files
+*.bak
+*.backup
+*.old
+*.orig
+
+# Configuration files with sensitive data
+config.local.php
+database.local.php
+
+# Testing
+/phpunit.xml
+/tests/coverage/
+.phpunit.cache/
+
+# Build files
+/build/
+/dist/
+
+# Documentation build
+/docs/_build/
+
+# Node modules (if using any frontend build tools)
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Session files
+/sessions/
+sess_*
+
+# Private keys and certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# Database dumps
+*.dump
+database_backup/
+
+# PHP Storm
+.phpstorm.meta.php
+
+# NetBeans
+/nbproject/
+
+# Eclipse
+.buildpath
+.project
+.settings/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Local development
+.vagrant/
+Vagrantfile.local
+docker-compose.override.yml
+.docker/
+
+# macOS
+.AppleDouble
+.LSOverride
+Icon
+.DocumentRevisions-V100
+.fseventsd
+.TemporaryItems
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+.directory
+.Trash-*
+.nfs*
+
+# Project specific
+/config/local/
+*.local.config.php
