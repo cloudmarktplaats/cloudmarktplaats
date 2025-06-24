@@ -1,0 +1,115 @@
+RewriteEngine On
+RewriteBase /
+
+# Als het bestand of de directory niet bestaat
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+
+# Stuur alle requests naar index.php
+RewriteRule ^(.*)$ index.php [QSA,L]
+
+# Voorkom directory listing
+Options -Indexes
+
+# PHP instellingen
+php_value upload_max_filesize 10M
+php_value post_max_size 10M
+php_value max_execution_time 300
+php_value max_input_time 300
+
+# Beveiliging
+<FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Voorkom toegang tot gevoelige bestanden
+<FilesMatch "^(composer\.json|composer\.lock|package\.json|package-lock\.json|\.env|\.gitignore|README\.md)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Sta alleen toegang toe tot specifieke bestandstypen
+<FilesMatch "\.(php|html|css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$">
+    Order allow,deny
+    Allow from all
+</FilesMatch>
+
+# Voorkom toegang tot de includes directory
+<IfModule mod_rewrite.c>
+    RewriteRule ^includes/ - [F,L]
+</IfModule>
+
+# Voorkom toegang tot de controllers directory
+<IfModule mod_rewrite.c>
+    RewriteRule ^controllers/ - [F,L]
+</IfModule>
+
+# Voorkom toegang tot de views directory
+<IfModule mod_rewrite.c>
+    RewriteRule ^views/ - [F,L]
+</IfModule>
+
+# Voorkom toegang tot de src directory
+<IfModule mod_rewrite.c>
+    RewriteRule ^src/ - [F,L]
+</IfModule>
+
+# Voorkom toegang tot de admin directory (behalve via de juiste route)
+<IfModule mod_rewrite.c>
+    RewriteCond %{REQUEST_URI} !^/admin$
+    RewriteRule ^admin/ - [F,L]
+</IfModule>
+
+# Voorkom toegang tot de Database.php file
+<Files "Database.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Voorkom toegang tot de config.php file
+<Files "config.php">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Voorkom toegang tot de .htaccess file
+<Files ".htaccess">
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Voorkom toegang tot .git directory
+RedirectMatch 404 /\.git
+
+# Caching voor statische bestanden
+<IfModule mod_expires.c>
+    ExpiresActive On
+    ExpiresByType image/jpg "access plus 1 year"
+    ExpiresByType image/jpeg "access plus 1 year"
+    ExpiresByType image/gif "access plus 1 year"
+    ExpiresByType image/png "access plus 1 year"
+    ExpiresByType text/css "access plus 1 month"
+    ExpiresByType application/javascript "access plus 1 month"
+</IfModule>
+
+# Compressie voor snellere laadtijden
+<IfModule mod_deflate.c>
+    AddOutputFilterByType DEFLATE text/plain
+    AddOutputFilterByType DEFLATE text/html
+    AddOutputFilterByType DEFLATE text/xml
+    AddOutputFilterByType DEFLATE text/css
+    AddOutputFilterByType DEFLATE application/xml
+    AddOutputFilterByType DEFLATE application/xhtml+xml
+    AddOutputFilterByType DEFLATE application/rss+xml
+    AddOutputFilterByType DEFLATE application/javascript
+    AddOutputFilterByType DEFLATE application/x-javascript
+</IfModule>
+
+# Beveiliging tegen XSS en andere aanvallen
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+    Header set X-Frame-Options "SAMEORIGIN"
+    Header set X-Content-Type-Options "nosniff"
+    Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule> 

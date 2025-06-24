@@ -1,0 +1,17 @@
+{
+    "name": "cloudmarkplaats/cms",
+    "description": "Cloudmarkplaats.nl CMS",
+    "type": "project",
+    "require": {
+        "php": "^8.2",
+        "vlucas/phpdotenv": "^5.5",
+        "phpmailer/phpmailer": "^6.8",
+        "firebase/php-jwt": "^6.4",
+        "intervention/image": "^2.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+} 
