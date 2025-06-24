@@ -1,5 +1,7 @@
 # Cloudmarkplaats.nl
 
+[EN](README-EN.md) | NL
+
 Een platform voor IT experts om hardware te verhandelen.
 
 ## Vereisten
@@ -87,4 +89,6 @@ git push origin feature/nieuwe-feature
 
 ## Licentie
 
-Dit project is gelicenseerd onder de MIT licentie - zie het [LICENSE](LICENSE) bestand voor details. 
+Copyright © Man of Solutions B.V. Alle rechten voorbehouden.
+
+Dit is propriëtaire software. Zie het [LICENSE.md](LICENSE.md) bestand voor details. 
