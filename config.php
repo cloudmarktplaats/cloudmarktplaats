@@ -1,9 +1,9 @@
 <?php
 // Database configuratie
 define('DB_HOST', 'localhost');
-define('DB_NAME', 'cloudmarkplaats1');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_NAME', 'u384876541_cloudmarkt');
+define('DB_USER', 'u384876541_clmarkt');
+define('DB_PASS', 'fma36PXHf44dY#9');
 
 // App configuratie
 define('APP_NAME', 'Cloudmarkplaats.nl');
