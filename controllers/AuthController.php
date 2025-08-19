@@ -8,7 +8,7 @@ class AuthController extends BaseController {
             $password = $_POST['password'] ?? '';
 
             if (empty($username) || empty($password)) {
-                $this->setFlash('Vul alle velden in.', 'danger');
+                $this->setFlash('danger', 'Vul alle velden in.');
                 $this->redirect('/auth/login');
             }
 
@@ -19,10 +19,10 @@ class AuthController extends BaseController {
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['is_admin'] = $user['role'] === 'admin';
                 
-                $this->setFlash('Je bent succesvol ingelogd!', 'success');
+                $this->setFlash('success', 'Je bent succesvol ingelogd!');
                 $this->redirect('/dashboard');
             } else {
-                $this->setFlash('Ongeldige gebruikersnaam of wachtwoord.', 'danger');
+                $this->setFlash('danger', 'Ongeldige gebruikersnaam of wachtwoord.');
                 $this->redirect('/auth/login');
             }
         }
@@ -38,22 +38,22 @@ class AuthController extends BaseController {
             $password_confirm = $_POST['password_confirm'] ?? '';
 
             if (empty($username) || empty($email) || empty($password) || empty($password_confirm)) {
-                $this->setFlash('Vul alle velden in.', 'danger');
+                $this->setFlash('danger', 'Vul alle velden in.');
                 $this->redirect('/auth/register');
             }
 
             if ($password !== $password_confirm) {
-                $this->setFlash('Wachtwoorden komen niet overeen.', 'danger');
+                $this->setFlash('danger', 'Wachtwoorden komen niet overeen.');
                 $this->redirect('/auth/register');
             }
 
             if (strlen($password) < 8) {
-                $this->setFlash('Wachtwoord moet minimaal 8 tekens lang zijn.', 'danger');
+                $this->setFlash('danger', 'Wachtwoord moet minimaal 8 tekens lang zijn.');
                 $this->redirect('/auth/register');
             }
 
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $this->setFlash('Ongeldig e-mailadres.', 'danger');
+                $this->setFlash('danger', 'Ongeldig e-mailadres.');
                 $this->redirect('/auth/register');
             }
 
@@ -64,7 +64,7 @@ class AuthController extends BaseController {
             );
 
             if ($existing_user) {
-                $this->setFlash('Gebruikersnaam of e-mailadres bestaat al.', 'danger');
+                $this->setFlash('danger', 'Gebruikersnaam of e-mailadres bestaat al.');
                 $this->redirect('/auth/register');
             }
 
@@ -74,7 +74,7 @@ class AuthController extends BaseController {
                 [$username, $email, password_hash($password, PASSWORD_DEFAULT)]
             );
 
-            $this->setFlash('Je account is aangemaakt! Je kunt nu inloggen.', 'success');
+            $this->setFlash('success', 'Je account is aangemaakt! Je kunt nu inloggen.');
             $this->redirect('/auth/login');
         }
 
