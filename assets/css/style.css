@@ -9,6 +9,19 @@
     --hover-color: #dbeafe;
 }
 
+html {
+    font-size: clamp(14px, 1vw + 8px, 18px);
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+img, video {
+    max-width: 100%;
+    height: auto;
+}
+
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
     background-color: var(--background-color);
@@ -45,13 +58,13 @@ body {
 .hero-section {
     background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
     color: white;
-    padding: 4rem 0;
+    padding: clamp(2rem, 8vw, 4rem) 0;
     margin-bottom: 3rem;
 }
 
 /* Zoekbalk stijlen */
 .search-container {
-    max-width: 600px;
+    width: min(90vw, 600px);
     margin: 0 auto;
     position: relative;
 }
@@ -109,6 +122,13 @@ body {
     font-size: 2.5rem;
     color: var(--accent-color);
     margin-bottom: 1rem;
+}
+
+/* Responsive grids */
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
 }
 
 /* Buttons */
@@ -180,6 +200,9 @@ body {
     overflow: hidden;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .product-card:hover {
@@ -189,7 +212,7 @@ body {
 
 .product-card img {
     width: 100%;
-    height: 200px;
+    aspect-ratio: 4 / 3;
     object-fit: cover;
 }
 
@@ -197,6 +220,10 @@ body {
     font-size: 1.2rem;
     margin: 1rem 0;
     color: var(--text-color);
+}
+
+.product-card .card-body {
+    flex: 1 1 auto;
 }
 
 .price {
@@ -397,10 +424,10 @@ footer {
 /* Hero Section Home */
 .hero-section-home {
     background: #0b1530;
-    min-height: 480px;
+    min-height: 60vh;
     position: relative;
     overflow: hidden;
-    padding: 4rem 0 0 0;
+    padding: clamp(2rem, 6vh, 4rem) 0 0;
 }
 .hero-section-home .display-3 {
     font-weight: 800;
@@ -442,7 +469,7 @@ footer {
     color: #0b1530;
 }
 .hero-section-home .hero-img {
-    max-width: 350px;
+    max-width: min(350px, 80%);
     filter: drop-shadow(0 8px 32px rgba(0,0,0,0.25));
     margin-top: 2rem;
 }
@@ -465,6 +492,12 @@ footer {
     .hero-section-home .hero-img {
         max-width: 220px;
         margin-top: 1.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-section-home .display-3 {
+        font-size: 1.8rem;
     }
 }
 

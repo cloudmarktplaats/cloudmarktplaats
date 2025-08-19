@@ -148,45 +148,41 @@
 <div class="container">
     <!-- Recente hardware -->
     <h2 class="mb-4">Recente Hardware</h2>
-    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4 mb-5">
+    <div class="product-grid mb-5">
         <?php if (empty($recent_products)): ?>
-            <div class="col-12">
-                <div class="alert alert-info">
-                    Er is nog geen hardware beschikbaar.
-                </div>
+            <div class="alert alert-info">
+                Er is nog geen hardware beschikbaar.
             </div>
         <?php else: ?>
             <?php foreach ($recent_products as $product): ?>
-                <div class="col">
-                    <div class="card h-100 product-card">
-                        <?php if ($product['image']): ?>
-                            <img src="<?= htmlspecialchars($product['image']) ?>" 
-                                 class="card-img-top product-image" 
-                                 alt="<?= htmlspecialchars($product['name']) ?>">
-                        <?php endif; ?>
-                        <div class="card-body">
-                            <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
-                            <p class="card-text text-muted">
-                                <small>
-                                    <i class="bi bi-tag"></i> <?= htmlspecialchars($product['category']) ?>
-                                    <br>
-                                    <i class="bi bi-circle"></i> <?= htmlspecialchars($product['state']) ?>
-                                </small>
-                            </p>
-                            <p class="card-text"><?= htmlspecialchars($product['specs']) ?></p>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <span class="h5 mb-0">€<?= number_format($product['price'], 2) ?></span>
-                                <a href="/product/view?id=<?= $product['id'] ?>" class="btn btn-primary">
-                                    Details
-                                </a>
-                            </div>
-                        </div>
-                        <div class="card-footer bg-transparent">
-                            <small class="text-muted">
-                                Geplaatst door <?= htmlspecialchars($product['username']) ?> op 
-                                <?= date('d-m-Y', strtotime($product['created_at'])) ?>
+                <div class="card h-100 product-card">
+                    <?php if ($product['image']): ?>
+                        <img src="<?= htmlspecialchars($product['image']) ?>"
+                             class="card-img-top product-image"
+                             alt="<?= htmlspecialchars($product['name']) ?>">
+                    <?php endif; ?>
+                    <div class="card-body">
+                        <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
+                        <p class="card-text text-muted">
+                            <small>
+                                <i class="bi bi-tag"></i> <?= htmlspecialchars($product['category']) ?>
+                                <br>
+                                <i class="bi bi-circle"></i> <?= htmlspecialchars($product['state']) ?>
                             </small>
+                        </p>
+                        <p class="card-text"><?= htmlspecialchars($product['specs']) ?></p>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="h5 mb-0">€<?= number_format($product['price'], 2) ?></span>
+                            <a href="/product/view?id=<?= $product['id'] ?>" class="btn btn-primary">
+                                Details
+                            </a>
                         </div>
+                    </div>
+                    <div class="card-footer bg-transparent">
+                        <small class="text-muted">
+                            Geplaatst door <?= htmlspecialchars($product['username']) ?> op
+                            <?= date('d-m-Y', strtotime($product['created_at'])) ?>
+                        </small>
                     </div>
                 </div>
             <?php endforeach; ?>
