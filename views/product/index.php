@@ -30,9 +30,9 @@
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Toepassen</button>
                     </form>
-                </div>
-            </div>
         </div>
+    </div>
+</div>
 
         <div class="col-md-9">
             <!-- Zoekbalk -->
@@ -44,38 +44,34 @@
             </form>
 
             <!-- Producten lijst -->
-            <div class="row">
+            <div class="product-grid">
                 <?php if (empty($products)): ?>
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            Geen producten gevonden.
-                        </div>
+                    <div class="alert alert-info">
+                        Geen producten gevonden.
                     </div>
                 <?php else: ?>
                     <?php foreach ($products as $product): ?>
-                        <div class="col-md-4 mb-4">
-                            <div class="card product-card">
-                                <?php if ($product['image']): ?>
-                                    <img src="<?= htmlspecialchars($product['image']) ?>" 
-                                         class="card-img-top product-image" 
-                                         alt="<?= htmlspecialchars($product['name']) ?>">
-                                <?php endif; ?>
-                                <div class="card-body">
-                                    <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
-                                    <p class="card-text">
-                                        <strong>Categorie:</strong> <?= htmlspecialchars($product['category']) ?><br>
-                                        <strong>Staat:</strong> <?= htmlspecialchars($product['state']) ?><br>
-                                        <strong>Prijs:</strong> €<?= number_format($product['price'], 2) ?>
-                                    </p>
-                                    <p class="card-text">
-                                        <small class="text-muted">
-                                            Verkoper: <?= htmlspecialchars($product['username']) ?>
-                                        </small>
-                                    </p>
-                                    <a href="/product/<?= $product['id'] ?>" class="btn btn-primary">
-                                        Bekijk Product
-                                    </a>
-                                </div>
+                        <div class="card product-card">
+                            <?php if ($product['image']): ?>
+                                <img src="<?= htmlspecialchars($product['image']) ?>"
+                                     class="card-img-top product-image"
+                                     alt="<?= htmlspecialchars($product['name']) ?>">
+                            <?php endif; ?>
+                            <div class="card-body">
+                                <h5 class="card-title"><?= htmlspecialchars($product['name']) ?></h5>
+                                <p class="card-text">
+                                    <strong>Categorie:</strong> <?= htmlspecialchars($product['category']) ?><br>
+                                    <strong>Staat:</strong> <?= htmlspecialchars($product['state']) ?><br>
+                                    <strong>Prijs:</strong> €<?= number_format($product['price'], 2) ?>
+                                </p>
+                                <p class="card-text">
+                                    <small class="text-muted">
+                                        Verkoper: <?= htmlspecialchars($product['username']) ?>
+                                    </small>
+                                </p>
+                                <a href="/product/<?= $product['id'] ?>" class="btn btn-primary">
+                                    Bekijk Product
+                                </a>
                             </div>
                         </div>
                     <?php endforeach; ?>
@@ -83,4 +79,4 @@
             </div>
         </div>
     </div>
-</div> 
+</div>
