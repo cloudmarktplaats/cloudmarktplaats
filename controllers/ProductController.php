@@ -116,27 +116,27 @@ class ProductController extends BaseController {
 
             // Validatie
             if (empty($name) || empty($category) || empty($state) || empty($specs)) {
-                $this->setFlash('Vul alle verplichte velden in.', 'danger');
+                $this->setFlash('danger', 'Vul alle verplichte velden in.');
                 $this->redirect('/product/add');
             }
 
             if (!in_array($category, $this->allowed_categories)) {
-                $this->setFlash('Ongeldige categorie.', 'danger');
+                $this->setFlash('danger', 'Ongeldige categorie.');
                 $this->redirect('/product/add');
             }
 
             if (!in_array($state, $this->allowed_states)) {
-                $this->setFlash('Ongeldige staat.', 'danger');
+                $this->setFlash('danger', 'Ongeldige staat.');
                 $this->redirect('/product/add');
             }
 
             if ($price <= 0) {
-                $this->setFlash('Voer een geldig bedrag in.', 'danger');
+                $this->setFlash('danger', 'Voer een geldig bedrag in.');
                 $this->redirect('/product/add');
             }
 
             if (count($tags) > MAX_PRODUCT_TAGS) {
-                $this->setFlash('Maximaal ' . MAX_PRODUCT_TAGS . ' tags toegestaan.', 'danger');
+                $this->setFlash('danger', 'Maximaal ' . MAX_PRODUCT_TAGS . ' tags toegestaan.');
                 $this->redirect('/product/add');
             }
 
@@ -185,7 +185,7 @@ class ProductController extends BaseController {
                 );
             }
 
-            $this->setFlash('Product succesvol toegevoegd!', 'success');
+            $this->setFlash('success', 'Product succesvol toegevoegd!');
             $this->redirect('/dashboard');
         }
 
@@ -205,7 +205,7 @@ class ProductController extends BaseController {
         );
 
         if (!$product) {
-            $this->setFlash('Product niet gevonden.', 'danger');
+            $this->setFlash('danger', 'Product niet gevonden.');
             $this->redirect('/dashboard');
         }
 
@@ -220,27 +220,27 @@ class ProductController extends BaseController {
 
             // Validatie
             if (empty($name) || empty($category) || empty($state) || empty($specs)) {
-                $this->setFlash('Vul alle verplichte velden in.', 'danger');
+                $this->setFlash('danger', 'Vul alle verplichte velden in.');
                 $this->redirect("/product/edit?id={$product_id}");
             }
 
             if (!in_array($category, $this->allowed_categories)) {
-                $this->setFlash('Ongeldige categorie.', 'danger');
+                $this->setFlash('danger', 'Ongeldige categorie.');
                 $this->redirect("/product/edit?id={$product_id}");
             }
 
             if (!in_array($state, $this->allowed_states)) {
-                $this->setFlash('Ongeldige staat.', 'danger');
+                $this->setFlash('danger', 'Ongeldige staat.');
                 $this->redirect("/product/edit?id={$product_id}");
             }
 
             if ($price <= 0) {
-                $this->setFlash('Voer een geldig bedrag in.', 'danger');
+                $this->setFlash('danger', 'Voer een geldig bedrag in.');
                 $this->redirect("/product/edit?id={$product_id}");
             }
 
             if (count($tags) > MAX_PRODUCT_TAGS) {
-                $this->setFlash('Maximaal ' . MAX_PRODUCT_TAGS . ' tags toegestaan.', 'danger');
+                $this->setFlash('danger', 'Maximaal ' . MAX_PRODUCT_TAGS . ' tags toegestaan.');
                 $this->redirect("/product/edit?id={$product_id}");
             }
 
@@ -283,7 +283,7 @@ class ProductController extends BaseController {
                 }
             }
 
-            $this->setFlash('Product succesvol bijgewerkt!', 'success');
+            $this->setFlash('success', 'Product succesvol bijgewerkt!');
             $this->redirect('/dashboard');
         }
 
@@ -322,7 +322,7 @@ class ProductController extends BaseController {
             );
 
             if (!$product) {
-                $this->setFlash('Product niet gevonden.', 'danger');
+                $this->setFlash('danger', 'Product niet gevonden.');
                 $this->redirect('/dashboard');
             }
 
@@ -332,7 +332,7 @@ class ProductController extends BaseController {
             $this->db->query("DELETE FROM favorites WHERE product_id = ?", [$product_id]);
             $this->db->query("DELETE FROM products WHERE id = ?", [$product_id]);
 
-            $this->setFlash('Product succesvol verwijderd!', 'success');
+            $this->setFlash('success', 'Product succesvol verwijderd!');
         }
 
         $this->redirect('/dashboard');

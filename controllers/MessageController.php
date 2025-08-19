@@ -38,7 +38,7 @@ class MessageController extends BaseController {
         $product_id = isset($_POST['product_id']) ? (int)$_POST['product_id'] : null;
 
         if (!$receiver_id || empty($message)) {
-            $this->setFlash('Ongeldige berichtgegevens.', 'danger');
+            $this->setFlash('danger', 'Ongeldige berichtgegevens.');
             $this->redirect('/messages');
         }
 
