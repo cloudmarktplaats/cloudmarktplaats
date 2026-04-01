@@ -7,7 +7,7 @@
                     <h5 class="card-title mb-0">Hardware Bewerken</h5>
                 </div>
                 <div class="card-body">
-                    <form action="/product/edit?id=<?= $product['id'] ?>" method="POST" enctype="multipart/form-data">
+                    <form action="/product/edit/<?= $product['id'] ?>" method="POST" enctype="multipart/form-data">
                         <?= View::csrfField() ?>
                         <!-- Naam -->
                         <div class="mb-3">
@@ -79,7 +79,7 @@
                             <input type="text" class="form-control" id="tags" name="tags"
                                    value="<?= View::e(implode(', ', $tags)) ?>">
                             <div class="form-text">
-                                Voeg tags toe gescheiden door komma's (max <?= MAX_PRODUCT_TAGS ?>).
+                                Voeg tags toe gescheiden door komma's (max <?= \App\Core\Config::get('MAX_PRODUCT_TAGS', 5) ?>).
                                 Bijvoorbeeld: server, dell, rackmount
                             </div>
                         </div>
@@ -94,37 +94,6 @@
                                             <div class="card h-100">
                                                 <img src="<?= View::e($image['image_url']) ?>"
                                                      class="card-img-top" alt="Product afbeelding">
-                                                <div class="card-body p-2">
-                                                    <button type="button" class="btn btn-sm btn-outline-danger w-100"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#deleteImageModal<?= $image['id'] ?>">
-                                                        <i class="bi bi-trash"></i> Verwijderen
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Verwijder afbeelding modal -->
-                                        <div class="modal fade" id="deleteImageModal<?= $image['id'] ?>" tabindex="-1">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content">
-                                                    <div class="modal-header">
-                                                        <h5 class="modal-title">Afbeelding verwijderen</h5>
-                                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                                                    </div>
-                                                    <div class="modal-body">
-                                                        <p>Weet je zeker dat je deze afbeelding wilt verwijderen?</p>
-                                                    </div>
-                                                    <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary"
-                                                                data-bs-dismiss="modal">Annuleren</button>
-                                                        <form action="/product/delete-image" method="POST" class="d-inline">
-                                                            <?= View::csrfField() ?>
-                                                            <input type="hidden" name="image_id" value="<?= $image['id'] ?>">
-                                                            <button type="submit" class="btn btn-danger">Verwijderen</button>
-                                                        </form>
-                                                    </div>
-                                                </div>
                                             </div>
                                         </div>
                                     <?php endforeach; ?>
@@ -138,7 +107,7 @@
                             <input type="file" class="form-control" id="images" name="images[]"
                                    accept="image/*" multiple>
                             <div class="form-text">
-                                Upload maximaal <?= MAX_PRODUCT_IMAGES ?> afbeeldingen (JPG, PNG, GIF).
+                                Upload maximaal <?= \App\Core\Config::get('MAX_PRODUCT_IMAGES', 5) ?> afbeeldingen (JPG, PNG, GIF).
                             </div>
                         </div>
 

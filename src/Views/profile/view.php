@@ -10,7 +10,7 @@
                         Lid sinds: <?= date('d-m-Y', strtotime($profile_user['created_at'])) ?>
                     </p>
                     <?php if (isset($_SESSION['user_id']) && $_SESSION['user_id'] !== $profile_user['id']): ?>
-                        <a href="/messages?user=<?= $profile_user['id'] ?>" class="btn btn-primary">
+                        <a href="/message/conversation/<?= $profile_user['id'] ?>" class="btn btn-primary">
                             <i class="bi bi-chat"></i> Bericht sturen
                         </a>
                     <?php endif; ?>
@@ -44,7 +44,7 @@
                                                     €<?= number_format($product['price'], 2) ?>
                                                 </small>
                                             </p>
-                                            <a href="/product/<?= $product['id'] ?>"
+                                            <a href="/product/view/<?= $product['id'] ?>"
                                                class="btn btn-outline-primary btn-sm w-100">
                                                 Bekijk product
                                             </a>
@@ -71,7 +71,7 @@
                                 <div class="list-group-item">
                                     <div class="d-flex w-100 justify-content-between">
                                         <h6 class="mb-1">
-                                            <a href="/product/<?= $review['product_id'] ?>" class="text-decoration-none">
+                                            <a href="/product/view/<?= $review['product_id'] ?>" class="text-decoration-none">
                                                 <?= View::e($review['product_name']) ?>
                                             </a>
                                         </h6>

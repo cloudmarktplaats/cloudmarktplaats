@@ -5,9 +5,9 @@
 <?php else: ?>
     <div class="list-group">
         <?php foreach ($topics as $topic): ?>
-            <a href="/forum/topic?id=<?= $topic['id'] ?>"
+            <a href="/forum/topic/<?= $topic['id'] ?>"
                class="list-group-item list-group-item-action"
-               hx-get="/forum/topic?id=<?= $topic['id'] ?>"
+               hx-get="/forum/topic/<?= $topic['id'] ?>"
                hx-target="#main-content"
                hx-push-url="true">
                 <div class="d-flex w-100 justify-content-between">

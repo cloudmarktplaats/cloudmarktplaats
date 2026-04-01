@@ -4,7 +4,7 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/forum">Forum</a></li>
             <li class="breadcrumb-item">
-                <a href="/forum/category?id=<?= $category['id'] ?>">
+                <a href="/forum/category/<?= $category['id'] ?>">
                     <?= View::e($category['name']) ?>
                 </a>
             </li>
@@ -17,7 +17,7 @@
             <h1 class="h3 mb-0">Nieuw Topic in <?= View::e($category['name']) ?></h1>
         </div>
         <div class="card-body">
-            <form action="/forum/new_topic?category_id=<?= $category['id'] ?>" method="POST">
+            <form action="/forum/new_topic/<?= $category['id'] ?>" method="POST">
                 <?= View::csrfField() ?>
                 <div class="mb-3">
                     <label for="title" class="form-label">Titel</label>
@@ -29,7 +29,7 @@
                 </div>
                 <div class="d-flex gap-2">
                     <button type="submit" class="btn btn-primary">Topic aanmaken</button>
-                    <a href="/forum/category?id=<?= $category['id'] ?>" class="btn btn-secondary">Annuleren</a>
+                    <a href="/forum/category/<?= $category['id'] ?>" class="btn btn-secondary">Annuleren</a>
                 </div>
             </form>
         </div>

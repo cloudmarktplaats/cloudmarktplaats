@@ -8,7 +8,7 @@
                     <h5 class="card-title mb-0">Filters</h5>
                 </div>
                 <div class="card-body">
-                    <form method="GET" action="/products">
+                    <form method="GET" action="/product">
                         <div class="mb-3">
                             <label for="category" class="form-label">Categorie</label>
                             <select name="category" id="category" class="form-select">
@@ -37,7 +37,7 @@
 
         <div class="col-md-9">
             <!-- Zoekbalk -->
-            <form method="GET" action="/products" class="mb-4">
+            <form method="GET" action="/product" class="mb-4">
                 <div class="input-group">
                     <input type="text" name="search" class="form-control" placeholder="Zoek producten..." value="<?= View::e($current_search ?? '') ?>">
                     <button type="submit" class="btn btn-primary">Zoeken</button>
@@ -70,7 +70,7 @@
                                         Verkoper: <?= View::e($product['username']) ?>
                                     </small>
                                 </p>
-                                <a href="/product/<?= $product['id'] ?>" class="btn btn-primary">
+                                <a href="/product/view/<?= $product['id'] ?>" class="btn btn-primary">
                                     Bekijk Product
                                 </a>
                             </div>

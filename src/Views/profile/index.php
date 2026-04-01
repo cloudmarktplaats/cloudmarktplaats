@@ -54,7 +54,7 @@
                     <ul class="nav nav-tabs mb-3" role="tablist">
                         <li class="nav-item">
                             <a class="nav-link active"
-                               hx-get="/profile/products"
+                               hx-get="/profile/products/<?= $user['id'] ?>"
                                hx-target="#activity-content"
                                hx-trigger="click"
                                href="#products"
@@ -64,7 +64,7 @@
                         </li>
                         <li class="nav-item">
                             <a class="nav-link"
-                               hx-get="/profile/topics"
+                               hx-get="/profile/topics/<?= $user['id'] ?>"
                                hx-target="#activity-content"
                                hx-trigger="click"
                                href="#topics"
@@ -74,7 +74,7 @@
                         </li>
                     </ul>
 
-                    <div id="activity-content" hx-get="/profile/products" hx-trigger="load">
+                    <div id="activity-content" hx-get="/profile/products/<?= $user['id'] ?>" hx-trigger="load">
                         <div class="text-center">
                             <div class="spinner-border text-primary" role="status">
                                 <span class="visually-hidden">Laden...</span>

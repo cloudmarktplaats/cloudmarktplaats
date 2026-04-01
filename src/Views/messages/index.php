@@ -9,7 +9,7 @@
                 </div>
                 <div class="list-group list-group-flush">
                     <?php foreach ($conversations as $conv): ?>
-                        <a href="/messages?user=<?= $conv['other_user_id'] ?>"
+                        <a href="/message/conversation/<?= $conv['other_user_id'] ?>"
                            class="list-group-item list-group-item-action <?= $selected_user_id == $conv['other_user_id'] ? 'active' : '' ?>">
                             <div class="d-flex w-100 justify-content-between">
                                 <h6 class="mb-1"><?= View::e($conv['other_username']) ?></h6>
@@ -20,11 +20,6 @@
                             <p class="mb-1 text-truncate">
                                 <?= View::e($conv['last_message']) ?>
                             </p>
-                            <?php if ($conv['product_name']): ?>
-                                <small class="text-muted">
-                                    Over: <?= View::e($conv['product_name']) ?>
-                                </small>
-                            <?php endif; ?>
                         </a>
                     <?php endforeach; ?>
                 </div>
@@ -45,15 +40,6 @@
                             <?php foreach ($messages as $message): ?>
                                 <div class="message <?= $message['sender_id'] == $_SESSION['user_id'] ? 'text-end' : '' ?> mb-3">
                                     <div class="message-content d-inline-block p-3 rounded <?= $message['sender_id'] == $_SESSION['user_id'] ? 'bg-primary text-white' : 'bg-light' ?>" style="max-width: 70%;">
-                                        <?php if ($message['product_name']): ?>
-                                            <div class="mb-2">
-                                                <small class="text-muted">
-                                                    Over: <a href="/product/<?= $message['product_id'] ?>" class="text-decoration-none">
-                                                        <?= View::e($message['product_name']) ?>
-                                                    </a>
-                                                </small>
-                                            </div>
-                                        <?php endif; ?>
                                         <p class="mb-0"><?= nl2br(View::e($message['message'])) ?></p>
                                         <small class="text-muted">
                                             <?= date('d-m-Y H:i', strtotime($message['created_at'])) ?>
@@ -64,7 +50,7 @@
                         </div>
 
                         <!-- Bericht versturen formulier -->
-                        <form method="POST" action="/messages/send" class="mt-3">
+                        <form method="POST" action="/message/send" class="mt-3">
                             <?= View::csrfField() ?>
                             <input type="hidden" name="receiver_id" value="<?= $selected_user_id ?>">
                             <div class="input-group">

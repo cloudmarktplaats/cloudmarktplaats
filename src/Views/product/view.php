@@ -52,19 +52,10 @@
                         <?php endforeach; ?>
                     <?php endif; ?>
 
-                    <?php if (isset($_SESSION['user_id'])): ?>
-                        <form method="POST" action="/add_review" class="mt-4">
-                            <?= View::csrfField() ?>
-                            <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                            <div class="mb-3">
-                                <label for="review" class="form-label">Schrijf een review</label>
-                                <textarea name="review" id="review" class="form-control" rows="3" required></textarea>
-                            </div>
-                            <button type="submit" class="btn btn-primary">Review plaatsen</button>
-                        </form>
-                    <?php else: ?>
+                    <!-- TODO: Phase 2 review system -->
+                    <?php if (!isset($_SESSION['user_id'])): ?>
                         <p class="text-muted mt-3">
-                            <a href="/login">Log in</a> om een review te plaatsen.
+                            <a href="/auth/login">Log in</a> om een review te plaatsen.
                         </p>
                     <?php endif; ?>
                 </div>
@@ -77,22 +68,16 @@
                 <div class="card-body">
                     <?php if (isset($_SESSION['user_id'])): ?>
                         <?php if ($_SESSION['user_id'] !== $product['user_id']): ?>
-                            <form method="POST" action="/add_favorite" class="mb-3">
-                                <?= View::csrfField() ?>
-                                <input type="hidden" name="product_id" value="<?= $product['id'] ?>">
-                                <button type="submit" class="btn btn-outline-primary w-100">
-                                    <i class="bi bi-heart"></i> Toevoegen aan favorieten
-                                </button>
-                            </form>
-                            <a href="/messages?user=<?= $product['user_id'] ?>&product=<?= $product['id'] ?>"
+                            <!-- TODO: Phase 2 favorite system -->
+                            <a href="/message/conversation/<?= $product['user_id'] ?>"
                                class="btn btn-primary w-100">
                                 <i class="bi bi-chat"></i> Contact opnemen
                             </a>
                         <?php else: ?>
-                            <a href="/edit_product/<?= $product['id'] ?>" class="btn btn-outline-primary w-100 mb-3">
+                            <a href="/product/edit/<?= $product['id'] ?>" class="btn btn-outline-primary w-100 mb-3">
                                 <i class="bi bi-pencil"></i> Product bewerken
                             </a>
-                            <form method="POST" action="/delete_product/<?= $product['id'] ?>"
+                            <form method="POST" action="/product/delete/<?= $product['id'] ?>"
                                   onsubmit="return confirm('Weet je zeker dat je dit product wilt verwijderen?');">
                                 <?= View::csrfField() ?>
                                 <button type="submit" class="btn btn-danger w-100">
@@ -102,7 +87,7 @@
                         <?php endif; ?>
                     <?php else: ?>
                         <p class="text-muted mb-3">
-                            <a href="/login">Log in</a> om contact op te nemen of het product toe te voegen aan je favorieten.
+                            <a href="/auth/login">Log in</a> om contact op te nemen of het product toe te voegen aan je favorieten.
                         </p>
                     <?php endif; ?>
                 </div>
@@ -115,7 +100,7 @@
                 </div>
                 <div class="card-body">
                     <h4 class="h6"><?= View::e($product['username']) ?></h4>
-                    <a href="/profile/<?= $product['user_id'] ?>" class="btn btn-outline-primary btn-sm">
+                    <a href="/profile/view/<?= $product['user_id'] ?>" class="btn btn-outline-primary btn-sm">
                         Bekijk profiel
                     </a>
                 </div>

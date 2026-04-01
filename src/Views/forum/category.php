@@ -10,7 +10,7 @@
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h1><?= View::e($category['name']) ?></h1>
         <?php if (isset($_SESSION['user_id'])): ?>
-            <a href="/forum/new_topic?category_id=<?= $category['id'] ?>" class="btn btn-primary">
+            <a href="/forum/new_topic/<?= $category['id'] ?>" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Nieuw Topic
             </a>
         <?php endif; ?>
@@ -36,7 +36,7 @@
                         <div class="row align-items-center">
                             <div class="col-md-6">
                                 <h5 class="mb-1">
-                                    <a href="/forum/topic?id=<?= $topic['id'] ?>" class="text-decoration-none">
+                                    <a href="/forum/topic/<?= $topic['id'] ?>" class="text-decoration-none">
                                         <?= View::e($topic['title']) ?>
                                     </a>
                                 </h5>
@@ -45,7 +45,7 @@
                                 </small>
                             </div>
                             <div class="col-md-2">
-                                <small><?= View::e($topic['author_name']) ?></small>
+                                <small><?= View::e($topic['username']) ?></small>
                             </div>
                             <div class="col-md-2">
                                 <small><?= $topic['reply_count'] ?> reacties</small>

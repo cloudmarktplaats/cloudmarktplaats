@@ -4,7 +4,7 @@
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/forum">Forum</a></li>
             <li class="breadcrumb-item">
-                <a href="/forum/category?id=<?= $topic['category_id'] ?>">
+                <a href="/forum/category/<?= $topic['category_id'] ?>">
                     <?= View::e($topic['category_name']) ?>
                 </a>
             </li>
@@ -29,7 +29,7 @@
                         <i class="bi bi-person-circle fs-1"></i>
                     </div>
                     <div class="small">
-                        <strong><?= View::e($topic['author_name']) ?></strong>
+                        <strong><?= View::e($topic['username']) ?></strong>
                     </div>
                     <div class="small text-muted">
                         <?= date('d-m-Y H:i', strtotime($topic['created_at'])) ?>
@@ -85,9 +85,8 @@
                 <h3 class="h5 mb-0">Reageren</h3>
             </div>
             <div class="card-body">
-                <form action="/forum/reply" method="POST">
+                <form action="/forum/reply/<?= $topic['id'] ?>" method="POST">
                     <?= View::csrfField() ?>
-                    <input type="hidden" name="topic_id" value="<?= $topic['id'] ?>">
                     <div class="mb-3">
                         <label for="content" class="form-label">Jouw reactie</label>
                         <textarea class="form-control" id="content" name="content" rows="4" required></textarea>

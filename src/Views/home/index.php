@@ -8,7 +8,7 @@
                 <p class="lead text-white-50 mb-4">Connect with specialists and find datacenter equipment from experts who understand the value.</p>
                 <div class="d-flex gap-3 mb-4">
                     <a href="/auth/register" class="btn btn-lg btn-cta me-2">Join Now</a>
-                    <a href="/products" class="btn btn-lg btn-outline-light">Browse Hardware</a>
+                    <a href="/product" class="btn btn-lg btn-outline-light">Browse Hardware</a>
                 </div>
             </div>
             <div class="col-lg-5 d-none d-lg-block text-center">
@@ -46,7 +46,7 @@
             ?>
             <?php foreach ($all_categories as $cat): ?>
                 <div class="col">
-                    <a href="/products?category=<?= urlencode($cat['name']) ?>" class="text-decoration-none">
+                    <a href="/product?category=<?= urlencode($cat['name']) ?>" class="text-decoration-none">
                         <div class="category-card h-100">
                             <span class="category-icon">
                                 <i class="bi <?= $cat['icon'] ?>"></i>
@@ -70,7 +70,7 @@
     <div class="container">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2 class="fw-bold mb-0">Featured Listings</h2>
-            <a href="/products" class="btn btn-outline-primary btn-lg px-4">View All</a>
+            <a href="/product" class="btn btn-outline-primary btn-lg px-4">View All</a>
         </div>
         <div class="row g-4">
             <!-- Card 1 -->
@@ -174,7 +174,7 @@
                         <p class="card-text"><?= View::e($product['specs']) ?></p>
                         <div class="d-flex justify-content-between align-items-center">
                             <span class="h5 mb-0">€<?= number_format($product['price'], 2) ?></span>
-                            <a href="/product/view?id=<?= $product['id'] ?>" class="btn btn-primary">
+                            <a href="/product/view/<?= $product['id'] ?>" class="btn btn-primary">
                                 Details
                             </a>
                         </div>

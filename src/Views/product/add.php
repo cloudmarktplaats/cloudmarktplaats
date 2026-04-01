@@ -75,7 +75,7 @@
                             <label for="tags" class="form-label">Tags</label>
                             <input type="text" class="form-control" id="tags" name="tags">
                             <div class="form-text">
-                                Voeg tags toe gescheiden door komma's (max <?= MAX_PRODUCT_TAGS ?>).
+                                Voeg tags toe gescheiden door komma's (max <?= \App\Core\Config::get('MAX_PRODUCT_TAGS', 5) ?>).
                                 Bijvoorbeeld: server, dell, rackmount
                             </div>
                         </div>
@@ -86,7 +86,7 @@
                             <input type="file" class="form-control" id="images" name="images[]"
                                    accept="image/*" multiple>
                             <div class="form-text">
-                                Upload maximaal <?= MAX_PRODUCT_IMAGES ?> afbeeldingen (JPG, PNG, GIF).
+                                Upload maximaal <?= \App\Core\Config::get('MAX_PRODUCT_IMAGES', 5) ?> afbeeldingen (JPG, PNG, GIF).
                             </div>
                         </div>
 

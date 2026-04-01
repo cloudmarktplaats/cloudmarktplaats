@@ -14,13 +14,13 @@
                         <a href="/product/add" class="list-group-item list-group-item-action">
                             <i class="bi bi-plus-circle"></i> Hardware Toevoegen
                         </a>
-                        <a href="/messages" class="list-group-item list-group-item-action">
+                        <a href="/message" class="list-group-item list-group-item-action">
                             <i class="bi bi-envelope"></i> Berichten
-                            <?php if ($unread_messages > 0): ?>
-                                <span class="badge bg-danger float-end"><?= $unread_messages ?></span>
+                            <?php if ($unread_count > 0): ?>
+                                <span class="badge bg-danger float-end"><?= $unread_count ?></span>
                             <?php endif; ?>
                         </a>
-                        <a href="/favorites" class="list-group-item list-group-item-action">
+                        <a href="/dashboard" class="list-group-item list-group-item-action">
                             <i class="bi bi-heart"></i> Favorieten
                         </a>
                         <a href="/profile" class="list-group-item list-group-item-action">
@@ -70,7 +70,7 @@
                                             </p>
                                             <p class="card-text fw-bold">€<?= number_format($product['price'], 2) ?></p>
                                             <div class="btn-group w-100">
-                                                <a href="/product/edit?id=<?= $product['id'] ?>"
+                                                <a href="/product/edit/<?= $product['id'] ?>"
                                                    class="btn btn-outline-primary btn-sm">
                                                     <i class="bi bi-pencil"></i> Bewerken
                                                 </a>
@@ -97,9 +97,8 @@
                                                 <div class="modal-footer">
                                                     <button type="button" class="btn btn-secondary"
                                                             data-bs-dismiss="modal">Annuleren</button>
-                                                    <form action="/product/delete" method="POST" class="d-inline">
+                                                    <form action="/product/delete/<?= $product['id'] ?>" method="POST" class="d-inline">
                                                         <?= View::csrfField() ?>
-                                                        <input type="hidden" name="id" value="<?= $product['id'] ?>">
                                                         <button type="submit" class="btn btn-danger">Verwijderen</button>
                                                     </form>
                                                 </div>
@@ -127,22 +126,22 @@
                     <?php else: ?>
                         <div class="list-group list-group-flush">
                             <?php foreach ($recent_messages as $message): ?>
-                                <a href="/messages/view?id=<?= $message['id'] ?>"
+                                <a href="/message/conversation/<?= $message['sender_id'] ?>"
                                    class="list-group-item list-group-item-action <?= $message['read_at'] ? '' : 'fw-bold' ?>">
                                     <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1"><?= View::e($message['subject']) ?></h6>
+                                        <h6 class="mb-1"><?= View::e(mb_strimwidth($message['message'], 0, 50, '...')) ?></h6>
                                         <small class="text-muted">
                                             <?= date('d-m-Y H:i', strtotime($message['created_at'])) ?>
                                         </small>
                                     </div>
                                     <p class="mb-1 text-muted">
-                                        Van: <?= View::e($message['sender_username']) ?>
+                                        Van: <?= View::e($message['sender_name']) ?>
                                     </p>
                                 </a>
                             <?php endforeach; ?>
                         </div>
                         <div class="text-center mt-3">
-                            <a href="/messages" class="btn btn-outline-primary btn-sm">
+                            <a href="/message" class="btn btn-outline-primary btn-sm">
                                 Alle berichten bekijken
                             </a>
                         </div>

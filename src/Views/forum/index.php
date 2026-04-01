@@ -20,7 +20,7 @@
                     <div class="card h-100">
                         <div class="card-body">
                             <h5 class="card-title">
-                                <a href="/forum/category?id=<?= $category['id'] ?>" class="text-decoration-none">
+                                <a href="/forum/category/<?= $category['id'] ?>" class="text-decoration-none">
                                     <?= View::e($category['name']) ?>
                                 </a>
                             </h5>
@@ -33,7 +33,7 @@
                                     &bull;
                                     <?= $category['reply_count'] ?> reacties
                                 </small>
-                                <a href="/forum/new_topic?category_id=<?= $category['id'] ?>" class="btn btn-sm btn-outline-primary">
+                                <a href="/forum/new_topic/<?= $category['id'] ?>" class="btn btn-sm btn-outline-primary">
                                     <i class="fas fa-plus"></i> Nieuw Topic
                                 </a>
                             </div>

@@ -5,9 +5,9 @@
 <?php else: ?>
     <div class="list-group">
         <?php foreach ($products as $product): ?>
-            <a href="/product?id=<?= $product['id'] ?>"
+            <a href="/product/view/<?= $product['id'] ?>"
                class="list-group-item list-group-item-action"
-               hx-get="/product?id=<?= $product['id'] ?>"
+               hx-get="/product/view/<?= $product['id'] ?>"
                hx-target="#main-content"
                hx-push-url="true">
                 <div class="d-flex w-100 justify-content-between">
