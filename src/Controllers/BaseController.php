@@ -2,51 +2,58 @@
 
 namespace App\Controllers;
 
+use App\Core\View;
+use App\Core\Session;
 use App\Core\Database;
 
-abstract class BaseController {
+abstract class BaseController
+{
     protected Database $db;
 
-    public function __construct() {
-        $this->db = new Database();
+    public function __construct()
+    {
+        $this->db = Database::getInstance();
     }
 
-    protected function view(string $view, array $data = []): void {
-        extract($data);
-        
-        ob_start();
-        require_once __DIR__ . "/../Views/{$view}.php";
-        $content = ob_get_clean();
-        
-        require_once __DIR__ . "/../Views/layouts/main.php";
+    protected function render(string $view, array $data = []): void
+    {
+        $data['user'] = $this->getUser();
+        $data['flash'] = Session::getFlash();
+        View::render($view, $data);
     }
 
-    protected function redirect(string $url): void {
-        header("Location: {$url}");
+    protected function redirect(string $url): void
+    {
+        header('Location: ' . $url);
         exit;
     }
 
-    protected function setFlash(string $message, string $type = 'success'): void {
-        $_SESSION['flash'] = [
-            'message' => $message,
-            'type' => $type
-        ];
+    protected function flash(string $type, string $message): void
+    {
+        Session::flash($type, $message);
     }
 
-    protected function isAuthenticated(): bool {
-        return isset($_SESSION['user']);
-    }
-
-    protected function requireAuth(): void {
-        if (!$this->isAuthenticated()) {
-            $this->setFlash('Je moet ingelogd zijn om deze pagina te bekijken.', 'danger');
-            $this->redirect('/auth/login');
+    protected function getUser(): ?array
+    {
+        $userId = Session::userId();
+        if (!$userId) {
+            return null;
         }
+        return $this->db->fetch("SELECT * FROM users WHERE id = ?", [$userId]);
     }
 
-    protected function json(array $data): void {
-        header('Content-Type: application/json');
-        echo json_encode($data);
-        exit;
+    protected function isLoggedIn(): bool
+    {
+        return Session::isLoggedIn();
     }
-} 
+
+    protected function isAdmin(): bool
+    {
+        return Session::isAdmin();
+    }
+
+    protected function userId(): ?int
+    {
+        return Session::userId();
+    }
+}
