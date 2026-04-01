@@ -88,7 +88,7 @@ class ProductController extends BaseController
             }
 
             if (!empty($errors)) {
-                $this->flash('error', implode('<br>', $errors));
+                $this->flash('error', implode("\n", $errors));
                 $this->render('product/add', [
                     'title' => 'Product Toevoegen',
                     'categories' => self::ALLOWED_CATEGORIES,

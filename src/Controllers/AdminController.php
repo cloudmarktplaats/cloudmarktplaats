@@ -115,6 +115,11 @@ class AdminController extends BaseController
 
     public function toggleAdmin(string $id): void
     {
+        if ((int) $id === $this->userId()) {
+            $this->flash('error', 'Je kunt je eigen rol niet wijzigen.');
+            $this->redirect('/admin/users');
+            return;
+        }
         $this->userModel->toggleAdmin((int) $id);
         $this->flash('success', 'Gebruikersrol aangepast.');
         $this->redirect('/admin/users');
@@ -122,6 +127,11 @@ class AdminController extends BaseController
 
     public function deleteUser(string $id): void
     {
+        if ((int) $id === $this->userId()) {
+            $this->flash('error', 'Je kunt je eigen account niet verwijderen via admin.');
+            $this->redirect('/admin/users');
+            return;
+        }
         $this->userModel->delete((int) $id);
         $this->flash('success', 'Gebruiker verwijderd.');
         $this->redirect('/admin/users');

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Cloudmarkplaats.nl is a PHP-based marketplace platform for IT hardware trading. It uses a custom MVC architecture with MySQL database, Bootstrap 5 for UI, and HTMX for dynamic updates.
+Cloudmarkplaats.nl is a PHP 8.1+ marketplace platform for IT hardware trading. It uses a PSR-4 namespaced MVC architecture with MySQL database, Bootstrap 5 for UI, and HTMX for dynamic updates.
 
 ## Essential Commands
 
@@ -13,39 +13,57 @@ Cloudmarkplaats.nl is a PHP-based marketplace platform for IT hardware trading. 
 # Install dependencies
 composer install
 
-# Import database schema
-mysql -u root -p cloudmarkplaats1 < database.sql
+# Copy environment config
+cp .env.example .env  # then edit with your DB credentials
+
+# Run database migrations
+php migrations/migrate.php
 
 # Run local development server
 php -S localhost:8000
-```
 
-### Database Updates
-```bash
-# Apply database migrations (manual process)
-mysql -u root -p cloudmarkplaats1 < update_messages.sql
+# Run tests
+./vendor/bin/phpunit
 ```
 
 ## Architecture & Code Organization
 
-### MVC Structure
-- **Controllers** (`/controllers/`): Handle HTTP requests and business logic
-  - `AuthController.php`: User authentication and registration
-  - `ProductController.php`: Product CRUD operations
-  - `ForumController.php`: Forum functionality
-  - `MessageController.php`: User messaging system
-- **Views** (`/views/`): PHP templates organized by feature
-  - `/auth/`: Login, register, password reset
-  - `/product/`: Product listings and details
-  - `/dashboard/`: User dashboard views
-  - `/forum/`: Forum categories and topics
-- **Models**: Database interactions via PDO in `/includes/Database.php`
+### PSR-4 MVC Structure (`src/`)
 
-### Key Components
-1. **Database Connection**: `/includes/Database.php` - PDO wrapper for MySQL
-2. **Configuration**: `/config.php` - App settings (needs refactoring to use .env)
-3. **Session Management**: `/includes/session.php` - User session handling
-4. **Router**: Apache mod_rewrite via `.htaccess` redirects to `index.php`
+- **Core** (`src/Core/`): Framework components
+  - `App.php`: Application bootstrap, middleware pipeline, request dispatch
+  - `Config.php`: Environment-based configuration via .env
+  - `Database.php`: Unified PDO wrapper with CRUD helpers and transactions
+  - `Router.php`: URL routing with parameter extraction and middleware support
+  - `Session.php`: Secure session management with flash messages
+  - `View.php`: Template renderer with auto-escaping and HTMX support
+  - `Middleware/`: CSRF, Auth, Admin middleware
+
+- **Controllers** (`src/Controllers/`): Handle HTTP requests
+  - `AuthController.php`: Login, register, logout (with rate limiting)
+  - `ProductController.php`: Product CRUD with image upload validation
+  - `ForumController.php`: Forum with HTMLPurifier sanitization
+  - `MessageController.php`: User messaging
+  - `ProfileController.php`: User profiles
+  - `DashboardController.php`: User dashboard
+  - `AdminController.php`: Admin panel (products, users)
+
+- **Models** (`src/Models/`): Database query encapsulation
+  - `User.php`, `Product.php`, `Message.php`, `Forum.php`, `Review.php`
+
+- **Views** (`src/Views/`): PHP templates organized by feature
+  - `layouts/main.php`: Main layout with navbar and footer
+  - `auth/`, `product/`, `dashboard/`, `forum/`, `messages/`, `profile/`, `admin/`, `errors/`
+
+- **Routes** (`src/routes.php`): All route definitions
+
+### Key Patterns
+1. **Configuration**: All credentials in `.env`, loaded via `Config::get()`
+2. **Security**: CSRF tokens on all forms, View::e() for XSS prevention, HTMLPurifier for rich text
+3. **File Uploads**: MIME validation, extension whitelist, randomized filenames, 0755 permissions
+4. **Authentication**: Session-based with middleware guards
+5. **URL Routing**: `index.php` → `App.php` → `Router` → Middleware → Controller
+6. **Database**: Prepared statements via PDO, CRUD helpers on Database class
 
 ### Database Schema
 - **users**: User accounts with role-based access (user/admin)
@@ -55,31 +73,17 @@ mysql -u root -p cloudmarkplaats1 < update_messages.sql
 - **reviews**: Product reviews and ratings
 - **favorites**: User wishlists
 
-### Important Patterns
-1. **Authentication**: Session-based with role checking
-2. **File Uploads**: Product images stored in `/uploads/products/`
-3. **URL Routing**: All requests route through `index.php` via .htaccess
-4. **Database Queries**: Direct PDO usage, no ORM
-
 ## Development Notes
 
-### Current Limitations
-- No automated testing framework
-- Database credentials hardcoded in `config.php`
-- No code linting or formatting tools configured
-- Manual database migrations
+### Adding a New Page
+1. Add route in `src/routes.php`
+2. Create controller method in appropriate controller
+3. Create view file in `src/Views/`
+4. Use `View::e()` for output escaping, `View::csrfField()` in POST forms
 
-### Security Considerations
-- Always validate user input before database operations
-- Use prepared statements for all database queries (already implemented)
-- Check user permissions before sensitive operations
-- File upload validation is critical for product images
-
-### Common Tasks
-1. **Adding a new page**: Create controller method, add view file, update navigation
-2. **Database changes**: Update `database.sql` and create migration file
-3. **Adding features**: Follow existing MVC pattern in controllers/views
-4. **Debugging**: Error reporting enabled in `config.php` for development
+### Database Changes
+1. Create new SQL file in `migrations/` (e.g., `002_add_feature.sql`)
+2. Run `php migrations/migrate.php`
 
 ### Git Commit Guidelines
 - Never include "Co-Authored-By: Claude" in commit messages

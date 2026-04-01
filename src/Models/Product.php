@@ -112,11 +112,18 @@ class Product
 
     public function delete(int $id): void
     {
-        $this->db->delete('product_tags', 'product_id = ?', [$id]);
-        $this->db->delete('product_images', 'product_id = ?', [$id]);
-        $this->db->delete('favorites', 'product_id = ?', [$id]);
-        $this->db->delete('reviews', 'product_id = ?', [$id]);
-        $this->db->delete('products', 'id = ?', [$id]);
+        $this->db->beginTransaction();
+        try {
+            $this->db->delete('product_tags', 'product_id = ?', [$id]);
+            $this->db->delete('product_images', 'product_id = ?', [$id]);
+            $this->db->delete('favorites', 'product_id = ?', [$id]);
+            $this->db->delete('reviews', 'product_id = ?', [$id]);
+            $this->db->delete('products', 'id = ?', [$id]);
+            $this->db->commit();
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
+        }
     }
 
     public function addImage(int $productId, string $imageUrl): int

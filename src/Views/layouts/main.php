@@ -53,7 +53,7 @@ use App\Core\Session;
 <?php if (!empty($flash)): ?>
 <div class="container mt-3">
     <div class="alert alert-<?= View::e($flash['type'] === 'error' ? 'danger' : $flash['type']) ?> alert-dismissible fade show">
-        <?= $flash['message'] ?>
+        <?= nl2br(View::e($flash['message'])) ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 </div>

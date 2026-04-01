@@ -51,21 +51,28 @@ class User
 
     public function delete(int $id): void
     {
-        $this->db->delete('messages', 'sender_id = ? OR receiver_id = ?', [$id, $id]);
-        $this->db->delete('reviews', 'user_id = ?', [$id]);
-        $this->db->delete('favorites', 'user_id = ?', [$id]);
+        $this->db->beginTransaction();
+        try {
+            $this->db->delete('messages', 'sender_id = ? OR receiver_id = ?', [$id, $id]);
+            $this->db->delete('reviews', 'user_id = ?', [$id]);
+            $this->db->delete('favorites', 'user_id = ?', [$id]);
 
-        $products = $this->db->fetchAll("SELECT id FROM products WHERE user_id = ?", [$id]);
-        foreach ($products as $product) {
-            $this->db->delete('product_images', 'product_id = ?', [$product['id']]);
-            $this->db->delete('product_tags', 'product_id = ?', [$product['id']]);
+            $products = $this->db->fetchAll("SELECT id FROM products WHERE user_id = ?", [$id]);
+            foreach ($products as $product) {
+                $this->db->delete('product_images', 'product_id = ?', [$product['id']]);
+                $this->db->delete('product_tags', 'product_id = ?', [$product['id']]);
+            }
+            $this->db->delete('products', 'user_id = ?', [$id]);
+
+            $this->db->delete('forum_replies', 'user_id = ?', [$id]);
+            $this->db->delete('forum_topics', 'user_id = ?', [$id]);
+
+            $this->db->delete('users', 'id = ?', [$id]);
+            $this->db->commit();
+        } catch (\Exception $e) {
+            $this->db->rollBack();
+            throw $e;
         }
-        $this->db->delete('products', 'user_id = ?', [$id]);
-
-        $this->db->delete('forum_replies', 'user_id = ?', [$id]);
-        $this->db->delete('forum_topics', 'user_id = ?', [$id]);
-
-        $this->db->delete('users', 'id = ?', [$id]);
     }
 
     public function existsWithUsername(string $username, ?int $excludeId = null): bool

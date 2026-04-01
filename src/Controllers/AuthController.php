@@ -46,6 +46,8 @@ class AuthController extends BaseController
             }
 
             Session::remove('login_attempts');
+            session_regenerate_id(true);
+            $_SESSION['_csrf_token'] = bin2hex(random_bytes(32));
             Session::set('user_id', $user['id']);
             Session::set('username', $user['username']);
             Session::set('role', $user['role']);
@@ -88,7 +90,7 @@ class AuthController extends BaseController
             }
 
             if (!empty($errors)) {
-                $this->flash('error', implode('<br>', $errors));
+                $this->flash('error', implode("\n", $errors));
                 $this->render('auth/register', [
                     'title' => 'Registreren',
                     'username' => $username,

@@ -113,7 +113,7 @@ class ProfileController extends BaseController
             }
 
             if (!empty($errors)) {
-                $this->flash('error', implode('<br>', $errors));
+                $this->flash('error', implode("\n", $errors));
                 $this->render('profile/edit', [
                     'title' => 'Profiel Bewerken',
                     'profile_user' => $user,
