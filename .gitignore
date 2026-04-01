@@ -6,6 +6,7 @@
 # Composer dependencies
 /vendor/
 composer.phar
+composer.lock
 
 # IDE and editor files
 .idea/
