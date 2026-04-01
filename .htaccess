@@ -24,7 +24,7 @@ php_value max_input_time 300
 </FilesMatch>
 
 # Voorkom toegang tot gevoelige bestanden
-<FilesMatch "^(composer\.json|composer\.lock|package\.json|package-lock\.json|\.env|\.gitignore|README\.md)$">
+<FilesMatch "^(composer\.json|composer\.lock|package\.json|package-lock\.json|\.env|\.gitignore|README\.md|phpunit\.xml)$">
     Order allow,deny
     Deny from all
 </FilesMatch>
@@ -35,43 +35,12 @@ php_value max_input_time 300
     Allow from all
 </FilesMatch>
 
-# Voorkom toegang tot de includes directory
-<IfModule mod_rewrite.c>
-    RewriteRule ^includes/ - [F,L]
-</IfModule>
-
-# Voorkom toegang tot de controllers directory
-<IfModule mod_rewrite.c>
-    RewriteRule ^controllers/ - [F,L]
-</IfModule>
-
-# Voorkom toegang tot de views directory
-<IfModule mod_rewrite.c>
-    RewriteRule ^views/ - [F,L]
-</IfModule>
-
-# Voorkom toegang tot de src directory
-<IfModule mod_rewrite.c>
-    RewriteRule ^src/ - [F,L]
-</IfModule>
-
-# Voorkom toegang tot de admin directory (behalve via de juiste route)
-<IfModule mod_rewrite.c>
-    RewriteCond %{REQUEST_URI} !^/admin$
-    RewriteRule ^admin/ - [F,L]
-</IfModule>
-
-# Voorkom toegang tot de Database.php file
-<Files "Database.php">
-    Order allow,deny
-    Deny from all
-</Files>
-
-# Voorkom toegang tot de config.php file
-<Files "config.php">
-    Order allow,deny
-    Deny from all
-</Files>
+# Block access to sensitive directories
+RewriteRule ^src/ - [F,L]
+RewriteRule ^migrations/ - [F,L]
+RewriteRule ^tests/ - [F,L]
+RewriteRule ^vendor/ - [F,L]
+RewriteRule ^docs/ - [F,L]
 
 # Voorkom toegang tot de .htaccess file
 <Files ".htaccess">
