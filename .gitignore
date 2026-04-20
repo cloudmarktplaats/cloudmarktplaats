@@ -145,6 +145,9 @@ $RECYCLE.BIN/
 .Trash-*
 .nfs*
 
+# Worktrees
+.worktrees/
+
 # Project specific
 /config/local/
 *.local.config.php

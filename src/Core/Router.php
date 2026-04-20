@@ -2,51 +2,81 @@
 
 namespace App\Core;
 
-class Router {
+class Router
+{
     private array $routes = [];
-    private string $currentPath;
-    private string $currentMethod;
 
-    public function __construct() {
-        $this->currentPath = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
-        $this->currentMethod = $_SERVER['REQUEST_METHOD'];
+    public function get(string $path, string $handler, array $middleware = []): self
+    {
+        return $this->addRoute('GET', $path, $handler, $middleware);
     }
 
-    public function get(string $path, string $handler): void {
-        $this->addRoute('GET', $path, $handler);
+    public function post(string $path, string $handler, array $middleware = []): self
+    {
+        return $this->addRoute('POST', $path, $handler, $middleware);
     }
 
-    public function post(string $path, string $handler): void {
-        $this->addRoute('POST', $path, $handler);
+    public function both(string $path, string $handler, array $middleware = []): self
+    {
+        $this->addRoute('GET', $path, $handler, $middleware);
+        return $this->addRoute('POST', $path, $handler, $middleware);
     }
 
-    private function addRoute(string $method, string $path, string $handler): void {
+    private function addRoute(string $method, string $path, string $handler, array $middleware): self
+    {
+        [$controller, $action] = explode('@', $handler);
         $this->routes[] = [
             'method' => $method,
             'path' => $path,
-            'handler' => $handler
+            'controller' => $controller,
+            'action' => $action,
+            'middleware' => $middleware,
         ];
+        return $this;
     }
 
-    public function dispatch(): void {
+    public function match(string $method, string $uri): ?array
+    {
+        $uri = '/' . trim(parse_url($uri, PHP_URL_PATH), '/');
+        if ($uri === '/') {
+            $uri = '/';
+        }
+
         foreach ($this->routes as $route) {
-            if ($route['method'] === $this->currentMethod && $this->matchPath($route['path'])) {
-                [$controller, $method] = explode('@', $route['handler']);
-                $controllerClass = "App\\Controllers\\{$controller}";
-                $controllerInstance = new $controllerClass();
-                $controllerInstance->$method();
-                return;
+            if ($route['method'] !== $method) {
+                continue;
+            }
+
+            $params = $this->matchPath($route['path'], $uri);
+            if ($params !== null) {
+                return [
+                    'controller' => $route['controller'],
+                    'action' => $route['action'],
+                    'middleware' => $route['middleware'],
+                    'params' => $params,
+                ];
             }
         }
-        
-        // 404 handler
-        header("HTTP/1.0 404 Not Found");
-        echo "404 Not Found";
+
+        return null;
     }
 
-    private function matchPath(string $routePath): bool {
-        $pattern = preg_replace('/\{([a-zA-Z]+)\}/', '([^/]+)', $routePath);
-        $pattern = str_replace('/', '\/', $pattern);
-        return (bool) preg_match('/^' . $pattern . '$/', $this->currentPath);
+    private function matchPath(string $routePath, string $uri): ?array
+    {
+        $pattern = preg_replace('/\{(\w+)\}/', '(?P<$1>[^/]+)', $routePath);
+        $pattern = '#^' . $pattern . '$#';
+
+        if (!preg_match($pattern, $uri, $matches)) {
+            return null;
+        }
+
+        $params = [];
+        foreach ($matches as $key => $value) {
+            if (is_string($key)) {
+                $params[$key] = $value;
+            }
+        }
+
+        return $params;
     }
-} 
+}
