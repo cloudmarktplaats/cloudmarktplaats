@@ -40,6 +40,9 @@ $router->both('/profile/edit', 'ProfileController@edit', ['auth', 'legal']);
 $router->post('/profile/delete', 'ProfileController@delete', ['auth', 'legal']);
 $router->get('/profile/products/{id}', 'ProfileController@products');
 $router->get('/profile/topics/{id}', 'ProfileController@topics');
+$router->get('/profile/security', 'ProfileController@security', ['auth', 'legal']);
+$router->post('/profile/security/oauth/{provider}/unlink', 'ProfileController@unlinkOAuth', ['auth', 'legal']);
+$router->post('/profile/security/wallet/{id}/unlink', 'ProfileController@unlinkWallet', ['auth', 'legal']);
 
 // Dashboard
 $router->get('/dashboard', 'DashboardController@index', ['auth', 'legal']);
