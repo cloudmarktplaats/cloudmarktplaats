@@ -7,6 +7,8 @@ use App\Models\User;
 use App\Models\Product;
 use App\Models\Review;
 use App\Models\Forum;
+use App\Models\OAuthProvider;
+use App\Models\WalletAddress;
 
 class ProfileController extends BaseController
 {
@@ -150,5 +152,75 @@ class ProfileController extends BaseController
         Session::flash('success', 'Account verwijderd.');
         header('Location: /');
         exit;
+    }
+
+    public function security(): void
+    {
+        $userId = $this->userId();
+        if ($userId === null) {
+            $this->redirect('/auth/login');
+            return;
+        }
+
+        $user = $this->db->fetch("SELECT * FROM users WHERE id = ?", [$userId]);
+        $oauth = (new OAuthProvider())->findByUser($userId);
+        $wallets = (new WalletAddress())->findByUser($userId);
+
+        $this->render('profile/security', [
+            'title' => 'Beveiliging',
+            'user_row' => $user,
+            'oauth' => $oauth,
+            'wallets' => $wallets,
+            'auth_methods_count' => $this->countAuthMethods($userId),
+        ]);
+    }
+
+    public function unlinkOAuth(string $provider): void
+    {
+        $userId = $this->userId();
+        if ($userId === null) {
+            $this->redirect('/auth/login');
+            return;
+        }
+
+        if ($this->countAuthMethods($userId) <= 1) {
+            $this->flash('error', 'Je kunt je laatste inlogmethode niet loskoppelen.');
+            $this->redirect('/profile/security');
+            return;
+        }
+
+        (new OAuthProvider())->unlink($userId, $provider);
+        $this->flash('success', 'Koppeling verwijderd.');
+        $this->redirect('/profile/security');
+    }
+
+    public function unlinkWallet(string $id): void
+    {
+        $userId = $this->userId();
+        if ($userId === null) {
+            $this->redirect('/auth/login');
+            return;
+        }
+
+        if ($this->countAuthMethods($userId) <= 1) {
+            $this->flash('error', 'Je kunt je laatste inlogmethode niet loskoppelen.');
+            $this->redirect('/profile/security');
+            return;
+        }
+
+        (new WalletAddress())->unlink($userId, (int) $id);
+        $this->flash('success', 'Wallet ontkoppeld.');
+        $this->redirect('/profile/security');
+    }
+
+    public function countAuthMethods(int $userId): int
+    {
+        $user = $this->db->fetch("SELECT password FROM users WHERE id = ?", [$userId]);
+        $passwordCount = ($user && !empty($user['password'])) ? 1 : 0;
+
+        $oauthCount = (int) $this->db->fetch("SELECT COUNT(*) AS c FROM oauth_providers WHERE user_id = ?", [$userId])['c'];
+        $walletCount = (int) $this->db->fetch("SELECT COUNT(*) AS c FROM wallet_addresses WHERE user_id = ?", [$userId])['c'];
+
+        return $passwordCount + $oauthCount + $walletCount;
     }
 }
