@@ -1,6 +1,7 @@
 <?php
 use App\Core\View;
 use App\Core\Session;
+use App\Core\Config;
 ?>
 <!DOCTYPE html>
 <html lang="nl">
@@ -14,6 +15,7 @@ use App\Core\Session;
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
     <script src="https://unpkg.com/hyperscript.org@0.9.12"></script>
     <meta name="csrf-token" content="<?= View::e(Session::get('_csrf_token', '')) ?>">
+    <meta name="wc-project-id" content="<?= View::e(Config::get('WALLETCONNECT_PROJECT_ID', '')) ?>">
 </head>
 <body>
 
@@ -75,6 +77,8 @@ use App\Core\Session;
                 <ul class="list-unstyled">
                     <li><a href="/product" class="text-muted">Marktplaats</a></li>
                     <li><a href="/forum" class="text-muted">Forum</a></li>
+                    <li><a href="/legal/tos" class="text-muted">Algemene Voorwaarden</a></li>
+                    <li><a href="/legal/privacy" class="text-muted">Privacybeleid</a></li>
                 </ul>
             </div>
             <div class="col-md-4">
@@ -103,5 +107,7 @@ document.body.addEventListener('htmx:configRequest', function(event) {
 var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
 tooltipTriggerList.map(function (el) { return new bootstrap.Tooltip(el); });
 </script>
+
+<?php require __DIR__ . '/../partials/cookie_banner.php'; ?>
 </body>
 </html>
