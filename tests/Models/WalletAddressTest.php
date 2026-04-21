@@ -9,6 +9,16 @@ use App\Models\WalletAddress;
 
 class WalletAddressTest extends TestCase
 {
+    // 42-char hex addresses (0x + 40 hex chars) used in tests. Prefix 0xfeedbeef
+    // reserved for test fixtures so LIKE-based cleanup does not touch real data.
+    private const TEST_ADDR_1 = '0xfeedbeef00000000000000000000000000000001';
+    private const TEST_ADDR_2 = '0xfeedbeef00000000000000000000000000000002';
+    private const TEST_ADDR_3 = '0xfeedbeef00000000000000000000000000000003';
+    private const TEST_ADDR_4 = '0xfeedbeef00000000000000000000000000000004';
+    private const TEST_ADDR_5 = '0xfeedbeef00000000000000000000000000000005';
+    private const TEST_ADDR_6 = '0xfeedbeef00000000000000000000000000000006';
+    private const TEST_ADDR_UPPER = '0xFEEDBEEF000000000000000000000000000000AA';
+
     private WalletAddress $model;
     private Database $db;
     private int $userId;
@@ -21,7 +31,7 @@ class WalletAddressTest extends TestCase
         $this->db = Database::getInstance();
         $this->model = new WalletAddress();
 
-        $this->db->query("DELETE FROM wallet_addresses WHERE address LIKE '0x000000000000000000000000000000000000test%'");
+        $this->db->query("DELETE FROM wallet_addresses WHERE address LIKE '0xfeedbeef%'");
         $this->db->query("DELETE FROM users WHERE username LIKE 'test_wallet_%'");
         $this->userId = $this->db->insert('users', [
             'username' => 'test_wallet_u1',
@@ -32,54 +42,51 @@ class WalletAddressTest extends TestCase
 
     protected function tearDown(): void
     {
-        $this->db->query("DELETE FROM wallet_addresses WHERE address LIKE '0x000000000000000000000000000000000000test%'");
+        $this->db->query("DELETE FROM wallet_addresses WHERE address LIKE '0xfeedbeef%'");
         $this->db->query("DELETE FROM users WHERE username LIKE 'test_wallet_%'");
     }
 
     public function testLinkStoresLowercased(): void
     {
-        $addr = '0x000000000000000000000000000000000000TEST';
-        $id = $this->model->link($this->userId, $addr, 1);
+        $id = $this->model->link($this->userId, self::TEST_ADDR_UPPER, 1);
         $this->assertGreaterThan(0, $id);
 
         $row = $this->db->fetch("SELECT address FROM wallet_addresses WHERE id = ?", [$id]);
-        $this->assertSame(strtolower($addr), $row['address']);
+        $this->assertSame(strtolower(self::TEST_ADDR_UPPER), $row['address']);
     }
 
     public function testFindByAddressIsCaseInsensitive(): void
     {
-        $lower = '0x000000000000000000000000000000000000test1';
-        $this->model->link($this->userId, $lower, 1);
-        $row = $this->model->findByAddress(strtoupper($lower));
+        $this->model->link($this->userId, self::TEST_ADDR_1, 1);
+        $row = $this->model->findByAddress(strtoupper(self::TEST_ADDR_1));
         $this->assertNotFalse($row);
     }
 
     public function testDuplicateAddressThrows(): void
     {
-        $addr = '0x000000000000000000000000000000000000test2';
-        $this->model->link($this->userId, $addr, 1);
+        $this->model->link($this->userId, self::TEST_ADDR_2, 1);
         $this->expectException(\PDOException::class);
-        $this->model->link($this->userId, $addr, 1);
+        $this->model->link($this->userId, self::TEST_ADDR_2, 1);
     }
 
     public function testFindByUserReturnsAll(): void
     {
-        $this->model->link($this->userId, '0x000000000000000000000000000000000000test3', 1);
-        $this->model->link($this->userId, '0x000000000000000000000000000000000000test4', 8453);
+        $this->model->link($this->userId, self::TEST_ADDR_3, 1);
+        $this->model->link($this->userId, self::TEST_ADDR_4, 8453);
         $rows = $this->model->findByUser($this->userId);
         $this->assertCount(2, $rows);
     }
 
     public function testUnlinkRemovesRowOwnedByUser(): void
     {
-        $id = $this->model->link($this->userId, '0x000000000000000000000000000000000000test5', 1);
+        $id = $this->model->link($this->userId, self::TEST_ADDR_5, 1);
         $this->assertTrue($this->model->unlink($this->userId, $id));
         $this->assertFalse($this->db->fetch("SELECT * FROM wallet_addresses WHERE id = ?", [$id]));
     }
 
     public function testUnlinkFailsForOtherUser(): void
     {
-        $id = $this->model->link($this->userId, '0x000000000000000000000000000000000000test6', 1);
+        $id = $this->model->link($this->userId, self::TEST_ADDR_6, 1);
         $this->assertFalse($this->model->unlink($this->userId + 99999, $id));
     }
 }

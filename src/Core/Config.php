@@ -21,6 +21,8 @@ class Config
 
         self::$config = $_ENV;
         self::$loaded = true;
+
+        date_default_timezone_set(self::get('APP_TIMEZONE', 'Europe/Amsterdam'));
     }
 
     public static function get(string $key, mixed $default = null): mixed
