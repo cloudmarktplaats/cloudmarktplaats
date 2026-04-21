@@ -5,6 +5,7 @@ namespace App\Core;
 use App\Core\Middleware\CsrfMiddleware;
 use App\Core\Middleware\AuthMiddleware;
 use App\Core\Middleware\AdminMiddleware;
+use App\Core\Middleware\LegalAcceptanceMiddleware;
 
 class App
 {
@@ -15,6 +16,7 @@ class App
         'csrf' => CsrfMiddleware::class,
         'auth' => AuthMiddleware::class,
         'admin' => AdminMiddleware::class,
+        'legal' => LegalAcceptanceMiddleware::class,
     ];
 
     public function __construct(string $basePath)
@@ -103,6 +105,11 @@ class App
         if ($name === 'admin') {
             Session::flash('error', 'Geen toegang.');
             header('Location: /');
+            exit;
+        }
+
+        if ($name === 'legal') {
+            header('Location: /legal/accept');
             exit;
         }
     }
