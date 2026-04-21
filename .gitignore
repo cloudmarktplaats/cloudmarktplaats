@@ -19,6 +19,7 @@ Thumbs.db
 # Logs and databases
 *.log
 *.sql
+!migrations/*.sql
 *.sqlite
 /storage/logs/
 error_log
