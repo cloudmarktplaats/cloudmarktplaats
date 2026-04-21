@@ -1,0 +1,5 @@
+{
+    "message": "cloudmarkplaats.test wants you to sign in with your Ethereum account:\n0x2c7536e3605d9c16a7a3d7b1898e529396a65c23\n\nLog in bij Cloudmarkplaats\n\nURI: https:\/\/cloudmarkplaats.test\nVersion: 1\nChain ID: 1\nNonce: FIXTUREnonceFIXTUREnonceFIXTUREnn\nIssued At: 2026-04-21T19:41:02Z",
+    "signature": "0xc8f4aedf534a82f107ce6035ddacd8005c9d4e5ce931d01a543d85f64592758d56f334cb5f9b3020ec634c89c510b6f803c9bb940b4fa059096ed4acf1fa06c81c",
+    "expected_address": "0x2c7536e3605d9c16a7a3d7b1898e529396a65c23"
+}
