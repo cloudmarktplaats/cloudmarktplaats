@@ -59,3 +59,11 @@ $router->get('/legal/tos', 'LegalController@tos');
 $router->get('/legal/privacy', 'LegalController@privacy');
 $router->get('/legal/accept', 'LegalController@showAccept', ['auth']);
 $router->post('/legal/accept', 'LegalController@accept', ['auth']);
+
+// OAuth
+$router->get('/auth/oauth/{provider}', 'OAuthController@redirect');
+$router->get('/auth/oauth/{provider}/callback', 'OAuthController@callback');
+
+// Web3
+$router->post('/auth/web3/nonce', 'Web3Controller@nonce');
+$router->post('/auth/web3/verify', 'Web3Controller@verify');
