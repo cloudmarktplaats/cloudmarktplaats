@@ -24,6 +24,26 @@
                         </div>
                     </form>
 
+                    <div class="text-center my-4">
+                        <span class="text-muted">of</span>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="/auth/oauth/google" class="btn btn-outline-secondary">
+                            <i class="bi bi-google me-2"></i>Inloggen met Google
+                        </a>
+                        <a href="/auth/oauth/github" class="btn btn-outline-dark">
+                            <i class="bi bi-github me-2"></i>Inloggen met GitHub
+                        </a>
+                        <button type="button" id="web3-metamask" class="btn btn-outline-warning">
+                            🦊 MetaMask
+                        </button>
+                        <button type="button" id="web3-walletconnect" class="btn btn-outline-primary">
+                            <i class="bi bi-qr-code-scan me-2"></i>WalletConnect
+                        </button>
+                    </div>
+                    <div id="web3-status" class="text-muted small mt-2 text-center"></div>
+
                     <div class="text-center mt-4">
                         <p class="mb-0">Nog geen account?
                             <a href="/auth/register" class="text-decoration-none">Registreer hier</a>
@@ -34,3 +54,4 @@
         </div>
     </div>
 </div>
+<script src="/assets/js/web3-login.js" defer></script>
