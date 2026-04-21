@@ -22,8 +22,8 @@ class LegalAcceptanceMiddlewareTest extends TestCase
         $this->db->query("DELETE FROM legal_documents WHERE content LIKE 'TEST_%'");
         $this->db->query("DELETE FROM users WHERE username LIKE 'test_laccept_%'");
 
-        $this->db->insert('legal_documents', ['type' => 'tos', 'version' => 1, 'language' => 'nl', 'content' => 'TEST_tos', 'published_at' => '2026-01-01 00:00:00']);
-        $this->db->insert('legal_documents', ['type' => 'privacy', 'version' => 1, 'language' => 'nl', 'content' => 'TEST_priv', 'published_at' => '2026-01-01 00:00:00']);
+        $this->db->insert('legal_documents', ['type' => 'tos', 'version' => 88, 'language' => 'nl', 'content' => 'TEST_tos', 'published_at' => '2026-01-01 00:00:00']);
+        $this->db->insert('legal_documents', ['type' => 'privacy', 'version' => 88, 'language' => 'nl', 'content' => 'TEST_priv', 'published_at' => '2026-01-01 00:00:00']);
 
         $this->userId = $this->db->insert('users', [
             'username' => 'test_laccept_u1',
@@ -50,8 +50,8 @@ class LegalAcceptanceMiddlewareTest extends TestCase
     public function testPassesWhenUserAcceptedCurrent(): void
     {
         $this->db->update('users', [
-            'tos_version' => 1, 'tos_accepted_at' => '2026-01-02 00:00:00',
-            'privacy_version' => 1, 'privacy_accepted_at' => '2026-01-02 00:00:00',
+            'tos_version' => 88, 'tos_accepted_at' => '2026-01-02 00:00:00',
+            'privacy_version' => 88, 'privacy_accepted_at' => '2026-01-02 00:00:00',
         ], 'id = ?', [$this->userId]);
 
         $_SESSION['user_id'] = $this->userId;
