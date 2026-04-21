@@ -1,7 +1,7 @@
 CREATE TABLE wallet_addresses (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id INT NOT NULL,
-    address CHAR(42) NOT NULL,
+    address VARCHAR(66) NOT NULL,
     chain_id INT UNSIGNED NOT NULL,
     verified_at DATETIME NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
