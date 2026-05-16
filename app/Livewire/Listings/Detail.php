@@ -6,6 +6,7 @@ namespace App\Livewire\Listings;
 
 use App\Jobs\Listings\IncrementViewJob;
 use App\Models\Listing;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -40,6 +41,16 @@ class Detail extends Component
 
         if ($listing === null) {
             abort(404);
+        }
+
+        // Canonicalize the URL. The ulid alone identifies the listing, so
+        // anyone can craft `/listings/{ulid}-anything` and still land on
+        // the right detail page. That's bad for SEO (duplicate-content
+        // signals) and lets people share misleading slugs ("...-broken-
+        // worthless"). Permanent-redirect to the slug we own so canonical
+        // signals point at one URL.
+        if ($slug !== $listing->slug) {
+            abort(new RedirectResponse("/listings/{$listing->ulid}-{$listing->slug}", 301));
         }
 
         $this->listing = $listing;

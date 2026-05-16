@@ -68,6 +68,14 @@ it('Detail contact button redirects anon → /login with return_to', function ()
         ->assertRedirect('/login?return_to=/listings/'.$listing->ulid.'-'.$listing->slug);
 });
 
+it('Detail 301-redirects to the canonical slug if the URL slug differs', function () {
+    $listing = Listing::factory()->published()->create(['slug' => 'apple-imac-g3']);
+
+    $this->get("/listings/{$listing->ulid}-something-fake")
+        ->assertStatus(301)
+        ->assertRedirect("/listings/{$listing->ulid}-apple-imac-g3");
+});
+
 it('Detail contact button shows messaging-coming-soon notice for authed users', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
