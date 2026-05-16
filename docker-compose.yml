@@ -42,6 +42,20 @@ services:
     ports: ["9000:9000", "9001:9001"]
     volumes: ["miniodata:/data"]
 
+  queue-worker:
+    build: ./docker/php-fpm
+    command: php artisan queue:work --tries=3 --backoff=30 --max-time=3600
+    volumes: ["./:/app"]
+    depends_on: [postgres, redis]
+    restart: unless-stopped
+
+  scheduler:
+    build: ./docker/php-fpm
+    command: php artisan schedule:work
+    volumes: ["./:/app"]
+    depends_on: [postgres, redis]
+    restart: unless-stopped
+
 volumes:
   pgdata:
   miniodata:
