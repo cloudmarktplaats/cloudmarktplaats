@@ -6,4 +6,8 @@ parameters:
         - app
         - config
     level: 8
-    ignoreErrors: []
+    ignoreErrors:
+        # `redirect()->intended()` returns RedirectResponse at runtime, but
+        # the helper signature also allows Redirector. We declare the union
+        # for accuracy; PHPStan resolves intended() to RedirectResponse only.
+        - '#Method App\\Livewire\\Auth\\TwoFactorChallenge::complete\(\) never returns Livewire\\Features\\SupportRedirects\\Redirector so it can be removed from the return type\.#'

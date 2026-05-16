@@ -63,6 +63,13 @@ class OAuthController extends Controller
             $identity->update(['last_used_at' => now()]);
             $identityUser = $identity->user;
             if ($identityUser instanceof User) {
+                // Gate on 2FA before completing login.
+                if ($identityUser->two_factor_confirmed_at !== null) {
+                    $request->session()->put('pending_2fa_user_id', $identityUser->id);
+
+                    return redirect('/2fa/challenge');
+                }
+
                 auth()->login($identityUser);
                 $this->postLogin($request, $identityUser);
             }

@@ -93,8 +93,16 @@ class Web3Controller extends Controller
         if ($identity !== null) {
             $identityUser = $identity->user;
             if ($identityUser instanceof User) {
-                auth()->login($identityUser);
                 $identity->update(['last_used_at' => now()]);
+
+                // Gate on 2FA before completing login.
+                if ($identityUser->two_factor_confirmed_at !== null) {
+                    $request->session()->put('pending_2fa_user_id', $identityUser->id);
+
+                    return response()->json(['ok' => true, 'redirect' => '/2fa/challenge']);
+                }
+
+                auth()->login($identityUser);
                 $this->postLogin($request, $identityUser);
             }
 

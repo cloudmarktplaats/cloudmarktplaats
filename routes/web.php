@@ -8,6 +8,7 @@ use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\SiweOnboarding;
+use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Profile\Security as ProfileSecurity;
 use App\Livewire\Profile\TwoFactorSetup;
@@ -76,3 +77,9 @@ Route::get('/profile/security', ProfileSecurity::class)
 Route::get('/profile/security/2fa', TwoFactorSetup::class)
     ->middleware('auth')
     ->name('profile.security.2fa');
+
+// 2FA challenge after primary auth — guest-accessible because the user
+// is not yet seated in the session at this point.
+Route::get('/2fa/challenge', TwoFactorChallenge::class)
+    ->middleware('guest')
+    ->name('2fa.challenge');

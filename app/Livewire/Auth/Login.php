@@ -1,13 +1,18 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Livewire\Auth;
 
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\Features\SupportRedirects\Redirector;
 
 #[Layout('layouts.app')]
 class Login extends Component
@@ -18,7 +23,7 @@ class Login extends Component
 
     public bool $remember = false;
 
-    public function submit(): void
+    public function submit(): RedirectResponse|Redirector|null
     {
         $this->validate([
             'email' => ['required', 'email'],
@@ -30,17 +35,33 @@ class Login extends Component
             throw ValidationException::withMessages(['email' => 'Te veel pogingen. Probeer over een minuut opnieuw.']);
         }
 
-        if (! Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+        $user = User::where('email', $this->email)->first();
+        if ($user === null || ! Hash::check($this->password, $user->password_hash ?? '')) {
             RateLimiter::hit($key, 60);
             throw ValidationException::withMessages(['email' => 'Inloggegevens onjuist.']);
         }
 
         RateLimiter::clear($key);
+
+        // Gate: 2FA challenge precedes the actual login. The primary
+        // credential check has passed, but we don't seat the session
+        // until the second factor is verified.
+        if ($user->two_factor_confirmed_at !== null) {
+            session(['pending_2fa_user_id' => $user->id]);
+
+            return redirect('/2fa/challenge');
+        }
+
+        auth()->login($user, $this->remember);
         if (request()->hasSession()) {
             request()->session()->regenerate();
         }
-        Auth::user()?->update(['last_login_at' => now(), 'last_login_ip' => request()->ip()]);
-        $this->redirectIntended('/');
+        $user->forceFill([
+            'last_login_at' => now(),
+            'last_login_ip' => request()->ip(),
+        ])->save();
+
+        return redirect()->intended('/');
     }
 
     public function render(): View
