@@ -73,7 +73,7 @@ class Wizard extends Component
             $this->condition = (string) $listing->condition;
             $this->price_cents = (int) $listing->price_cents;
             $this->is_trade_allowed = (bool) $listing->is_trade_allowed;
-            $this->description = (string) $listing->description;
+            $this->description = (string) ($listing->description ?? '');
             $this->region_postcode = $listing->region_postcode;
             /** @var array<string, bool> $opts */
             $opts = (array) $listing->shipping_options;
@@ -165,9 +165,10 @@ class Wizard extends Component
                 'condition' => $this->condition,
                 'price_cents' => $this->price_cents,
                 'is_trade_allowed' => $this->is_trade_allowed,
-                // Step 2 fields are required by the migration; fill harmless
-                // defaults on initial draft creation so the row is valid.
-                'description' => $this->description !== '' ? $this->description : '(draft — wordt aangevuld in stap 2)',
+                // Description is nullable for drafts (see migration
+                // `add_nullable_description_to_listings`); the step-2
+                // validation enforces a real value before submit.
+                'description' => $this->description !== '' ? $this->description : null,
                 'state' => 'draft',
             ]
             : [

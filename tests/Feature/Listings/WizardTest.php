@@ -32,7 +32,11 @@ it('walks step 1 → 2 → 3 and persists a draft listing per step', function ()
     $draft = Listing::query()->where('user_id', $this->user->id)->firstOrFail();
     expect($draft->state)->toBe('draft')
         ->and($draft->title)->toBe('Vintage Sun Sparc Server')
-        ->and($draft->price_cents)->toBe(25000);
+        ->and($draft->price_cents)->toBe(25000)
+        // Step 1 saves the draft without forcing a placeholder description.
+        // The migration `add_nullable_description_to_listings` makes the
+        // column nullable so a draft can honestly say "no description yet".
+        ->and($draft->description)->toBeNull();
 
     $component
         ->set('description', 'Werkende UltraSPARC met origineel rack.')
