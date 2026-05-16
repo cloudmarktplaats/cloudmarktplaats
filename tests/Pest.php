@@ -50,3 +50,4 @@ function something()
 }
 
 require_once __DIR__.'/Helpers/SocialiteTestHelpers.php';
+require_once __DIR__.'/Helpers/SiweTestHelpers.php';

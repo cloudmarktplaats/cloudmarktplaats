@@ -1,0 +1,5 @@
+{
+    "_warning": "TEST FIXTURE ONLY. This private key is committed to the repo for deterministic SIWE signature tests. NEVER deploy with this key. NEVER send funds to this address.",
+    "private_key_hex": "0x4c0883a69102937d6231471b5dbb6204fe5129617082792ae468d01a3f362318",
+    "address": "0x2c7536e3605d9c16a7a3d7b1898e529396a65c23"
+}
