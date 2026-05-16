@@ -21,6 +21,25 @@ it('renders the legal documents list for admins', function () {
         ->assertCanSeeTableRecords(LegalDocument::all());
 });
 
+it('hides the edit action on published legal documents (immutable trail)', function () {
+    $published = LegalDocument::factory()->create([
+        'type' => 'tos',
+        'locale' => 'nl',
+        'version' => '1.0.0',
+        'published_at' => now()->subDay(),
+    ]);
+    $draft = LegalDocument::factory()->create([
+        'type' => 'tos',
+        'locale' => 'nl',
+        'version' => '1.1.0',
+        'published_at' => null,
+    ]);
+
+    Livewire::test(ListLegalDocuments::class)
+        ->assertTableActionHidden('edit', $published)
+        ->assertTableActionVisible('edit', $draft);
+});
+
 it('publishes a new version of an existing document', function () {
     $doc = LegalDocument::factory()->create([
         'type' => 'tos',

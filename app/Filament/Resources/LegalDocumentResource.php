@@ -73,7 +73,14 @@ class LegalDocumentResource extends Resource
                 ]),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                // Published rows are part of the legal trail and must
+                // remain byte-for-byte stable: a user who clicked
+                // "ik accepteer" against ToS v1.0.0 should always be able
+                // to reread the exact text they accepted. Editing drafts
+                // (published_at = null) is fine; once a row is live, force
+                // admins through "Publish new version" instead.
+                Tables\Actions\EditAction::make()
+                    ->visible(fn (LegalDocument $record): bool => $record->published_at === null),
                 Tables\Actions\Action::make('publish_new_version')
                     ->icon('heroicon-o-arrow-up-on-square')
                     ->color('primary')
