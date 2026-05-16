@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\Auth\Web3Controller;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\Listings\ReportController;
 use App\Http\Controllers\Listings\SearchController;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
@@ -115,3 +116,9 @@ Route::get('/listings/{ulid}-{slug}', ListingDetail::class)
 // Full-text search — backed by the SearchInterface contract so the
 // Postgres implementation can be swapped for Meilisearch later.
 Route::get('/search', SearchController::class)->name('listings.search');
+
+// Reports — auth-only. Polymorphic store endpoint; Foundation only
+// wires listings, more reportable types attach in later phases.
+Route::post('/reports/listing/{listing}', [ReportController::class, 'storeForListing'])
+    ->middleware('auth')
+    ->name('reports.listing.store');
