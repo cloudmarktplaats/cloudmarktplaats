@@ -53,4 +53,14 @@ it('force-disables 2FA and clears two_factor_* fields', function () {
     expect($target->two_factor_secret)->toBeNull()
         ->and($target->two_factor_recovery_codes)->toBeNull()
         ->and($target->two_factor_confirmed_at)->toBeNull();
+
+    // Force-disabling 2FA is a sensitive support action; the AdminAction
+    // audit row is what makes it accountable. If the AdminActionLogger
+    // call ever gets dropped this test fails loudly.
+    expect(AdminAction::query()
+        ->where('action', 'user.force_disable_2fa')
+        ->where('target_type', 'user')
+        ->where('target_id', $target->id)
+        ->exists()
+    )->toBeTrue();
 });
