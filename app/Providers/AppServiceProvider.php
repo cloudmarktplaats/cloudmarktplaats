@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Services\Auth\SiweMessageBuilder;
+use App\Services\Storage\StorageInterface;
+use App\Services\Storage\StorageManager;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\GitLab\GitLabExtendSocialite;
@@ -21,6 +23,16 @@ class AppServiceProvider extends ServiceProvider
                 parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'localhost',
                 (string) config('app.url'),
             ),
+        );
+
+        // Storage abstraction: the StorageManager registry resolves the
+        // active driver from `cloudmarktplaats.storage.driver`, and the
+        // bare StorageInterface binding delegates to that registry so
+        // typed constructor parameters auto-resolve the right driver.
+        $this->app->singleton(StorageManager::class);
+        $this->app->bind(
+            StorageInterface::class,
+            fn ($app) => $app->make(StorageManager::class)->driver(),
         );
     }
 

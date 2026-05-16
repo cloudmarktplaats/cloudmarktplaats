@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Storage\StorageManager;
 use Database\Factories\ListingPhotoFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,18 +36,19 @@ class ListingPhoto extends Model
     /**
      * Resolve a URL for a derived variant of this photo.
      *
-     * The full implementation, which uses the StorageManager service to
-     * dispatch on `$this->disk` and return a CDN-style URL, lands in
-     * Phase G. Until then we expose the variant path so callers can wire
-     * it up against the default disk if needed.
+     * Photos are stored under `listings/{ulid}/{photo_id}/{variant}.{ext}`,
+     * where the model row records the path to the `card` variant. We
+     * compose sibling variant paths from that base and resolve the URL
+     * via the {@see StorageManager} driver matching `$this->disk` so
+     * the same model works against local, S3, or future IPFS storage.
      */
     public function urlFor(string $variant = 'card'): string
     {
-        $base = preg_replace('/\.[^.]+$/', '', $this->path) ?? $this->path;
-        $ext = $variant === 'original'
-            ? pathinfo($this->path, PATHINFO_EXTENSION)
-            : 'webp';
+        $sourceExt = pathinfo($this->path, PATHINFO_EXTENSION);
+        $ext = $variant === 'original' ? $sourceExt : 'webp';
 
-        return dirname($base).'/'.$variant.'.'.$ext;
+        $variantPath = dirname($this->path).'/'.$variant.'.'.$ext;
+
+        return app(StorageManager::class)->driver($this->disk)->url($variantPath);
     }
 }
