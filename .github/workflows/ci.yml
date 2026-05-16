@@ -1,0 +1,65 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3' }
+      - run: composer install --no-progress --no-interaction
+      - run: ./vendor/bin/pint --test
+
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3' }
+      - run: composer install --no-progress --no-interaction
+      - run: ./vendor/bin/phpstan analyse --memory-limit=512M
+
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env: { POSTGRES_DB: cloudmarktplaats_test, POSTGRES_USER: app, POSTGRES_PASSWORD: app }
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 10s --health-timeout 5s --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+    env:
+      DB_CONNECTION: pgsql
+      DB_HOST: 127.0.0.1
+      DB_DATABASE: cloudmarktplaats_test
+      DB_USERNAME: app
+      DB_PASSWORD: app
+      REDIS_HOST: 127.0.0.1
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3', extensions: pdo_pgsql, redis, gd, intl, zip, bcmath }
+      - run: composer install --no-progress --no-interaction
+      - run: psql "postgresql://app:app@127.0.0.1/cloudmarktplaats_test" -c "CREATE EXTENSION IF NOT EXISTS ltree; CREATE EXTENSION IF NOT EXISTS \"uuid-ossp\"; CREATE EXTENSION IF NOT EXISTS pg_trgm;"
+      - run: cp .env.example .env && php artisan key:generate
+      - run: ./vendor/bin/pest --parallel
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker compose build
+      - run: docker compose up -d
+      - run: |
+          for i in {1..30}; do
+            curl -fsS http://localhost:8080/healthz && break || sleep 2
+          done
