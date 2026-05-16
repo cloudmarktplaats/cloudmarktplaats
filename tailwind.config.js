@@ -1,4 +1,5 @@
 import defaultTheme from 'tailwindcss/defaultTheme';
+import forms from '@tailwindcss/forms';
 
 /** @type {import('tailwindcss').Config} */
 export default {
@@ -7,7 +8,7 @@ export default {
         './storage/framework/views/*.php',
         './resources/**/*.blade.php',
         './resources/**/*.js',
-        './resources/**/*.vue',
+        './app/Livewire/**/*.php',
     ],
     theme: {
         extend: {
@@ -16,5 +17,5 @@ export default {
             },
         },
     },
-    plugins: [],
+    plugins: [forms],
 };
