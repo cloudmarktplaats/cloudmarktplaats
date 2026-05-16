@@ -16,7 +16,13 @@ class HealthController extends Controller
         return response()->json([
             'db' => $this->check(fn () => DB::select('select 1')),
             'redis' => $this->check(fn () => Redis::ping()),
-            'storage' => $this->check(fn () => Storage::disk('local')->exists('') || true),
+            'storage' => $this->check(function () {
+                Storage::disk('local')->put('healthz.tmp', 'ok');
+                if (Storage::disk('local')->get('healthz.tmp') !== 'ok') {
+                    throw new \RuntimeException('storage read mismatch');
+                }
+                Storage::disk('local')->delete('healthz.tmp');
+            }),
             'version' => trim((string) @file_get_contents(base_path('VERSION'))) ?: 'dev',
         ]);
     }
