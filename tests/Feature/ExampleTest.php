@@ -14,6 +14,7 @@ class ExampleTest extends TestCase
     {
         $response = $this->get('/');
 
-        $response->assertStatus(200);
+        // `/` redirects to /listings after Phase G.
+        $response->assertRedirect('/listings');
     }
 }

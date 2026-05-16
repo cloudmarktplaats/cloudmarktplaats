@@ -10,15 +10,16 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\SiweOnboarding;
 use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Listings\Browse as ListingsBrowse;
+use App\Livewire\Listings\Detail as ListingDetail;
 use App\Livewire\Listings\Wizard as ListingWizard;
 use App\Livewire\Profile\Security as ProfileSecurity;
 use App\Livewire\Profile\TwoFactorSetup;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Homepage: redirect to the listings grid until a curated landing exists.
+Route::redirect('/', '/listings');
 
 Route::get('/healthz', HealthController::class);
 
@@ -95,3 +96,17 @@ Route::get('/listings/{listing:ulid}/edit', ListingWizard::class)
     ->middleware(['auth', 'verified'])
     ->where('listing', '[0-9A-HJKMNP-TV-Z]{26}')
     ->name('listings.edit');
+
+// Public browse + detail. Anonymous browsing is enabled by feature flag
+// `anonymous_browse`. Category routing uses an ltree path so all
+// descendants of the prefix are included automatically.
+Route::get('/listings', ListingsBrowse::class)->name('listings.index');
+
+Route::get('/c/{categoryPath}', ListingsBrowse::class)
+    ->where('categoryPath', '[a-z0-9._-]+')
+    ->name('listings.category');
+
+Route::get('/listings/{ulid}-{slug}', ListingDetail::class)
+    ->where('ulid', '[0-9A-HJKMNP-TV-Z]{26}')
+    ->where('slug', '[a-z0-9-]+')
+    ->name('listings.detail');

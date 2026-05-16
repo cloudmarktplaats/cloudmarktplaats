@@ -1,6 +1,9 @@
 <?php
 
 it('boots the application', function () {
-    $response = $this->get('/');
-    $response->assertStatus(200);
+    // `/` redirects to /listings after Phase G; check the redirect
+    // chain lands on a 200 page.
+    $this->get('/')
+        ->assertRedirect('/listings');
+    $this->get('/listings')->assertStatus(200);
 });

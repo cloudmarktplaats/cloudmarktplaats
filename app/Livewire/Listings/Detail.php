@@ -1,0 +1,70 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Livewire\Listings;
+
+use App\Jobs\Listings\IncrementViewJob;
+use App\Models\Listing;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\View\View;
+use Livewire\Attributes\Layout;
+use Livewire\Component;
+
+/**
+ * Public detail view for a single published listing.
+ *
+ * The route is `/listings/{ulid}-{slug}`; the slug exists for SEO and is
+ * not load-bearing — only the ulid identifies the listing. Anonymous
+ * users see the full listing (per `anonymous_browse` feature flag). The
+ * "Neem contact op" button gates behind login: anon visitors get
+ * redirected to `/login?return_to=...`; authed users see a notice that
+ * messaging arrives in the messaging sub-project.
+ *
+ * View counting is throttled per IP via {@see IncrementViewJob}; we
+ * dispatch after the response so it doesn't slow down rendering.
+ */
+#[Layout('layouts.app')]
+class Detail extends Component
+{
+    public Listing $listing;
+
+    public bool $showMessagingNotice = false;
+
+    public function mount(string $ulid, string $slug): void
+    {
+        $listing = Listing::query()
+            ->where('ulid', $ulid)
+            ->where('state', 'published')
+            ->first();
+
+        if ($listing === null) {
+            abort(404);
+        }
+
+        $this->listing = $listing;
+
+        Bus::dispatchAfterResponse(new IncrementViewJob(
+            $listing->id,
+            hash('sha256', (string) request()->ip().(string) config('app.key')),
+        ));
+    }
+
+    public function contactSeller(): mixed
+    {
+        if (! auth()->check()) {
+            $return = '/listings/'.$this->listing->ulid.'-'.$this->listing->slug;
+
+            return $this->redirect('/login?return_to='.$return);
+        }
+
+        $this->showMessagingNotice = true;
+
+        return null;
+    }
+
+    public function render(): View
+    {
+        return view('livewire.listings.detail');
+    }
+}
