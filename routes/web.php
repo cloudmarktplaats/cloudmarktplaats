@@ -7,6 +7,7 @@ use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
+use App\Livewire\Auth\SiweOnboarding;
 use App\Livewire\Auth\VerifyEmailNotice;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
@@ -60,3 +61,7 @@ Route::get('/oauth/{provider}/callback', [OAuthController::class, 'callback']);
 // the single-use nonce stored in auth_nonces.
 Route::get('/auth/web3/nonce', [Web3Controller::class, 'nonce']);
 Route::post('/auth/web3/verify', [Web3Controller::class, 'verify']);
+Route::get('/auth/web3/onboarding/{address}', SiweOnboarding::class)
+    ->where('address', '0x[a-fA-F0-9]{40}')
+    ->middleware('guest')
+    ->name('siwe.onboarding');
