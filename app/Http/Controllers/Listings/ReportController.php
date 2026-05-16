@@ -40,6 +40,25 @@ class ReportController extends Controller
             'details' => ['nullable', 'string', 'max:1000'],
         ]);
 
+        // Dedup: a user must not be able to file the same report twice
+        // against the same listing while their first one is still open.
+        // We re-allow once the moderation team has closed (resolved /
+        // dismissed) the original — that gives reporters a path to flag a
+        // re-listing of the same offending content. Implemented as a
+        // controller check rather than a unique index because the dedup
+        // semantics are scoped to "open" status, which a partial unique
+        // index could express but at the cost of pulling Postgres-specific
+        // syntax into the schema.
+        $alreadyOpen = Report::query()
+            ->where('reportable_type', $listing->getMorphClass())
+            ->where('reportable_id', $listing->id)
+            ->where('reporter_user_id', $userId)
+            ->where('status', 'open')
+            ->exists();
+        if ($alreadyOpen) {
+            return back()->with('status', 'Je hebt deze advertentie al gerapporteerd; onze moderators bekijken het.');
+        }
+
         Report::query()->create([
             'reportable_type' => $listing->getMorphClass(),
             'reportable_id' => $listing->id,

@@ -34,6 +34,31 @@ it('authed user can file a report; row carries reporter id', function () {
         ->and($report->status)->toBe('open');
 });
 
+it('refuses a duplicate report from the same reporter while an open report exists', function () {
+    $listing = Listing::factory()->published()->create();
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post("/reports/listing/{$listing->id}", ['reason' => 'spam'])
+        ->assertRedirect();
+
+    // Second submission should not create another row.
+    $this->actingAs($user)
+        ->post("/reports/listing/{$listing->id}", ['reason' => 'spam'])
+        ->assertRedirect();
+
+    expect(Report::query()->where('reportable_id', $listing->id)->count())->toBe(1);
+
+    // After moderation closes the original, the same user can flag again.
+    Report::query()->where('reportable_id', $listing->id)->update(['status' => 'resolved']);
+
+    $this->actingAs($user)
+        ->post("/reports/listing/{$listing->id}", ['reason' => 'spam'])
+        ->assertRedirect();
+
+    expect(Report::query()->where('reportable_id', $listing->id)->count())->toBe(2);
+});
+
 it('reports require auth', function () {
     $listing = Listing::factory()->published()->create();
 
