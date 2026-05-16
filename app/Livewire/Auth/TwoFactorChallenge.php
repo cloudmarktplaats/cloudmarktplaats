@@ -46,13 +46,16 @@ class TwoFactorChallenge extends Component
             abort(401);
         }
 
-        $key = '2fa:challenge:'.$userId;
-        if (RateLimiter::tooManyAttempts($key, 5)) {
+        $userKey = '2fa:challenge:user:'.$userId;
+        $ipKey = '2fa:challenge:ip:'.request()->ip();
+
+        if (RateLimiter::tooManyAttempts($userKey, 5) || RateLimiter::tooManyAttempts($ipKey, 20)) {
             throw ValidationException::withMessages([
                 'code' => 'Te veel pogingen. Probeer over een minuut opnieuw.',
             ]);
         }
-        RateLimiter::hit($key, 60);
+        RateLimiter::hit($userKey, 60);
+        RateLimiter::hit($ipKey, 60);
 
         $user = User::findOrFail($userId);
         $secret = $user->two_factor_secret;
@@ -81,7 +84,8 @@ class TwoFactorChallenge extends Component
     private function complete(User $user): RedirectResponse|Redirector
     {
         session()->forget('pending_2fa_user_id');
-        RateLimiter::clear('2fa:challenge:'.$user->id);
+        RateLimiter::clear('2fa:challenge:user:'.$user->id);
+        RateLimiter::clear('2fa:challenge:ip:'.request()->ip());
 
         auth()->login($user);
         if (request()->hasSession()) {

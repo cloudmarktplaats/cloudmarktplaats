@@ -74,3 +74,41 @@ it('rejects an invalid code', function (): void {
 
     expect(auth()->id())->toBeNull();
 });
+
+it('blocks after exceeding IP throttle even with different pending users', function (): void {
+    $secret2 = (new Google2FA)->generateSecretKey();
+    $user2 = User::factory()->create([
+        'email' => 'c@d.nl',
+        'password_hash' => bcrypt('p'),
+    ]);
+    $user2->forceFill([
+        'two_factor_secret' => $secret2,
+        'two_factor_recovery_codes' => ['recoveryBB1', 'recoveryBB2'],
+        'two_factor_confirmed_at' => now(),
+    ])->save();
+    UserIdentity::factory()->password()->for($user2)->create();
+
+    RateLimiter::clear('2fa:challenge:user:'.$this->user->id);
+    RateLimiter::clear('2fa:challenge:user:'.$user2->id);
+    RateLimiter::clear('2fa:challenge:ip:127.0.0.1');
+
+    $users = [$this->user->id, $user2->id];
+    $throttled = false;
+
+    for ($i = 0; $i < 21; $i++) {
+        $userId = $users[$i % 2];
+        session(['pending_2fa_user_id' => $userId]);
+
+        $component = Livewire::test(TwoFactorChallenge::class)
+            ->set('code', '000000')
+            ->call('submit');
+
+        $errors = $component->errors()->get('code');
+        if (! empty($errors) && str_contains($errors[0], 'Te veel pogingen')) {
+            $throttled = true;
+            break;
+        }
+    }
+
+    expect($throttled)->toBeTrue();
+});
