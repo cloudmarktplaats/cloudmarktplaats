@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HealthController;
+use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\VerifyEmailNotice;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -29,3 +30,13 @@ Route::post('/email/verification-notification', function () {
 
     return back()->with('status', 'verification-link-sent');
 })->middleware(['auth', 'throttle:6,1'])->name('verification.send');
+
+Route::get('/login', Login::class)->middleware('guest')->name('login');
+
+Route::post('/logout', function () {
+    auth()->logout();
+    request()->session()->invalidate();
+    request()->session()->regenerateToken();
+
+    return redirect('/');
+})->middleware('auth')->name('logout');
