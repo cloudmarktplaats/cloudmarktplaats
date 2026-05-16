@@ -1,66 +1,145 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Cloudmarktplaats
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+> Een open marktplaats voor IT-hardware, opgezet door en voor de Nederlandstalige tech-community. **Niet** alweer een SaaS met dark patterns; gewoon spullen ruilen, kopen en verkopen onder gebruikers die elkaar (digitaal) kunnen vertrouwen.
 
-## About Laravel
+Cloudmarktplaats is open source onder de **AGPL-3.0** (zie `LICENSE`). Dat betekent: forken mag, host het zelf als je dat wilt — maar wijzigingen die je publiekelijk draait moeten ook open zijn. Geen wallgardens.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+> 🇬🇧 An English summary is in [README-EN.md](README-EN.md).
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+---
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+## 1. Wat het is
 
-## Learning Laravel
+Een herstart-vanaf-nul van het oude (PHP-zonder-framework) Cloudmarkplaats. **Foundation** (deze release, `v0.1.0-foundation`) levert het skelet:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+- Authenticatie via e-mail/wachtwoord, GitHub/GitLab (OAuth), Ethereum-wallet (SIWE) en TOTP-2FA.
+- Een advertentiewizard, foto-pipeline (EXIF wordt automatisch gestript), categorieën, full-text zoeken (Postgres tsvector), reports.
+- Een Filament-3 adminpanel met audit-trail, modder- en admin-rollen.
+- Juridische versionering van ToS en privacyverklaring met re-acceptatie-flow.
+- Een privacy-statement dat ook handhaafbaar is in code (`IpStripperJob`, geen trackers, geen cookiebanner-theater).
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+Wat **nog niet** in Foundation zit, wel in toekomstige sub-projecten: messaging, reviews, sponsoring/donaties, DAC7-export, Web3-escrow, analytics. Zie ook [§ 8 Bekende gaten](#8-bekende-gaten).
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+---
 
-## Laravel Sponsors
+## 2. Stack
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+| Laag | Keuze | Waarom |
+|---|---|---|
+| Runtime | **PHP 8.3** | Strict types, readonly props, intersection types — gebruikt het allemaal. |
+| Framework | **Laravel 11** | Filament + Livewire ecosysteem, batterijen inbegrepen. |
+| Database | **Postgres 16** | Generated `tsvector` kolom voor zoekindex, `ltree` voor categorieboom, native `jsonb`. |
+| Cache & queue | **Redis 7** | View-counter SETNX, throttle-buckets, queue-backend. |
+| UI | **Livewire 3 + Tailwind 3** | Component-based, geen SPA-overhead. |
+| Admin | **Filament 3** | Resources voor users, listings, reports, legal docs, audit trail. |
+| Storage | Lokale disk (default) / S3-compatible / IPFS pinning (later) | Achter `StorageInterface`. |
+| Tests | **Pest 3** | Feature-tests draaien in Docker via Postgres + Redis. |
+| Lint | **Pint** + **PHPStan level 8** | Beide blijven groen in CI. |
 
-### Premium Partners
+Mail in dev gaat via Mailpit (`docker compose`), object-storage via MinIO.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+---
 
-## Contributing
+## 3. Quickstart
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+```bash
+git clone https://github.com/cloudmarktplaats/cloudmarktplaats.git
+cd cloudmarktplaats
+cp .env.example .env
+docker compose up -d
+docker compose exec php-fpm composer install
+docker compose exec php-fpm php artisan key:generate
+docker compose exec php-fpm php artisan migrate --seed
+```
 
-## Code of Conduct
+Open `http://localhost:8080`. Demo-inloggegevens zitten in de seeders (`DemoUserSeeder`). Mailpit-UI staat op `http://localhost:8025`.
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+Tests:
 
-## Security Vulnerabilities
+```bash
+docker compose exec php-fpm ./vendor/bin/pest
+./vendor/bin/pint --test
+./vendor/bin/phpstan analyse --memory-limit=512M
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+Health-endpoint: `curl -fsS http://localhost:8080/healthz`.
 
-## License
+---
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 4. DAC7 juridische positie
+
+De EU-richtlijn DAC7 (Council Directive 2021/514) verplicht platforms om verkopers te rapporteren aan de Belastingdienst zodra zij in een kalenderjaar **30 transacties of €2.000** op het platform realiseren.
+
+Cloudmarktplaats wijkt op dit punt af van Marktplaats/Vinted/eBay: in Foundation **vinden geen transacties op-platform plaats**. Wij faciliteren ontmoeting (advertentie + contactknop) — de afhandeling gebeurt offline of via een externe betaaldienst die wij niet beheren. De `transactions`-tabel is alvast voorbereid voor toekomstige on-platform betaling/escrow, maar zolang die functionaliteit gated is achter `web3_escrow` / `donations` (default `false`), is er niets te rapporteren.
+
+Lees de volledige analyse in [`docs/dac7-position.md`](docs/dac7-position.md).
+
+---
+
+## 5. Feature flags
+
+Features worden geactiveerd in `config/cloudmarktplaats.php` (env-overrides via `.env`):
+
+| Flag | Standaard | Activerend sub-project |
+|---|---|---|
+| `anonymous_browse` | `true` | Foundation |
+| `oauth_github` / `oauth_gitlab` | `true` | Foundation |
+| `siwe` | `true` | Foundation |
+| `two_factor` | `true` | Foundation |
+| `messaging` | `false` | Messaging (#2) |
+| `meilisearch` | `false` | Search-upgrade (#3) |
+| `reputation` | `false` | Reviews (#4) |
+| `sponsoring` / `donations` | `false` | Sponsoring (#5) |
+| `dac7_reporting` | `false` | DAC7-module (#6) |
+| `web3_escrow` | `false` | Web3 (#7) |
+| `ipfs_pinning` | `false` | Web3 (#7) |
+| `umami_analytics` | `false` | Analytics (#8) |
+
+Zie de uitgebreidere tabel met betekenissen en sub-project-koppelingen in [`docs/feature-flags.md`](docs/feature-flags.md).
+
+---
+
+## 6. Privacy
+
+Wat we **niet** doen:
+
+- **Geen third-party trackers.** Geen Google Analytics, geen Facebook Pixel, geen Hotjar. Foundation ondersteunt later een self-hosted Umami-instantie achter `umami_analytics=true`; standaard staat hij uit.
+- **Geen cookiebanner.** Omdat er geen non-essential cookies zijn (alleen session + CSRF), is een banner overbodig — en die banners zijn op zichzelf een UX-misdrijf.
+- **Geen verkoop van data.** Punt.
+
+Wat we **wel** doen:
+
+- **IP-retentie max 24 uur.** `last_login_ip` wordt opgeslagen voor incident-response, maar `IpStripperJob` (hourly cron) wist het zodra de login ≥ 24 u oud is. Zie `app/Jobs/IpStripperJob.php`.
+- **EXIF/GPS strippen.** Foto-uploads worden door `StoreListingPhotoJob` herendcodeerd zonder EXIF — telefoons lekken anders het thuisadres van de verkoper.
+- **Versioned ToS/privacy.** Elke publicatie van een nieuwe versie triggert re-acceptatie via `LegalAcceptanceMiddleware`; het oude akkoord blijft als legal trail bewaard.
+
+Gegevensverzoeken (export / wissen) gaan via GitHub Issues; een geautomatiseerd portaal komt in een latere sub-project.
+
+---
+
+## 7. Bijdragen
+
+Cloudmarktplaats wordt door de community gebouwd. We werken via [GitHub Issues](https://github.com/cloudmarktplaats/cloudmarktplaats/issues):
+
+- **Bugs:** open een issue met reproductie-stappen.
+- **Features:** open een issue met de waarom-vraag; we discussiëren intentie voordat er code wordt gevormd. Specs leven in `docs/superpowers/specs/`.
+- **Pull requests:** geen verplichte CLA, maar je submission valt onder dezelfde AGPL-3.0 als de rest. Pint + PHPStan + Pest moeten groen blijven.
+
+Roadmap = de [Issues-tracker](https://github.com/cloudmarktplaats/cloudmarktplaats/issues). De grote brokken (sub-projecten 2–10) staan in [`docs/superpowers/specs/2026-05-16-cloudmarktplaats-v2-foundation-design.md`](docs/superpowers/specs/2026-05-16-cloudmarktplaats-v2-foundation-design.md) §12.
+
+---
+
+## 8. Bekende gaten
+
+We zijn eerlijk over wat (nog) niet werkt of niet af is in Foundation. Volledige lijst in [`docs/known-gaps.md`](docs/known-gaps.md). Hoofdpunten:
+
+- **Total-lockout recovery** (geen 2FA-token + geen recovery codes + geen e-mail-toegang) is op dit moment een handmatig support-pad. Self-service-recovery komt in een toekomstig support-sub-project.
+- **Foto-cleanup hook** ontbreekt: als een verkoper een advertentie verwijdert, blijven de blob-paden voorlopig staan. Cron-cleanup komt mee met sub-project #4.
+- **Messaging-knop** redirect naar een notice; de daadwerkelijke berichten-functionaliteit zit in sub-project #2.
+- **Wizard-resume UX** werkt (de draft wordt op elke stap bewaard), maar de surface voor "open je drafts" is nog niet aanwezig in het dashboard.
+
+---
+
+## Licentie
+
+[AGPL-3.0](LICENSE). Forken/zelfhosten mag — en moedigen we aan — maar als je een gewijzigde versie publiek draait, moet je je wijzigingen ook publiek maken.
