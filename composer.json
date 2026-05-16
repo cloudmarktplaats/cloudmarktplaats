@@ -8,6 +8,7 @@
     "require": {
         "php": "^8.3",
         "bacon/bacon-qr-code": "^3",
+        "intervention/image-laravel": "^1",
         "kornrunner/keccak": "^1.1",
         "laravel/framework": "^11.31",
         "laravel/socialite": "^5",
