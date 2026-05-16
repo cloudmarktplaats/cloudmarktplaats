@@ -27,7 +27,7 @@ it('authed user can file a report; row carries reporter id', function () {
         ->assertRedirect();
 
     $report = Report::query()->where('reportable_id', $listing->id)->firstOrFail();
-    expect($report->reportable_type)->toBe(Listing::class)
+    expect($report->reportable_type)->toBe('listing')
         ->and($report->reporter_user_id)->toBe($user->id)
         ->and($report->reason)->toBe('illegal')
         ->and($report->details)->toBe('Looks like a stolen Mac.')

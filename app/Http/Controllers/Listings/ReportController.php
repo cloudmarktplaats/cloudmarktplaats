@@ -41,7 +41,7 @@ class ReportController extends Controller
         ]);
 
         Report::query()->create([
-            'reportable_type' => Listing::class,
+            'reportable_type' => $listing->getMorphClass(),
             'reportable_id' => $listing->id,
             'reporter_user_id' => $userId,
             'reason' => $data['reason'],

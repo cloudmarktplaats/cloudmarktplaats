@@ -21,7 +21,7 @@ it('creates listing photos with ordering', function () {
 it('creates a report on a listing', function () {
     $listing = Listing::factory()->create();
     $r = Report::create([
-        'reportable_type' => Listing::class,
+        'reportable_type' => 'listing',
         'reportable_id' => $listing->id,
         'reason' => 'spam',
         'details' => 'looks fake',
@@ -52,7 +52,7 @@ it('logs an admin action', function () {
     AdminAction::create([
         'user_id' => $admin->id,
         'action' => 'listing.reject',
-        'target_type' => Listing::class,
+        'target_type' => 'listing',
         'target_id' => 1,
         'meta' => ['reason' => 'duplicate'],
         'ip_hash' => str_repeat('a', 64),

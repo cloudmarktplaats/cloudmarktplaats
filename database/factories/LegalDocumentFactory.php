@@ -19,7 +19,14 @@ class LegalDocumentFactory extends Factory
     {
         return [
             'type' => 'tos',
-            'version' => '1.0.0',
+            // Pseudo-random version keeps factory inserts from
+            // colliding on the (type, locale, version) unique index.
+            'version' => sprintf(
+                '%d.%d.%d',
+                fake()->numberBetween(1, 9),
+                fake()->numberBetween(0, 99),
+                fake()->unique()->numberBetween(0, 999),
+            ),
             'locale' => 'nl',
             'markdown_content' => '# ToS placeholder',
             'published_at' => null,

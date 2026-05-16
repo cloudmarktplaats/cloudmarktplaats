@@ -2,11 +2,16 @@
 
 namespace App\Models;
 
+use Database\Factories\AdminActionFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AdminAction extends Model
 {
+    /** @use HasFactory<AdminActionFactory> */
+    use HasFactory;
+
     public $timestamps = false;
 
     /** @var list<string> */

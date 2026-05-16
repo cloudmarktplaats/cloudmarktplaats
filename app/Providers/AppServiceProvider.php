@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Listing;
 use App\Services\Auth\SiweMessageBuilder;
 use App\Services\Search\PostgresSearchService;
 use App\Services\Search\SearchInterface;
 use App\Services\Storage\StorageInterface;
 use App\Services\Storage\StorageManager;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\GitLab\GitLabExtendSocialite;
@@ -55,5 +57,13 @@ class AppServiceProvider extends ServiceProvider
             SocialiteWasCalled::class,
             [GitLabExtendSocialite::class, 'handle'],
         );
+
+        // Morph map for polymorphic relations. Keeping aliases stable
+        // (instead of leaking fully-qualified class names into the DB) lets
+        // us rename / move models later without rewriting `reports` rows,
+        // and gives Filament a short label for the reportable target.
+        Relation::enforceMorphMap([
+            'listing' => Listing::class,
+        ]);
     }
 }
