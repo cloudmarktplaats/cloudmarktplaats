@@ -21,13 +21,35 @@ class UserIdentityFactory extends Factory
         return [
             'user_id' => User::factory(),
             'provider' => 'password',
+            // Placeholder; finalized in afterMaking() below so the value
+            // reflects the actual user id (avoids the unique-constraint
+            // collision that a fixed `password` token would cause).
             'provider_uid' => 'password',
         ];
     }
 
+    /**
+     * Ensure password identities get a unique provider_uid derived from the
+     * owning user's primary key. This keeps the (provider, provider_uid)
+     * unique index satisfied across any number of users.
+     */
+    public function configure(): static
+    {
+        return $this->afterMaking(function (UserIdentity $identity): void {
+            if ($identity->provider === 'password') {
+                $identity->provider_uid = (string) $identity->user_id;
+            }
+        })->afterCreating(function (UserIdentity $identity): void {
+            if ($identity->provider === 'password' && $identity->provider_uid !== (string) $identity->user_id) {
+                $identity->provider_uid = (string) $identity->user_id;
+                $identity->save();
+            }
+        });
+    }
+
     public function password(): static
     {
-        return $this->state(fn () => ['provider' => 'password', 'provider_uid' => 'password']);
+        return $this->state(fn () => ['provider' => 'password']);
     }
 
     public function github(string $uid): static

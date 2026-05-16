@@ -34,12 +34,12 @@ class DemoUserSeeder extends Seeder
                 ],
             );
 
-            // For the `password` provider, provider_uid scopes per-user; we
-            // use the user email so the (provider, provider_uid) unique
+            // For the `password` provider, provider_uid is derived from the
+            // user's primary key so the (provider, provider_uid) unique
             // constraint never collides across users.
             UserIdentity::firstOrCreate(
                 ['user_id' => $u->id, 'provider' => 'password'],
-                ['provider_uid' => $email],
+                ['provider_uid' => (string) $u->id],
             );
         }
     }
