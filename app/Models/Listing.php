@@ -75,7 +75,13 @@ class Listing extends Model
     {
         static::creating(function (self $l): void {
             $l->ulid = $l->ulid ?? (string) Str::ulid();
-            $l->slug = $l->slug ?: Str::slug($l->title).'-'.substr((string) $l->ulid, -6);
+            // The slug must match the public route regex `[a-z0-9-]+`,
+            // so we lowercase the ulid-suffix before appending it. ULIDs
+            // use [0-9A-HJKMNP-TV-Z] (uppercase Crockford base32); without
+            // strtolower the slug carries `01H...` letters and the
+            // detail URL would 404 against its own router constraint.
+            $suffix = strtolower(substr((string) $l->ulid, -6));
+            $l->slug = $l->slug ?: Str::slug($l->title).'-'.$suffix;
         });
     }
 }
