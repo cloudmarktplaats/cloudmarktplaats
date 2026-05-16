@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use Database\Factories\UserFactory;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasName;
+use Filament\Panel;
 use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -13,7 +16,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 
-class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
+class User extends Authenticatable implements CanResetPassword, FilamentUser, HasName, MustVerifyEmail
 {
     /** @use HasFactory<UserFactory> */
     use CanResetPasswordTrait, HasFactory, Notifiable, SoftDeletes;
@@ -79,6 +82,31 @@ class User extends Authenticatable implements CanResetPassword, MustVerifyEmail
     public function hasRole(string ...$roles): bool
     {
         return in_array($this->role, $roles, true);
+    }
+
+    /**
+     * Gate Filament panel access to staff roles.
+     *
+     * The Filament admin panel is reserved for moderators and admins; regular
+     * users hit a 403 via the `role` middleware on the panel route, and this
+     * method ensures the same outcome if any internal Filament check is
+     * invoked outside that middleware (e.g. component-level guards).
+     */
+    public function canAccessPanel(Panel $panel): bool
+    {
+        return $this->hasRole('admin', 'moderator');
+    }
+
+    /**
+     * Display name surfaced by Filament (avatar, header, audit log).
+     *
+     * Falls back to the username when `display_name` is empty so the panel
+     * never renders an empty avatar tooltip — Filament treats a `null` name
+     * as a runtime error.
+     */
+    public function getFilamentName(): string
+    {
+        return $this->display_name ?: $this->username ?? $this->email;
     }
 
     protected static function booted(): void

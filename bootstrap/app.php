@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -15,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // WalletConnect) which doesn't carry a Laravel session token. Replay
         // protection is provided by the single-use nonce in `auth_nonces`.
         $middleware->validateCsrfTokens(except: ['/auth/web3/verify']);
+
+        // `role:admin,moderator` guards staff-only routes such as the
+        // Filament admin panel.
+        $middleware->alias([
+            'role' => RoleMiddleware::class,
+        ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
