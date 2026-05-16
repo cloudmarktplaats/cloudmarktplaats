@@ -57,9 +57,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: docker compose build
-      - run: docker compose up -d
-      - run: |
+      - name: Bring up stack
+        run: |
+          cp .env.example .env
+          docker compose build
+          docker compose up -d
+          docker compose exec -T php-fpm composer install --no-progress --no-interaction
+          docker compose exec -T php-fpm php artisan key:generate
+      - name: Probe /healthz
+        run: |
           for i in {1..30}; do
-            curl -fsS http://localhost:8080/healthz && break || sleep 2
+            if curl -fsS http://localhost:8080/healthz; then
+              echo "healthz OK"
+              exit 0
+            fi
+            sleep 2
           done
+          echo "healthz never responded — dumping container logs"
+          docker compose logs
+          exit 1
