@@ -10,6 +10,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\SiweOnboarding;
 use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Listings\Wizard as ListingWizard;
 use App\Livewire\Profile\Security as ProfileSecurity;
 use App\Livewire\Profile\TwoFactorSetup;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -83,3 +84,14 @@ Route::get('/profile/security/2fa', TwoFactorSetup::class)
 Route::get('/2fa/challenge', TwoFactorChallenge::class)
     ->middleware('guest')
     ->name('2fa.challenge');
+
+// Listing wizard — auth + verified guard. The wizard persists drafts
+// after every step so users can resume later via /listings/{ulid}/edit.
+Route::get('/listings/new', ListingWizard::class)
+    ->middleware(['auth', 'verified'])
+    ->name('listings.create');
+
+Route::get('/listings/{listing:ulid}/edit', ListingWizard::class)
+    ->middleware(['auth', 'verified'])
+    ->where('listing', '[0-9A-HJKMNP-TV-Z]{26}')
+    ->name('listings.edit');
