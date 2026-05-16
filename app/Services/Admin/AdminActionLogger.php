@@ -55,6 +55,6 @@ class AdminActionLogger
     {
         $ip = request()->ip() ?? '0.0.0.0';
 
-        return hash('sha256', $ip.'|'.config('app.key'));
+        return hash('sha256', $ip.config('app.key'));
     }
 }
