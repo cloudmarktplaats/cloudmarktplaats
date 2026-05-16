@@ -12,6 +12,7 @@ use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * Filament resource for managing user accounts.
@@ -92,7 +93,19 @@ class UserResource extends Resource
                 Tables\Filters\TernaryFilter::make('is_banned'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->after(function (User $record): void {
+                        $changes = $record->getChanges();
+                        // Drop timestamps from the audit payload — they are
+                        // always present after a save and just add noise.
+                        unset($changes['updated_at']);
+                        if ($changes === []) {
+                            return;
+                        }
+                        AdminActionLogger::log('user.update', 'user', $record->id, [
+                            'changes' => $changes,
+                        ]);
+                    }),
                 Tables\Actions\Action::make('ban')
                     ->icon('heroicon-o-no-symbol')
                     ->color('danger')
@@ -141,7 +154,12 @@ class UserResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->after(function (Collection $records): void {
+                            AdminActionLogger::log('user.bulk_delete', 'user', 0, [
+                                'ids' => $records->pluck('id')->all(),
+                            ]);
+                        }),
                 ]),
             ]);
     }

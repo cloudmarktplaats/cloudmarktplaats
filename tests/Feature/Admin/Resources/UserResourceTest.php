@@ -38,6 +38,61 @@ it('bans a user with a reason via the ban action', function () {
     )->toBeTrue();
 });
 
+it('writes a user.update audit row when an admin edits a user via the row Edit action', function () {
+    $target = User::factory()->create([
+        'role' => 'user',
+        'display_name' => 'Original Name',
+    ]);
+
+    Livewire::test(ListUsers::class)
+        ->callTableAction('edit', $target, data: [
+            'email' => $target->email,
+            'username' => $target->username,
+            'display_name' => 'Renamed Person',
+            'role' => 'moderator',
+            'is_banned' => false,
+        ])
+        ->assertHasNoTableActionErrors();
+
+    $target->refresh();
+    expect($target->role)->toBe('moderator')
+        ->and($target->display_name)->toBe('Renamed Person');
+
+    $row = AdminAction::query()
+        ->where('action', 'user.update')
+        ->where('target_type', 'user')
+        ->where('target_id', $target->id)
+        ->firstOrFail();
+
+    expect($row->user_id)->toBe($this->admin->id)
+        ->and($row->meta)->toHaveKey('changes')
+        ->and($row->meta['changes'])->toHaveKey('role')
+        ->and($row->meta['changes']['role'])->toBe('moderator')
+        ->and($row->meta['changes'])->toHaveKey('display_name')
+        ->and($row->meta['changes'])->not->toHaveKey('updated_at');
+});
+
+it('writes a user.bulk_delete audit row when an admin bulk-deletes users', function () {
+    $a = User::factory()->create();
+    $b = User::factory()->create();
+
+    Livewire::test(ListUsers::class)
+        ->callTableBulkAction('delete', [$a, $b])
+        ->assertHasNoTableBulkActionErrors();
+
+    expect(User::query()->whereIn('id', [$a->id, $b->id])->count())->toBe(0)
+        ->and(User::withTrashed()->whereIn('id', [$a->id, $b->id])->count())->toBe(2);
+
+    $row = AdminAction::query()
+        ->where('action', 'user.bulk_delete')
+        ->where('target_type', 'user')
+        ->firstOrFail();
+
+    expect($row->user_id)->toBe($this->admin->id)
+        ->and($row->meta)->toHaveKey('ids')
+        ->and($row->meta['ids'])->toEqualCanonicalizing([$a->id, $b->id]);
+});
+
 it('force-disables 2FA and clears two_factor_* fields', function () {
     $target = User::factory()->create([
         'two_factor_secret' => 'secret-blob',
