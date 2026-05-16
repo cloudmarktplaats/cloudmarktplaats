@@ -17,6 +17,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Intervention\Image\Interfaces\ImageInterface;
 use Intervention\Image\Laravel\Facades\Image;
+use Throwable;
 
 /**
  * Photo-ingest pipeline for the listing wizard.
@@ -105,11 +106,34 @@ class StoreListingPhotoJob implements ShouldQueue
         $cardPath = $baseDir.'/card.webp';
         $thumbPath = $baseDir.'/thumb.webp';
 
-        $this->writeOriginal($storage, $stripped, $originalPath, $actual);
-        $this->writeCover($storage, $stripped, $cardPath, 600);
-        $this->writeCover($storage, $stripped, $thumbPath, 200);
+        // Variant writes + the final `path` update form one logical unit:
+        // either all three variants land AND the DB row points at them, or
+        // nothing persists. We track every blob we successfully write so a
+        // mid-pipeline failure (disk full, transient S3 error, codec
+        // explosion in a later variant) can roll back the partial state
+        // before re-throwing.
+        $written = [];
+        try {
+            $this->writeOriginal($storage, $stripped, $originalPath, $actual);
+            $written[] = $originalPath;
+            $this->writeCover($storage, $stripped, $cardPath, 600);
+            $written[] = $cardPath;
+            $this->writeCover($storage, $stripped, $thumbPath, 200);
+            $written[] = $thumbPath;
 
-        $photo->forceFill(['path' => $cardPath])->save();
+            $photo->forceFill(['path' => $cardPath])->save();
+        } catch (Throwable $e) {
+            foreach ($written as $path) {
+                try {
+                    $storage->delete($path);
+                } catch (Throwable) {
+                    // Best-effort cleanup; swallow secondary failures so
+                    // the original exception surfaces to the caller.
+                }
+            }
+            $photo->delete();
+            throw $e;
+        }
     }
 
     private function writeOriginal(StorageInterface $storage, object $image, string $path, string $mime): void
