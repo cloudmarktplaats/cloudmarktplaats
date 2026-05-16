@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\Auth\Web3Controller;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\Listings\SearchController;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
@@ -110,3 +111,7 @@ Route::get('/listings/{ulid}-{slug}', ListingDetail::class)
     ->where('ulid', '[0-9A-HJKMNP-TV-Z]{26}')
     ->where('slug', '[a-z0-9-]+')
     ->name('listings.detail');
+
+// Full-text search — backed by the SearchInterface contract so the
+// Postgres implementation can be swapped for Meilisearch later.
+Route::get('/search', SearchController::class)->name('listings.search');

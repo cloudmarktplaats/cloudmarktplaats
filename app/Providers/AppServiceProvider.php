@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Services\Auth\SiweMessageBuilder;
+use App\Services\Search\PostgresSearchService;
+use App\Services\Search\SearchInterface;
 use App\Services\Storage\StorageInterface;
 use App\Services\Storage\StorageManager;
 use Illuminate\Support\Facades\Event;
@@ -34,6 +36,11 @@ class AppServiceProvider extends ServiceProvider
             StorageInterface::class,
             fn ($app) => $app->make(StorageManager::class)->driver(),
         );
+
+        // Search abstraction: Postgres FTS for Foundation; a later
+        // sub-project can swap in Meilisearch by binding a different
+        // implementation here.
+        $this->app->singleton(SearchInterface::class, PostgresSearchService::class);
     }
 
     /**
