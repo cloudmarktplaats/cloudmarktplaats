@@ -48,6 +48,15 @@ De middleware wordt **alleen** toegepast op routes met juridisch gevolg (wizard)
 ### E2E walkthrough via HTTP, niet via Pest Browser
 De §14 acceptatie-walkthrough is geïmplementeerd als HTTP-level feature-test (`tests/Feature/Acceptance/AcceptanceWalkthroughTest.php`) in plaats van een echte Playwright-driven browser-test. Reden: Pest Browser + Livewire 3 + Filament 3 + onze huidige docker-compose-setup gaf te fragiele resultaten in CI (snapshot-validation-issues, race conditions tijdens form-submit). De HTTP-test dekt alle waarneembare effecten (state-transitions, DB-rijen, redirect-targets) maar test geen JS-rendering. Pickup-werk voor een latere CI-modernisatie zodra we Playwright fatsoenlijk in compose gehost krijgen.
 
+### Acceptance walkthrough slaat de 2FA-enable-stap over
+De walkthrough doorloopt de §14-journey (registreren → e-mail-verifiëren → wizard → admin-approve → anoniem zoeken → contact-CTA) **minus** de "2FA inschakelen vóór listing"-stap die spec §14 noemt. Reden:
+
+- De walkthrough draait op HTTP-niveau (`Livewire::test(...)` + signed URLs), niet via Pest Browser. Een echte TOTP-flow vereist een browser-driver die `qrcode-svg` rendert, een TOTP-secret afleest, en het OTP terug-typt — exact het stuk dat in onze docker-stack flaky was.
+- 2FA-inschakelen en de challenge-flow zijn al volledig gedekt door dedicated tests: `tests/Feature/Profile/TwoFactor*Test.php` (enable + confirm + recovery codes) en `tests/Feature/Auth/TwoFactorChallengeTest.php` (challenge + recovery + lockout).
+- Een 2FA-stap bovenop de walkthrough geplakt zou dus alleen testen wat de unit-suite al test, ten koste van CI-stabiliteit.
+
+Pickup-werk voor de Pest Browser-migratie (zie hierboven): dan kan de walkthrough de TOTP-stap inline doen.
+
 ### Geen browser-test voor Filament-paneel
 De Filament-tests draaien via `Livewire::test(...)`-helpers (geen browser). Voor Foundation voldoende; Filament's eigen test-suite dekt de UI-laag.
 
