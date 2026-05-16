@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\LegalAcceptance;
 use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,8 +20,13 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // `role:admin,moderator` guards staff-only routes such as the
         // Filament admin panel.
+        // `legal` re-prompts users to accept the latest ToS/privacy
+        // when a new revision has been published since their last
+        // acceptance — applied to legally-consequential routes (the
+        // listing wizard, etc.). See {@see LegalAcceptance}.
         $middleware->alias([
             'role' => RoleMiddleware::class,
+            'legal' => LegalAcceptance::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

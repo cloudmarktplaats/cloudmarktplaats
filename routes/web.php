@@ -6,6 +6,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\Listings\ReportController;
 use App\Http\Controllers\Listings\SearchController;
 use App\Livewire\Auth\ForgotPassword;
+use App\Livewire\Auth\LegalAccept;
 use App\Livewire\Auth\Login;
 use App\Livewire\Auth\Register;
 use App\Livewire\Auth\ResetPassword;
@@ -88,14 +89,23 @@ Route::get('/2fa/challenge', TwoFactorChallenge::class)
     ->middleware('guest')
     ->name('2fa.challenge');
 
-// Listing wizard — auth + verified guard. The wizard persists drafts
-// after every step so users can resume later via /listings/{ulid}/edit.
+// Legal re-acceptance page. Mounted under `auth` only — applying the
+// `legal` middleware here would create a redirect loop with itself.
+Route::get('/legal/accept', LegalAccept::class)
+    ->middleware('auth')
+    ->name('legal.accept');
+
+// Listing wizard — auth + verified + legal guard. Drafts are persisted
+// after every step so users can resume via /listings/{ulid}/edit. The
+// `legal` middleware re-prompts ToS / privacy acceptance whenever a new
+// version has been published since the user last agreed (creating a
+// listing is a legally consequential action).
 Route::get('/listings/new', ListingWizard::class)
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'legal'])
     ->name('listings.create');
 
 Route::get('/listings/{listing:ulid}/edit', ListingWizard::class)
-    ->middleware(['auth', 'verified'])
+    ->middleware(['auth', 'verified', 'legal'])
     ->where('listing', '[0-9A-HJKMNP-TV-Z]{26}')
     ->name('listings.edit');
 
