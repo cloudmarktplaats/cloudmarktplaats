@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\OAuthController;
+use App\Http\Controllers\Auth\Web3Controller;
 use App\Http\Controllers\HealthController;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
@@ -52,3 +53,10 @@ Route::get('/reset-password/{token}', ResetPassword::class)->middleware('guest')
 // App\Services\Auth\OAuthProviderRegistry; unknown providers 404.
 Route::get('/oauth/{provider}/redirect', [OAuthController::class, 'redirect']);
 Route::get('/oauth/{provider}/callback', [OAuthController::class, 'callback']);
+
+// SIWE (Sign-In With Ethereum) — JSON endpoints driven by the wallet
+// adapter on the front-end. /verify is CSRF-exempt (see bootstrap/app.php)
+// because the wallet adapter has no session cookie; replay is blocked by
+// the single-use nonce stored in auth_nonces.
+Route::get('/auth/web3/nonce', [Web3Controller::class, 'nonce']);
+Route::post('/auth/web3/verify', [Web3Controller::class, 'verify']);

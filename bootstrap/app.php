@@ -11,7 +11,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        //
+        // The SIWE verify endpoint is called from a wallet adapter (MetaMask /
+        // WalletConnect) which doesn't carry a Laravel session token. Replay
+        // protection is provided by the single-use nonce in `auth_nonces`.
+        $middleware->validateCsrfTokens(except: ['/auth/web3/verify']);
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //

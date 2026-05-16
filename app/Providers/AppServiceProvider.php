@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\Auth\SiweMessageBuilder;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use SocialiteProviders\GitLab\GitLabExtendSocialite;
@@ -14,7 +15,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(
+            SiweMessageBuilder::class,
+            fn () => new SiweMessageBuilder(
+                parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'localhost',
+                (string) config('app.url'),
+            ),
+        );
     }
 
     /**
