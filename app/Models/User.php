@@ -61,6 +61,14 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasMany(UserIdentity::class);
     }
 
+    /**
+     * @return HasMany<LegalAcceptance, $this>
+     */
+    public function legalAcceptances(): HasMany
+    {
+        return $this->hasMany(LegalAcceptance::class);
+    }
+
     public function hasIdentity(string $provider): bool
     {
         return $this->identities()->where('provider', $provider)->exists();
