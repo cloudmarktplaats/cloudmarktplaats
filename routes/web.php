@@ -10,6 +10,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\SiweOnboarding;
 use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Profile\Security as ProfileSecurity;
+use App\Livewire\Profile\TwoFactorSetup;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
 
@@ -71,3 +72,7 @@ Route::get('/auth/web3/onboarding/{address}', SiweOnboarding::class)
 Route::get('/profile/security', ProfileSecurity::class)
     ->middleware('auth')
     ->name('profile.security');
+
+Route::get('/profile/security/2fa', TwoFactorSetup::class)
+    ->middleware('auth')
+    ->name('profile.security.2fa');

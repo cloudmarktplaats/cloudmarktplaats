@@ -7,11 +7,13 @@
     "license": "AGPL-3.0-or-later",
     "require": {
         "php": "^8.3",
+        "bacon/bacon-qr-code": "^3",
         "kornrunner/keccak": "^1.1",
         "laravel/framework": "^11.31",
         "laravel/socialite": "^5",
         "laravel/tinker": "^2.9",
         "livewire/livewire": "^3.5",
+        "pragmarx/google2fa-laravel": "^2",
         "simplito/elliptic-php": "^1.0.10",
         "socialiteproviders/gitlab": "^4.1"
     },
