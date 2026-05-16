@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\HealthController;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\Login;
@@ -46,3 +47,8 @@ Route::post('/logout', function () {
 Route::get('/forgot-password', ForgotPassword::class)->middleware('guest')->name('password.request');
 
 Route::get('/reset-password/{token}', ResetPassword::class)->middleware('guest')->name('password.reset');
+
+// OAuth — provider-agnostic. Allowed providers are whitelisted in
+// App\Services\Auth\OAuthProviderRegistry; unknown providers 404.
+Route::get('/oauth/{provider}/redirect', [OAuthController::class, 'redirect']);
+Route::get('/oauth/{provider}/callback', [OAuthController::class, 'callback']);
