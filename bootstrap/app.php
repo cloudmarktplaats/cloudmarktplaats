@@ -20,6 +20,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // protection is provided by the single-use nonce in `auth_nonces`.
         $middleware->validateCsrfTokens(except: ['/auth/web3/verify']);
 
+        // Production sits behind a Caddy reverse proxy on a separate host;
+        // trust X-Forwarded-* so request scheme/host/IP reflect the public
+        // edge (e.g. for https URL generation and rate-limit keys).
+        $middleware->trustProxies(at: '*');
+
         // `role:admin,moderator` guards staff-only routes such as the
         // Filament admin panel.
         // `legal` re-prompts users to accept the latest ToS/privacy
