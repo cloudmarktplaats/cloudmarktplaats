@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+--cmp-blue:#1A56FF;
+--cmp-blue-dark:#0F3ACC;
+--cmp-blue-light:#4A7AFF;
+--cmp-blue-muted:#1A56FF22;
+--cmp-signal:#00FF88;
+--cmp-signal-dark:#00CC6A;
+--cmp-amber:#F59E0B;
+--cmp-bg:#0A0D14;
+--cmp-bg2:#0F1320;
+--cmp-bg3:#151B2E;
+--cmp-surface:#1A2035;
+--cmp-border:#1E2A45;
+--cmp-text:#E8EDF8;
+--cmp-muted:#7B8DB0;
+--cmp-faint:#3A4560;
+--ff-sans:'Space Grotesk',sans-serif;
+--ff-mono:'JetBrains Mono',monospace;
+}
+body{background:var(--cmp-bg);color:var(--cmp-text);font-family:var(--ff-sans);font-size:14px;line-height:1.6;padding:0}
+
+.page{max-width:680px;margin:0 auto;padding:24px 20px 48px}
+
+/* Section */
+.section{margin:0 0 48px}
+.section-label{font-family:var(--ff-mono);font-size:11px;color:var(--cmp-blue);letter-spacing:.12em;text-transform:uppercase;margin:0 0 16px;display:flex;align-items:center;gap:8px}
+.section-label::before{content:'';display:block;width:16px;height:1px;background:var(--cmp-blue)}
+
+/* Header */
+.brand-header{display:flex;align-items:flex-end;justify-content:space-between;padding:0 0 32px;border-bottom:1px solid var(--cmp-border);margin:0 0 40px}
+.logo-mark{display:flex;align-items:center;gap:12px}
+.logo-icon{width:44px;height:44px;position:relative}
+.wordmark{font-family:var(--ff-sans);font-weight:700;font-size:22px;color:var(--cmp-text);letter-spacing:-.02em}
+.wordmark span{color:var(--cmp-blue)}
+.version-tag{font-family:var(--ff-mono);font-size:10px;color:var(--cmp-muted);padding:2px 8px;border:1px solid var(--cmp-border);border-radius:3px}
+
+/* Colors */
+.color-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.color-chip{border-radius:8px;overflow:hidden}
+.color-swatch{height:64px}
+.color-info{padding:8px 10px;background:var(--cmp-surface);border:1px solid var(--cmp-border);border-top:none;border-radius:0 0 8px 8px}
+.color-name{font-size:12px;font-weight:500;color:var(--cmp-text);display:block}
+.color-hex{font-family:var(--ff-mono);font-size:10px;color:var(--cmp-muted)}
+.color-role{font-size:10px;color:var(--cmp-faint);margin-top:2px;display:block}
+
+/* Typography */
+.type-specimen{margin:0 0 24px;padding:20px;background:var(--cmp-surface);border:1px solid var(--cmp-border);border-radius:8px}
+.type-meta{font-family:var(--ff-mono);font-size:10px;color:var(--cmp-muted);margin:0 0 8px}
+.type-row{display:flex;align-items:baseline;gap:16px;padding:12px 0;border-bottom:1px solid var(--cmp-border)}
+.type-row:last-child{border-bottom:none}
+.type-label{font-family:var(--ff-mono);font-size:10px;color:var(--cmp-faint);min-width:80px;flex-shrink:0}
+.t-h1{font-size:32px;font-weight:700;color:var(--cmp-text);letter-spacing:-.03em;line-height:1.1}
+.t-h2{font-size:20px;font-weight:700;color:var(--cmp-text);letter-spacing:-.02em}
+.t-h3{font-size:16px;font-weight:500;color:var(--cmp-text)}
+.t-body{font-size:15px;font-weight:400;color:var(--cmp-text);line-height:1.7}
+.t-muted{font-size:14px;color:var(--cmp-muted)}
+.t-mono{font-family:var(--ff-mono);font-size:13px;color:var(--cmp-signal)}
+.t-label{font-family:var(--ff-mono);font-size:11px;color:var(--cmp-blue);letter-spacing:.08em;text-transform:uppercase}
+
+/* Components */
+.comp-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 12px}
+.comp-box{background:var(--cmp-surface);border:1px solid var(--cmp-border);border-radius:8px;padding:16px}
+.comp-title{font-family:var(--ff-mono);font-size:10px;color:var(--cmp-faint);margin:0 0 12px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:6px;font-family:var(--ff-sans);font-size:14px;font-weight:500;border:none;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--cmp-blue);color:#fff}
+.btn-primary:hover{background:var(--cmp-blue-light)}
+.btn-secondary{background:transparent;color:var(--cmp-text);border:1px solid var(--cmp-border)}
+.btn-secondary:hover{border-color:var(--cmp-blue);color:var(--cmp-blue)}
+.btn-ghost{background:transparent;color:var(--cmp-muted);border:1px solid transparent}
+.btn-ghost:hover{color:var(--cmp-text)}
+.btn-signal{background:var(--cmp-signal);color:#0A0D14;font-weight:700}
+
+/* Badges */
+.badge-row{display:flex;flex-wrap:wrap;gap:8px}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:4px;font-family:var(--ff-mono);font-size:11px;font-weight:500}
+.badge-blue{background:var(--cmp-blue-muted);color:var(--cmp-blue);border:1px solid var(--cmp-blue)44}
+.badge-green{background:#00FF8811;color:var(--cmp-signal);border:1px solid var(--cmp-signal)33}
+.badge-amber{background:#F59E0B11;color:var(--cmp-amber);border:1px solid var(--cmp-amber)33}
+.badge-muted{background:var(--cmp-bg3);color:var(--cmp-muted);border:1px solid var(--cmp-border)}
+
+/* Listing card */
+.listing-card{background:var(--cmp-surface);border:1px solid var(--cmp-border);border-radius:10px;overflow:hidden;transition:border-color .15s}
+.listing-card:hover{border-color:var(--cmp-blue)66}
+.listing-img{height:96px;background:linear-gradient(135deg,var(--cmp-bg3) 0%,var(--cmp-bg2) 100%);display:flex;align-items:center;justify-content:center;position:relative}
+.listing-img-label{font-family:var(--ff-mono);font-size:10px;color:var(--cmp-faint)}
+.listing-body{padding:12px}
+.listing-price{font-size:18px;font-weight:700;color:var(--cmp-text)}
+.listing-title{font-size:13px;color:var(--cmp-muted);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.listing-meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px}
+.listing-region{font-family:var(--ff-mono);font-size:10px;color:var(--cmp-faint)}
+.listing-condition{font-family:var(--ff-mono);font-size:10px}
+
+/* Icons placeholder */
+.icon-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.icon-item{background:var(--cmp-surface);border:1px solid var(--cmp-border);border-radius:6px;padding:12px 8px;text-align:center}
+.icon-sym{font-size:18px;margin:0 0 4px;display:block}
+.icon-lbl{font-family:var(--ff-mono);font-size:9px;color:var(--cmp-faint)}
+
+/* Motion note */
+.motion-row{display:flex;gap:8px;flex-wrap:wrap}
+.motion-chip{background:var(--cmp-surface);border:1px solid var(--cmp-border);border-radius:6px;padding:8px 12px;font-family:var(--ff-mono);font-size:11px;color:var(--cmp-muted)}
+.motion-chip strong{color:var(--cmp-text);display:block;margin:0 0 2px}
+
+/* Voice */
+.voice-table{width:100%;border-collapse:collapse}
+.voice-table th{text-align:left;font-family:var(--ff-mono);font-size:10px;color:var(--cmp-muted);padding:0 0 8px;font-weight:400}
+.voice-table td{padding:6px 0;border-top:1px solid var(--cmp-border);font-size:13px;vertical-align:top}
+.voice-table td:first-child{color:var(--cmp-muted);width:44%;padding-right:12px}
+.voice-table td:last-child{color:var(--cmp-text)}
+.cross{color:#FF4444}
+.check{color:var(--cmp-signal)}
+
+/* Divider */
+.divider{border:none;border-top:1px solid var(--cmp-border);margin:0 0 40px}
+
+/* Grid bg effect on header */
+.grid-bg{position:absolute;inset:0;opacity:.04;background-image:linear-gradient(var(--cmp-blue) 1px,transparent 1px),linear-gradient(90deg,var(--cmp-blue) 1px,transparent 1px);background-size:24px 24px;pointer-events:none;border-radius:inherit}
+
+/* Spacing scale */
+.space-row{display:flex;align-items:flex-end;gap:8px}
+.space-bar{background:var(--cmp-blue-muted);border:1px solid var(--cmp-blue)44;border-radius:3px;width:32px}
+.space-val{font-family:var(--ff-mono);font-size:10px;color:var(--cmp-muted);text-align:center;margin-top:4px}
+
+/* SVG logo */
+.logo-svg{width:44px;height:44px}
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="brand-header">
+    <div class="logo-mark">
+      <svg class="logo-svg" viewBox="0 0 44 44" fill="none">
+        <!-- Circuit cloud shape -->
+        <path d="M10 28C6.7 28 4 25.3 4 22C4 19.1 6 16.7 8.7 16.1C8.3 15.1 8 14 8 13C8 9.1 11.1 6 15 6C16.8 6 18.4 6.7 19.6 7.8C21 6.7 22.8 6 24.8 6C29.2 6 32.8 9.2 33.4 13.4C33.6 13.3 33.8 13.3 34 13.3C37.3 13.3 40 16 40 19.3C40 22.3 37.8 24.8 34.9 25.3L34.9 28Z" fill="#1A2035" stroke="#1A56FF" stroke-width="1"/>
+        <!-- PCB traces -->
+        <path d="M14 28L14 22L20 22" stroke="#1A56FF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+        <path d="M20 22L20 18L26 18" stroke="#1A56FF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+        <path d="M30 28L30 24L26 24L26 18" stroke="#1A56FF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+        <!-- Nodes -->
+        <circle cx="14" cy="28" r="2.5" fill="#1A56FF"/>
+        <circle cx="20" cy="22" r="2" fill="#1A56FF" opacity=".8"/>
+        <circle cx="26" cy="18" r="2" fill="#00FF88"/>
+        <circle cx="30" cy="28" r="2.5" fill="#1A56FF"/>
+        <!-- Exchange arrows -->
+        <path d="M14 32L19 36" stroke="#00FF88" stroke-width="1" stroke-linecap="round" opacity=".6"/>
+        <path d="M30 36L25 32" stroke="#00FF88" stroke-width="1" stroke-linecap="round" opacity=".6"/>
+        <circle cx="22" cy="38" r="1.5" fill="#00FF88" opacity=".8"/>
+      </svg>
+      <div>
+        <div class="wordmark">cloud<span>marktplaats</span><span style="color:var(--cmp-muted)">.nl</span></div>
+        <div style="font-family:var(--ff-mono);font-size:10px;color:var(--cmp-muted);margin-top:2px">Huisstijlgids v1.0</div>
+      </div>
+    </div>
+    <div class="version-tag">Community-first · AGPL-3.0</div>
+  </div>
+
+  <!-- Merkwaarden -->
+  <div class="section">
+    <div class="section-label">Merkwaarden</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div style="padding:14px;background:var(--cmp-surface);border:1px solid var(--cmp-border);border-radius:8px">
+        <div style="font-family:var(--ff-mono);font-size:10px;color:var(--cmp-blue);margin-bottom:4px">01</div>
+        <div style="font-size:13px;font-weight:500">Vrijheid</div>
+        <div style="font-size:11px;color:var(--cmp-muted);margin-top:4px">Open, anarchistisch van geest, altijd binnen de wet</div>
+      </div>
+      <div style="padding:14px;background:var(--cmp-surface);border:1px solid var(--cmp-border);border-radius:8px">
+        <div style="font-family:var(--ff-mono);font-size:10px;color:var(--cmp-blue);margin-bottom:4px">02</div>
+        <div style="font-size:13px;font-weight:500">Eerlijkheid</div>
+        <div style="font-size:11px;color:var(--cmp-muted);margin-top:4px">Geen bullshit, geen verborgen agenda, geen tracking</div>
+      </div>
+      <div style="padding:14px;background:var(--cmp-surface);border:1px solid var(--cmp-border);border-radius:8px">
+        <div style="font-family:var(--ff-mono);font-size:10px;color:var(--cmp-blue);margin-bottom:4px">03</div>
+        <div style="font-size:13px;font-weight:500">Community</div>
+        <div style="font-size:11px;color:var(--cmp-muted);margin-top:4px">Mensen boven platform, winst terug naar de gemeenschap</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kleur -->
+  <div class="section">
+    <div class="section-label">Kleurenpalet</div>
+    <div class="color-grid">
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#1A56FF"></div>
+        <div class="color-info">
+          <span class="color-name">Primary Blue</span>
+          <span class="color-hex">#1A56FF</span>
+          <span class="color-role">Primaire acties, links, focus</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#00FF88"></div>
+        <div class="color-info">
+          <span class="color-name">Signal Green</span>
+          <span class="color-hex">#00FF88</span>
+          <span class="color-role">Succes, web3, live status</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#F59E0B"></div>
+        <div class="color-info">
+          <span class="color-name">Amber</span>
+          <span class="color-hex">#F59E0B</span>
+          <span class="color-role">Waarschuwing, biedingen</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#0A0D14"></div>
+        <div class="color-info">
+          <span class="color-name">Abyss</span>
+          <span class="color-hex">#0A0D14</span>
+          <span class="color-role">Achtergrond (primair)</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#1A2035"></div>
+        <div class="color-info">
+          <span class="color-name">Surface</span>
+          <span class="color-hex">#1A2035</span>
+          <span class="color-role">Kaarten, panels, inputs</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#1E2A45"></div>
+        <div class="color-info">
+          <span class="color-name">Border</span>
+          <span class="color-hex">#1E2A45</span>
+          <span class="color-role">Randen, scheidingen</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#E8EDF8"></div>
+        <div class="color-info">
+          <span class="color-name">Snow</span>
+          <span class="color-hex">#E8EDF8</span>
+          <span class="color-role">Primaire tekst</span>
+        </div>
+      </div>
+      <div class="color-chip">
+        <div class="color-swatch" style="background:#7B8DB0"></div>
+        <div class="color-info">
+          <span class="color-name">Muted</span>
+          <span class="color-hex">#7B8DB0</span>
+          <span class="color-role">Secundaire tekst, metadata</span>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:12px;background:var(--cmp-surface);border:1px solid var(--cmp-border);border-radius:8px;font-family:var(--ff-mono);font-size:11px;color:var(--cmp-muted)">
+      ⚠ Geen lichte achtergrond zonder bewuste reden. Dark-first is default. Light-mode is een opt-in, geen norm.
+    </div>
+  </div>
+
+  <!-- Typografie -->
+  <div class="section">
+    <div class="section-label">Typografie</div>
+    <div class="type-specimen">
+      <div class="type-meta">Space Grotesk — display, body / JetBrains Mono — code, labels, meta</div>
+      <div class="type-row">
+        <span class="type-label">H1 / 32px 700</span>
+        <span class="t-h1">Tweedehands tech</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">H2 / 20px 700</span>
+        <span class="t-h2">Server hardware</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">H3 / 16px 500</span>
+        <span class="t-h3">Netwerkapparatuur</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Body / 15px 400</span>
+        <span class="t-body">Koop en verkoop IT-hardware aan echte mensen, niet aan een algoritme.</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Muted / 14px</span>
+        <span class="t-muted">Amsterdam · geplaatst 3u geleden · 12 bekijkingen</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Mono / 13px</span>
+        <span class="t-mono">0x4a2F...8c1d → escrow</span>
+      </div>
+      <div class="type-row">
+        <span class="type-label">Label / 11px</span>
+        <span class="t-label">Categorie · Conditie · Prijs</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Buttons -->
+  <div class="section">
+    <div class="section-label">Buttons & interactie</div>
+    <div class="comp-box">
+      <div class="comp-title">BUTTON VARIANTS</div>
+      <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <button class="btn btn-primary">Advertentie plaatsen</button>
+        <button class="btn btn-secondary">Bekijk aanbod</button>
+        <button class="btn btn-ghost">Meer info</button>
+        <button class="btn btn-signal">Web3 escrow</button>
+      </div>
+      <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;align-items:center">
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px">Klein</button>
+        <button class="btn btn-primary" style="opacity:.4;cursor:not-allowed">Uitgeschakeld</button>
+        <button class="btn btn-secondary" style="border-color:var(--cmp-blue);color:var(--cmp-blue)">Hover staat</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Badges -->
+  <div class="section">
+    <div class="section-label">Badges & status</div>
+    <div class="comp-box">
+      <div class="comp-title">STATUS INDICATORS</div>
+      <div class="badge-row">
+        <span class="badge badge-green">● Live</span>
+        <span class="badge badge-blue">Nieuw aanbod</span>
+        <span class="badge badge-amber">Bieden</span>
+        <span class="badge badge-muted">Defect</span>
+        <span class="badge badge-green">Web3 escrow</span>
+        <span class="badge badge-muted">Gebruikt</span>
+        <span class="badge badge-blue">Verzending</span>
+        <span class="badge badge-amber">Ophalen</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Listing card voorbeeld -->
+  <div class="section">
+    <div class="section-label">Listing card</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+      <div class="listing-card">
+        <div class="listing-img">
+          <div class="grid-bg"></div>
+          <span class="listing-img-label">foto</span>
+        </div>
+        <div class="listing-body">
+          <div class="listing-price">€ 120</div>
+          <div class="listing-title">Cisco SG350-28 managed switch</div>
+          <div class="listing-meta">
+            <span class="listing-region">Amsterdam</span>
+            <span class="listing-condition" style="color:var(--cmp-signal)">Gebruikt</span>
+          </div>
+        </div>
+      </div>
+      <div class="listing-card">
+        <div class="listing-img">
+          <div class="grid-bg"></div>
+          <span class="listing-img-label">foto</span>
+        </div>
+        <div class="listing-body">
+          <div class="listing-price">€ 45</div>
+          <div class="listing-title">Raspberry Pi 4 4GB + case</div>
+          <div class="listing-meta">
+            <span class="listing-region">Utrecht</span>
+            <span class="listing-condition" style="color:var(--cmp-blue)">Nieuw</span>
+          </div>
+        </div>
+      </div>
+      <div class="listing-card">
+        <div class="listing-img">
+          <div class="grid-bg"></div>
+          <span class="listing-img-label">foto</span>
+        </div>
+        <div class="listing-body">
+          <div class="listing-price">€ 280</div>
+          <div class="listing-title">Dell R720 2U server bare</div>
+          <div class="listing-meta">
+            <span class="listing-region">Rotterdam</span>
+            <span class="listing-condition" style="color:var(--cmp-amber)">Defect</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Spacing -->
+  <div class="section">
+    <div class="section-label">Ruimte & grid</div>
+    <div class="comp-box">
+      <div class="comp-title">SPACING SCALE (BASE 4PX)</div>
+      <div class="space-row">
+        <div><div class="space-bar" style="height:4px"></div><div class="space-val">4px</div></div>
+        <div><div class="space-bar" style="height:8px"></div><div class="space-val">8px</div></div>
+        <div><div class="space-bar" style="height:12px"></div><div class="space-val">12px</div></div>
+        <div><div class="space-bar" style="height:16px"></div><div class="space-val">16px</div></div>
+        <div><div class="space-bar" style="height:24px"></div><div class="space-val">24px</div></div>
+        <div><div class="space-bar" style="height:32px"></div><div class="space-val">32px</div></div>
+        <div><div class="space-bar" style="height:48px"></div><div class="space-val">48px</div></div>
+        <div><div class="space-bar" style="height:64px"></div><div class="space-val">64px</div></div>
+      </div>
+      <div style="margin-top:16px;font-family:var(--ff-mono);font-size:10px;color:var(--cmp-muted);line-height:1.8">
+        Border-radius: 4px (klein) · 8px (default) · 12px (kaart) · 24px (modal)<br>
+        Grid: 12-kolommen · gutter 16px · max-width 1200px<br>
+        Breakpoints: 480 / 768 / 1024 / 1280px
+      </div>
+    </div>
+  </div>
+
+  <!-- Voice -->
+  <div class="section">
+    <div class="section-label">Tone of voice</div>
+    <div class="comp-box">
+      <div class="comp-title">WEL / NIET</div>
+      <table class="voice-table">
+        <tr><th style="width:44%">❌ Niet</th><th>✅ Wel</th></tr>
+        <tr>
+          <td>"Wij geloven in een betere wereld"</td>
+          <td>"Je data is van jou. Punt."</td>
+        </tr>
+        <tr>
+          <td>"Ons innovatieve ecosysteem"</td>
+          <td>"Een marktplaats voor mensen die weten wat een subnet is"</td>
+        </tr>
+        <tr>
+          <td>"Meld je aan voor exclusieve deals"</td>
+          <td>"Advertentie plaatsen kost niks. Spotten kosten €1."</td>
+        </tr>
+        <tr>
+          <td>"Wij nemen privacy serieus"</td>
+          <td>"We loggen geen IPs na 24 uur. Kijk maar in de code."</td>
+        </tr>
+        <tr>
+          <td>"Disruptieve marktplaatsoplossing"</td>
+          <td>"Tweakers V&A maar dan met reputatie en escrow."</td>
+        </tr>
+      </table>
+    </div>
+  </div>
+
+  <!-- Motion -->
+  <div class="section">
+    <div class="section-label">Motion & interactie</div>
+    <div class="motion-row">
+      <div class="motion-chip"><strong>Ease-out 150ms</strong>Button hover, link focus</div>
+      <div class="motion-chip"><strong>Ease-in-out 250ms</strong>Modal open/close, panels</div>
+      <div class="motion-chip"><strong>Ease-out 350ms</strong>Page transitions</div>
+      <div class="motion-chip"><strong>Geen</strong>Tabellen, lists, statische data</div>
+    </div>
+    <div style="margin-top:8px;font-family:var(--ff-mono);font-size:10px;color:var(--cmp-faint)">Altijd: prefers-reduced-motion respecteren. Animatie is accent, geen fundament.</div>
+  </div>
+
+  <!-- Logo usage -->
+  <div class="section">
+    <div class="section-label">Logo gebruik</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+      <div style="padding:20px;background:var(--cmp-bg2);border:1px solid var(--cmp-border);border-radius:8px;display:flex;align-items:center;gap:12px">
+        <svg width="32" height="32" viewBox="0 0 44 44" fill="none">
+          <path d="M10 28C6.7 28 4 25.3 4 22C4 19.1 6 16.7 8.7 16.1C8.3 15.1 8 14 8 13C8 9.1 11.1 6 15 6C16.8 6 18.4 6.7 19.6 7.8C21 6.7 22.8 6 24.8 6C29.2 6 32.8 9.2 33.4 13.4C33.6 13.3 33.8 13.3 34 13.3C37.3 13.3 40 16 40 19.3C40 22.3 37.8 24.8 34.9 25.3L34.9 28Z" fill="#1A2035" stroke="#1A56FF" stroke-width="1"/>
+          <path d="M14 28L14 22L20 22" stroke="#1A56FF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+          <path d="M20 22L20 18L26 18" stroke="#1A56FF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+          <path d="M30 28L30 24L26 24L26 18" stroke="#1A56FF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" opacity=".7"/>
+          <circle cx="14" cy="28" r="2.5" fill="#1A56FF"/>
+          <circle cx="26" cy="18" r="2" fill="#00FF88"/>
+          <circle cx="30" cy="28" r="2.5" fill="#1A56FF"/>
+        </svg>
+        <span style="font-family:var(--ff-sans);font-size:16px;font-weight:700">cloudmarktplaats<span style="color:var(--cmp-blue)">.nl</span></span>
+      </div>
+      <div style="padding:20px;background:#E8EDF8;border:1px solid #CBD5E8;border-radius:8px;display:flex;align-items:center;gap:12px">
+        <svg width="32" height="32" viewBox="0 0 44 44" fill="none">
+          <path d="M10 28C6.7 28 4 25.3 4 22C4 19.1 6 16.7 8.7 16.1C8.3 15.1 8 14 8 13C8 9.1 11.1 6 15 6C16.8 6 18.4 6.7 19.6 7.8C21 6.7 22.8 6 24.8 6C29.2 6 32.8 9.2 33.4 13.4C33.6 13.3 33.8 13.3 34 13.3C37.3 13.3 40 16 40 19.3C40 22.3 37.8 24.8 34.9 25.3L34.9 28Z" fill="#E8EDF8" stroke="#1A56FF" stroke-width="1"/>
+          <path d="M14 28L14 22L20 22" stroke="#1A56FF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M20 22L20 18L26 18" stroke="#1A56FF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M30 28L30 24L26 24L26 18" stroke="#1A56FF" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="14" cy="28" r="2.5" fill="#1A56FF"/>
+          <circle cx="26" cy="18" r="2" fill="#00CC6A"/>
+          <circle cx="30" cy="28" r="2.5" fill="#1A56FF"/>
+        </svg>
+        <span style="font-family:var(--ff-sans);font-size:16px;font-weight:700;color:#0A0D14">cloudmarktplaats<span style="color:#1A56FF">.nl</span></span>
+      </div>
+    </div>
+    <div style="margin-top:8px;font-family:var(--ff-mono);font-size:10px;color:var(--cmp-faint);line-height:1.8">
+      Minimale weergavegrootte: 24px hoogte voor het icon · 120px voor het volledige woordmerk<br>
+      Vrijezone: 8px rondom het logo. Nooit vervormen, roteren of herinkleuren buiten de brand-kleuren.
+    </div>
+  </div>
+
+  <!-- Footer note -->
+  <div style="border-top:1px solid var(--cmp-border);padding-top:20px;font-family:var(--ff-mono);font-size:10px;color:var(--cmp-faint);line-height:1.8">
+    cloudmarktplaats.nl huisstijlgids v1.0 · AGPL-3.0 · Community-owned<br>
+    Alle assets zijn vrij te gebruiken onder dezelfde licentie als het platform.
+  </div>
+
+</div>
+</body>
+</html>

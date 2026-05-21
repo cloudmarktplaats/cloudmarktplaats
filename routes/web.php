@@ -21,8 +21,18 @@ use App\Livewire\Profile\TwoFactorSetup;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
 
-// Homepage: redirect to the listings grid until a curated landing exists.
-Route::redirect('/', '/listings');
+// Homepage: marketing landing for guests, listings grid for authenticated users.
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect('/listings')
+        : view('pages.home');
+})->name('home');
+
+// Static marketing pages.
+Route::view('/over-ons', 'pages.about')->name('about');
+Route::view('/waarden', 'pages.values')->name('values');
+Route::view('/faq', 'pages.faq')->name('faq');
+Route::view('/sponsors', 'pages.sponsor')->name('sponsor');
 
 Route::get('/healthz', HealthController::class);
 
