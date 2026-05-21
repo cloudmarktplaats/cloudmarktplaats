@@ -12,9 +12,7 @@ class ExampleTest extends TestCase
      */
     public function test_the_application_returns_a_successful_response(): void
     {
-        $response = $this->get('/');
-
-        // `/` redirects to /listings after Phase G.
-        $response->assertRedirect('/listings');
+        // Anonymous visitors see the marketing home page (200).
+        $this->get('/')->assertStatus(200);
     }
 }

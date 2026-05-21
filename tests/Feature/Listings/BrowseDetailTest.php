@@ -56,8 +56,14 @@ it('Detail 404s for non-published listings', function () {
         ->assertNotFound();
 });
 
-it('homepage redirects to /listings', function () {
-    $this->get('/')->assertRedirect('/listings');
+it('homepage serves the marketing page for guests', function () {
+    $this->get('/')->assertStatus(200);
+});
+
+it('homepage redirects authenticated users to /listings', function () {
+    $this->actingAs(User::factory()->create())
+        ->get('/')
+        ->assertRedirect('/listings');
 });
 
 it('Detail contact button redirects anon → /login with return_to', function () {
