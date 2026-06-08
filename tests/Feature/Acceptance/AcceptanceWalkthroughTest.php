@@ -140,16 +140,19 @@ it('walks the full §14 acceptance scenario from register to anonymous detail-pa
     // tokenisation: "ThinkPad" hits, "thinkpad" hits, "vintage" hits.
     $this->get('/search?q=ThinkPad')->assertOk()->assertSee('IBM ThinkPad T42');
 
-    // --- 6. Anonymous detail page + contact-redirect ----------------
+    // --- 6. Anonymous detail page + contact relay -------------------
     $detailPath = "/listings/{$listing->ulid}-{$listing->slug}";
     $this->get($detailPath)->assertOk()->assertSee('IBM ThinkPad T42');
 
+    // The anonymous visitor can reach the seller through the one-way
+    // contact relay — no login wall (backs the "optionally anonymous"
+    // principle). The form is embedded on the detail page.
     Livewire::test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
-        ->call('contactSeller')
-        ->assertRedirect('/login?return_to='.$detailPath);
+        ->assertSee('Stuur bericht')
+        ->assertSeeLivewire('contact-seller');
 
-    // Sanity: hitting login while still anonymous resolves OK so the
-    // return_to flow has a valid landing page.
+    // Sanity: the login page still resolves OK for users who do choose
+    // to sign in.
     $this->get('/login')->assertOk();
     expect(Livewire::test(Login::class)->get('email'))->toBe('');
 });

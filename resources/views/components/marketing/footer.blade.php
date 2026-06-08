@@ -16,6 +16,7 @@
                 <ul class="space-y-2 text-sm text-cmp-muted">
                     <li><a href="{{ route('listings.index') }}" class="hover:text-cmp-text">Alle advertenties</a></li>
                     <li><a href="{{ route('listings.search') }}" class="hover:text-cmp-text">Zoeken</a></li>
+                    <li><a href="{{ route('roadmap') }}" class="hover:text-cmp-text">Roadmap</a></li>
                     <li><a href="{{ route('register') }}" class="hover:text-cmp-text">Account aanmaken</a></li>
                     <li><a href="{{ route('login') }}" class="hover:text-cmp-text">Inloggen</a></li>
                 </ul>

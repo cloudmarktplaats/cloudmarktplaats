@@ -66,12 +66,12 @@ it('homepage redirects authenticated users to /listings', function () {
         ->assertRedirect('/listings');
 });
 
-it('Detail contact button redirects anon → /login with return_to', function () {
+it('Detail offers the contact relay to anonymous visitors — no login wall', function () {
     $listing = Listing::factory()->published()->create();
 
     Livewire::test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
-        ->call('contactSeller')
-        ->assertRedirect('/login?return_to=/listings/'.$listing->ulid.'-'.$listing->slug);
+        ->assertSee('Stuur bericht')
+        ->assertSeeLivewire('contact-seller');
 });
 
 it('Detail 301-redirects to the canonical slug if the URL slug differs', function () {
@@ -80,15 +80,4 @@ it('Detail 301-redirects to the canonical slug if the URL slug differs', functio
     $this->get("/listings/{$listing->ulid}-something-fake")
         ->assertStatus(301)
         ->assertRedirect("/listings/{$listing->ulid}-apple-imac-g3");
-});
-
-it('Detail contact button shows messaging-coming-soon notice for authed users', function () {
-    $user = User::factory()->create();
-    $this->actingAs($user);
-
-    $listing = Listing::factory()->published()->create();
-
-    Livewire::test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
-        ->call('contactSeller')
-        ->assertSet('showMessagingNotice', true);
 });

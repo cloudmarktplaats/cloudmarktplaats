@@ -8,6 +8,8 @@
         </a>
 
         <div class="flex items-center gap-2 sm:gap-3">
+            {{-- Subtle wayfinding link; the grid and auth CTAs stay the focus. --}}
+            <a href="{{ route('roadmap') }}" class="hidden text-sm text-cmp-muted hover:text-cmp-text sm:inline">Roadmap</a>
             @auth
                 <a href="{{ route('listings.create') }}" class="cmp-btn cmp-btn-primary">Advertentie plaatsen</a>
                 <form method="POST" action="{{ route('logout') }}" class="inline">@csrf

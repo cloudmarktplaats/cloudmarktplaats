@@ -1,9 +1,33 @@
+/* Self-hosted fonts — no Google Fonts at runtime (privacy by design,
+   and no render-blocking third-party request). Both are variable fonts;
+   one woff2 per family covers every weight we use. Latin subset only. */
+@font-face {
+    font-family: 'Space Grotesk';
+    font-style: normal;
+    font-weight: 300 700;
+    font-display: swap;
+    src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+}
+@font-face {
+    font-family: 'JetBrains Mono';
+    font-style: normal;
+    font-weight: 400 500;
+    font-display: swap;
+    src: url('/fonts/jetbrains-mono-latin.woff2') format('woff2');
+}
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
     html { color-scheme: dark; }
+
+    /* Alpine: keep x-show / x-collapse panels hidden until Alpine boots.
+       Placed in @layer base so Tailwind utilities still win where needed;
+       our toggled panels carry no display utility, so this alone hides
+       them — no !important required. */
+    [x-cloak] { display: none; }
 
     body {
         @apply bg-cmp-bg text-cmp-text font-sans antialiased;

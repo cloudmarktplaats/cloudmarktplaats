@@ -1,27 +1,139 @@
-<div class="space-y-4">
-    <h1 class="text-2xl font-bold">
-        @if ($categoryPath)
-            Categorie: {{ $categoryPath }}
-        @else
-            Alle advertenties
-        @endif
-    </h1>
+<div class="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
+
+    {{-- Header: framed as wandering, not searching. --}}
+    <div class="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+            <div class="cmp-section-label mb-3">
+                @if ($categoryPath)
+                    Categorie · {{ $categoryPath }}
+                @else
+                    De rommelmarkt
+                @endif
+            </div>
+            <h1 class="text-3xl font-bold tracking-display-tighter sm:text-4xl">
+                Snuffel rond.
+            </h1>
+        </div>
+
+        {{-- Sort toggle: recent vs. "Verras me". --}}
+        <div class="flex items-center gap-1 self-start rounded-lg border border-cmp-border bg-cmp-surface p-1" role="group" aria-label="Sortering">
+            <button
+                type="button"
+                wire:click="setSort('recent')"
+                @class([
+                    'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                    'bg-cmp-blue text-white' => $sort !== 'shuffle',
+                    'text-cmp-muted hover:text-cmp-text' => $sort === 'shuffle',
+                ])
+                aria-pressed="{{ $sort !== 'shuffle' ? 'true' : 'false' }}"
+            >
+                Recent
+            </button>
+            <button
+                type="button"
+                wire:click="setSort('shuffle')"
+                @class([
+                    'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                    'bg-cmp-blue text-white' => $sort === 'shuffle',
+                    'text-cmp-muted hover:text-cmp-text' => $sort !== 'shuffle',
+                ])
+                aria-pressed="{{ $sort === 'shuffle' ? 'true' : 'false' }}"
+            >
+                Verras me
+            </button>
+        </div>
+    </div>
+
+    {{-- Search stays available, but deliberately secondary to the grid. --}}
+    <p class="mt-4 text-sm text-cmp-muted">
+        Iets specifieks zoeken?
+        <a href="{{ route('listings.search') }}" class="text-cmp-blue hover:text-cmp-blue-light">Doorzoek het aanbod</a>.
+    </p>
 
     @if ($listings->isEmpty())
-        <p class="rounded border bg-white p-6 text-gray-500">Geen advertenties gevonden.</p>
+        {{-- Empty state. --}}
+        <div class="mt-12 rounded-xl border border-dashed border-cmp-border bg-cmp-surface px-6 py-16 text-center">
+            <p class="font-display text-xl font-bold">Nog niks te snuffelen. Wees de eerste.</p>
+            <p class="mt-2 text-sm text-cmp-muted">Er staat hier nog geen aanbod. Plaats jouw spullen en zet de markt op gang.</p>
+            <a href="{{ route('listings.create') }}" class="cmp-btn cmp-btn-primary mt-6">
+                Plaats een advertentie
+            </a>
+        </div>
     @else
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {{-- The grid is the star: 1 / 2 / 3-4 columns. --}}
+        <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             @foreach ($listings as $listing)
-                <a href="/listings/{{ $listing->ulid }}-{{ $listing->slug }}" class="block rounded border bg-white p-4 shadow-sm transition hover:shadow">
-                    <h2 class="font-semibold">{{ $listing->title }}</h2>
-                    <p class="text-sm text-gray-500">€ {{ number_format($listing->price_cents / 100, 2, ',', '.') }}</p>
-                    @if ($listing->region_postcode)
-                        <p class="text-xs text-gray-400">{{ $listing->region_postcode }}</p>
-                    @endif
+                @php
+                    // Static class strings so Tailwind keeps them through purge.
+                    $badge = match ($listing->condition) {
+                        'new'       => 'border-cmp-blue/40 text-cmp-blue',
+                        'used'      => 'border-cmp-signal/40 text-cmp-signal',
+                        'defective' => 'border-cmp-amber/40 text-cmp-amber',
+                        default     => 'border-cmp-muted/40 text-cmp-muted',
+                    };
+                    $photo = $listing->photos->first();
+                @endphp
+                <a
+                    href="/listings/{{ $listing->ulid }}-{{ $listing->slug }}"
+                    wire:key="listing-{{ $listing->id }}"
+                    class="group flex flex-col overflow-hidden rounded-xl border border-cmp-border bg-cmp-surface transition-colors duration-150 hover:border-cmp-blue focus:outline-none focus-visible:border-cmp-blue focus-visible:ring-2 focus-visible:ring-cmp-blue-light"
+                >
+                    <div class="aspect-[4/3] overflow-hidden bg-cmp-bg2">
+                        @if ($photo)
+                            <img
+                                src="{{ $photo->urlFor('card') }}"
+                                alt="{{ $listing->title }}"
+                                loading="lazy"
+                                class="h-full w-full object-cover transition-transform duration-200 group-hover:scale-[1.03]"
+                            >
+                        @else
+                            <div class="flex h-full w-full items-center justify-center text-cmp-faint" aria-hidden="true">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                            </div>
+                        @endif
+                    </div>
+
+                    <div class="flex flex-1 flex-col gap-2 p-4">
+                        <div class="flex items-start justify-between gap-2">
+                            <span class="inline-flex shrink-0 items-center rounded-full border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide {{ $badge }}">
+                                {{ $listing->conditionLabel() }}
+                            </span>
+                            <span class="font-mono text-sm font-medium text-cmp-text">
+                                € {{ number_format($listing->price_cents / 100, 2, ',', '.') }}
+                            </span>
+                        </div>
+
+                        <h2 class="truncate font-medium text-cmp-text" title="{{ $listing->title }}">
+                            {{ $listing->title }}
+                        </h2>
+
+                        @if ($listing->region_postcode)
+                            <p class="mt-auto text-xs text-cmp-muted">{{ $listing->region_postcode }}</p>
+                        @endif
+                    </div>
                 </a>
             @endforeach
         </div>
 
-        <div class="mt-6">{{ $listings->links() }}</div>
+        @if ($hasMore)
+            {{-- Infinite scroll: Alpine IntersectionObserver auto-loads as the
+                 sentinel scrolls into view. The button is the visible fallback
+                 (and the only control when JS auto-loading is unavailable). --}}
+            <div
+                x-data
+                x-intersect.margin.400px="$wire.loadMore()"
+                class="mt-10 flex justify-center"
+            >
+                <button
+                    type="button"
+                    wire:click="loadMore"
+                    wire:loading.attr="disabled"
+                    class="cmp-btn cmp-btn-secondary"
+                >
+                    <span wire:loading.remove wire:target="loadMore">Meer laden</span>
+                    <span wire:loading wire:target="loadMore">Laden…</span>
+                </button>
+            </div>
+        @endif
     @endif
 </div>

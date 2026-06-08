@@ -71,6 +71,34 @@ class Listing extends Model
         return $this->hasMany(ListingPhoto::class)->orderBy('position');
     }
 
+    /**
+     * Dutch label for the `condition` enum, shown on cards and detail.
+     */
+    public function conditionLabel(): string
+    {
+        return match ($this->condition) {
+            'new' => 'Nieuw',
+            'used' => 'Gebruikt',
+            'defective' => 'Defect',
+            'for_parts' => 'Voor onderdelen',
+        };
+    }
+
+    /**
+     * House-style colour token for the condition badge. Returns the bare
+     * token (e.g. `cmp-blue`) so views can compose `text-{token}` /
+     * `border-{token}` as needed.
+     */
+    public function conditionColor(): string
+    {
+        return match ($this->condition) {
+            'new' => 'cmp-blue',
+            'used' => 'cmp-signal',
+            'defective' => 'cmp-amber',
+            'for_parts' => 'cmp-muted',
+        };
+    }
+
     protected static function booted(): void
     {
         static::creating(function (self $l): void {

@@ -33,6 +33,7 @@ Route::view('/over-ons', 'pages.about')->name('about');
 Route::view('/waarden', 'pages.values')->name('values');
 Route::view('/faq', 'pages.faq')->name('faq');
 Route::view('/sponsors', 'pages.sponsor')->name('sponsor');
+Route::view('/roadmap', 'pages.roadmap')->name('roadmap');
 
 Route::get('/healthz', HealthController::class);
 
