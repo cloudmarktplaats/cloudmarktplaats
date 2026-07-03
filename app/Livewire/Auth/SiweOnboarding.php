@@ -61,6 +61,9 @@ class SiweOnboarding extends Component
                 'username' => strtolower($this->username),
                 'display_name' => $this->display_name,
                 'password_hash' => null,
+                'invite_credits' => (bool) config('cloudmarktplaats.features.invites')
+                    ? (int) config('cloudmarktplaats.gamification.starting_invite_credits')
+                    : 0,
             ]);
 
             UserIdentity::create([

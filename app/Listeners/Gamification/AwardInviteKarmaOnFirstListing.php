@@ -38,6 +38,10 @@ class AwardInviteKarmaOnFirstListing
             return;
         }
 
+        if ($inviter->is_banned) {
+            return;
+        }
+
         // Idempotency: never award twice for the same invitee.
         $already = $inviter->karmaEvents()
             ->where('type', 'invite_activation')

@@ -34,3 +34,14 @@ it('does not award on a second listing or for an uninvited user', function () {
     event(new ListingPublished(Listing::factory()->published()->for($loner)->create()));
     expect(KarmaEvent::query()->count())->toBe(1);
 });
+
+it('does not award karma to a banned inviter', function () {
+    $inviter = User::factory()->create(['is_banned' => true]);
+    $invitee = User::factory()->create(['invited_by' => $inviter->id]);
+    $listing = Listing::factory()->published()->for($invitee)->create();
+
+    event(new ListingPublished($listing));
+
+    expect(app(KarmaService::class)->karmaFor($inviter))->toBe(0)
+        ->and(KarmaEvent::query()->count())->toBe(0);
+});

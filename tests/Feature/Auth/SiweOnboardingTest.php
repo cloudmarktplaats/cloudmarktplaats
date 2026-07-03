@@ -39,6 +39,7 @@ it('creates user + siwe identity from onboarding form', function (): void {
             ->exists()
     )->toBeTrue();
     expect($u->legalAcceptances()->count())->toBe(2);
+    expect($u->invite_credits)->toBe(3);
 });
 
 it('rejects onboarding when ToS is not accepted', function (): void {

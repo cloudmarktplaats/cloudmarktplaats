@@ -73,6 +73,7 @@
         </a>
     </section>
 
+    @if (config('cloudmarktplaats.features.invites'))
     <section>
         <h2 class="text-lg font-semibold">Uitnodigingen</h2>
         <p class="text-sm text-cmp-muted">
@@ -82,4 +83,5 @@
             Uitnodigingen beheren
         </a>
     </section>
+    @endif
 </div>
