@@ -6,7 +6,6 @@ use App\Livewire\Homelab\Feed;
 use App\Models\HomelabPost;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 
 it('shows the feed to guests but not the post form', function () {

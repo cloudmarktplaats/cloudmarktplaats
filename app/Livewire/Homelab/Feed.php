@@ -47,6 +47,12 @@ class Feed extends Component
             'body' => ['required', 'string', 'max:500'],
         ]);
 
+        // 'photo' => 'required' above guarantees a file at this point;
+        // narrow the type for PHPStan (public property stays nullable
+        // so the form starts empty and $this->reset() can clear it).
+        $photo = $this->photo;
+        abort_if($photo === null, 422);
+
         $userId = (int) auth()->id();
         $key = "homelab-post:user:{$userId}";
         if (RateLimiter::tooManyAttempts($key, maxAttempts: 1)) {
@@ -63,8 +69,8 @@ class Feed extends Component
 
         (new StoreHomelabPhotoJob(
             $post->id,
-            (string) file_get_contents((string) $this->photo->getRealPath()),
-            (string) $this->photo->getMimeType(),
+            (string) file_get_contents((string) $photo->getRealPath()),
+            (string) $photo->getMimeType(),
         ))->handle();
 
         RateLimiter::hit($key, decaySeconds: 86400);
