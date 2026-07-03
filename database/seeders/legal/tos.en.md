@@ -4,7 +4,7 @@ These terms govern your use of **cloudmarktplaats.nl** (the "platform"). By crea
 
 ## 1. Who we are
 
-The platform is operated by **Aldewereld Consultancy**, postal address Nieuwe Hemweg 26, 1013 CX Amsterdam, the Netherlands (mail only; visits by appointment), registered with the Dutch Chamber of Commerce under number **[KvK number to be added]**. Contact: [info@cloudmarktplaats.nl](mailto:info@cloudmarktplaats.nl).
+The platform is operated by **Aldewereld Consultancy**, postal address Nieuwe Hemweg 26, 1013 CX Amsterdam, the Netherlands (mail only; visits by appointment), registered with the Dutch Chamber of Commerce under number **61862533**. Contact: [info@cloudmarktplaats.nl](mailto:info@cloudmarktplaats.nl).
 
 ## 2. What cloudmarktplaats is — and isn't
 

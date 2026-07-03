@@ -4,7 +4,7 @@ Cloudmarktplaats is privacyvriendelijk opgezet: geen trackers, geen advertentien
 
 ## 1. Verwerkingsverantwoordelijke
 
-De verwerkingsverantwoordelijke is **Aldewereld Consultancy**, postadres Nieuwe Hemweg 26, 1013 CX Amsterdam, KvK **[KvK-nummer nog invullen]**. Vragen over privacy: [privacy@cloudmarktplaats.nl](mailto:privacy@cloudmarktplaats.nl).
+De verwerkingsverantwoordelijke is **Aldewereld Consultancy**, postadres Nieuwe Hemweg 26, 1013 CX Amsterdam, KvK **61862533**. Vragen over privacy: [privacy@cloudmarktplaats.nl](mailto:privacy@cloudmarktplaats.nl).
 
 ## 2. Welke gegevens we verwerken
 

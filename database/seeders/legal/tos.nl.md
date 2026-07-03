@@ -4,7 +4,7 @@ Deze voorwaarden gelden voor het gebruik van **cloudmarktplaats.nl** (hierna: "h
 
 ## 1. Wie we zijn
 
-Het platform wordt geëxploiteerd door **Aldewereld Consultancy**, postadres Nieuwe Hemweg 26, 1013 CX Amsterdam (uitsluitend post; bezoek op afspraak), ingeschreven bij de Kamer van Koophandel onder nummer **[KvK-nummer nog invullen]**. Contact: [info@cloudmarktplaats.nl](mailto:info@cloudmarktplaats.nl).
+Het platform wordt geëxploiteerd door **Aldewereld Consultancy**, postadres Nieuwe Hemweg 26, 1013 CX Amsterdam (uitsluitend post; bezoek op afspraak), ingeschreven bij de Kamer van Koophandel onder nummer **61862533**. Contact: [info@cloudmarktplaats.nl](mailto:info@cloudmarktplaats.nl).
 
 ## 2. Wat cloudmarktplaats is — en niet is
 

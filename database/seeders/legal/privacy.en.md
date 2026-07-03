@@ -4,7 +4,7 @@ Cloudmarktplaats is built to be privacy-friendly: no trackers, no ad networks, n
 
 ## 1. Data controller
 
-The data controller is **Aldewereld Consultancy**, postal address Nieuwe Hemweg 26, 1013 CX Amsterdam, the Netherlands, Chamber of Commerce no. **[KvK number to be added]**. Privacy questions: [privacy@cloudmarktplaats.nl](mailto:privacy@cloudmarktplaats.nl).
+The data controller is **Aldewereld Consultancy**, postal address Nieuwe Hemweg 26, 1013 CX Amsterdam, the Netherlands, Chamber of Commerce no. **61862533**. Privacy questions: [privacy@cloudmarktplaats.nl](mailto:privacy@cloudmarktplaats.nl).
 
 ## 2. What data we process
 
