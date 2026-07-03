@@ -48,34 +48,34 @@ class StoreHomelabPhotoJob implements ShouldQueue
     {
         $post = HomelabPost::query()->findOrFail($this->postId);
 
-        $finfo = new finfo(FILEINFO_MIME_TYPE);
-        $actual = (string) $finfo->buffer($this->bytes);
-
-        if (! in_array($actual, self::ALLOWED_MIMES, true) || $actual !== $this->declaredMime) {
-            throw new InvalidUploadException(
-                "Unsupported or mismatched MIME type (declared {$this->declaredMime}, actual {$actual})"
-            );
-        }
-
-        $image = Image::read($this->bytes);
-        $w = $image->width();
-        $h = $image->height();
-        if ($w < self::MIN_DIM || $h < self::MIN_DIM || $w > self::MAX_DIM || $h > self::MAX_DIM) {
-            throw new InvalidUploadException("Image dimensions out of bounds ({$w}x{$h})");
-        }
-
-        // Privacy: EXIF/IPTC/XMP weg vóór her-encoderen.
-        $stripped = clone $image;
-
         $post->photo_disk = (string) config('cloudmarktplaats.storage.driver', 'local');
         $storage = app(StorageManager::class)->driver($post->photo_disk);
 
-        $baseDir = 'homelabs/'.$post->ulid;
-        $originalPath = $baseDir.'/original.'.$this->extFor($actual);
-        $cardPath = $baseDir.'/card.webp';
-
         $written = [];
         try {
+            $finfo = new finfo(FILEINFO_MIME_TYPE);
+            $actual = (string) $finfo->buffer($this->bytes);
+
+            if (! in_array($actual, self::ALLOWED_MIMES, true) || $actual !== $this->declaredMime) {
+                throw new InvalidUploadException(
+                    "Unsupported or mismatched MIME type (declared {$this->declaredMime}, actual {$actual})"
+                );
+            }
+
+            $image = Image::read($this->bytes);
+            $w = $image->width();
+            $h = $image->height();
+            if ($w < self::MIN_DIM || $h < self::MIN_DIM || $w > self::MAX_DIM || $h > self::MAX_DIM) {
+                throw new InvalidUploadException("Image dimensions out of bounds ({$w}x{$h})");
+            }
+
+            // Privacy: EXIF/IPTC/XMP weg vóór her-encoderen.
+            $stripped = clone $image;
+
+            $baseDir = 'homelabs/'.$post->ulid;
+            $originalPath = $baseDir.'/original.'.$this->extFor($actual);
+            $cardPath = $baseDir.'/card.webp';
+
             $written[] = $this->writeOriginal($storage, $stripped, $originalPath, $actual);
             $written[] = $this->writeCard($storage, $stripped, $cardPath);
 

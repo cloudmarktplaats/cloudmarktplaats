@@ -30,4 +30,6 @@ it('rejects a mismatched mime and leaves nothing behind', function () {
 
     expect(fn () => (new StoreHomelabPhotoJob($post->id, 'not-an-image', 'image/jpeg'))->handle())
         ->toThrow(InvalidUploadException::class);
+
+    expect(HomelabPost::query()->find($post->id))->toBeNull();
 });
