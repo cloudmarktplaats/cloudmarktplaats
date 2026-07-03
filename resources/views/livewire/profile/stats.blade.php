@@ -6,7 +6,7 @@
     <dl class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
         @php
             $tiles = [
-                ['Lid sinds', $stats['member_since']->format('M Y')],
+                ['Lid sinds', $stats['member_since']->translatedFormat('M Y')],
                 ['Advertenties live', $stats['listings_published']],
                 ['Verkocht', $stats['listings_sold']],
                 ['Homelab-posts', $stats['homelab_posts']],
