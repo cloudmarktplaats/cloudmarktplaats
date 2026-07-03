@@ -61,3 +61,19 @@ it('rejects a reused, self, or unknown code', function () {
     expect(fn () => app(InviteService::class)->redeem($selfCode->code, $inviter))
         ->toThrow(InviteException::class);
 });
+
+it('rejects redeeming a second code for an already-invited user', function () {
+    $inviterA = verifiedUser();
+    $inviterB = verifiedUser();
+    $codeA = app(InviteService::class)->generate($inviterA);
+    $codeB = app(InviteService::class)->generate($inviterB);
+    $invitee = User::factory()->create();
+
+    app(InviteService::class)->redeem($codeA->code, $invitee);
+
+    expect(fn () => app(InviteService::class)->redeem($codeB->code, $invitee->fresh()))
+        ->toThrow(InviteException::class);
+
+    // The second code stays unused — no double credit.
+    expect($codeB->refresh()->used_at)->toBeNull();
+});

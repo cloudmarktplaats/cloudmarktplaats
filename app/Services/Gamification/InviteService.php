@@ -14,8 +14,10 @@ class InviteService
     public function generate(User $inviter): InviteCode
     {
         return DB::transaction(function () use ($inviter): InviteCode {
-            /** @var User $locked */
-            $locked = User::query()->lockForUpdate()->findOrFail($inviter->id);
+            $locked = User::query()->lockForUpdate()->find($inviter->id);
+            if ($locked === null) {
+                throw new InviteException('Account niet gevonden.');
+            }
 
             if ($locked->email_verified_at === null) {
                 throw new InviteException('Verifieer eerst je e-mailadres.');
@@ -48,16 +50,22 @@ class InviteService
             if ($row->inviter_user_id === $invitee->id) {
                 throw new InviteException('Je kunt je eigen code niet inwisselen.');
             }
-            if ($invitee->invited_by !== null) {
+
+            /** @var User $lockedInvitee */
+            $lockedInvitee = User::query()->lockForUpdate()->findOrFail($invitee->id);
+            if ($lockedInvitee->invited_by !== null) {
                 throw new InviteException('Dit account is al aan een uitnodiging gekoppeld.');
             }
 
             $row->forceFill([
-                'invitee_user_id' => $invitee->id,
+                'invitee_user_id' => $lockedInvitee->id,
                 'used_at' => now(),
             ])->save();
 
-            $invitee->forceFill(['invited_by' => $row->inviter_user_id])->save();
+            $lockedInvitee->forceFill(['invited_by' => $row->inviter_user_id])->save();
+
+            // Keep the caller's instance consistent with what we persisted.
+            $invitee->setAttribute('invited_by', $row->inviter_user_id);
 
             return $row;
         });
