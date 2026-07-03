@@ -21,6 +21,11 @@
         </label>
         @error('accept_tos') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
+        @if (config('cloudmarktplaats.features.invites'))
+            <input wire:model="invite_code" placeholder="uitnodigingscode (optioneel)" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
+            @error('invite_code') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+        @endif
+
         <button class="w-full cmp-btn cmp-btn-primary">Account aanmaken</button>
     </form>
 

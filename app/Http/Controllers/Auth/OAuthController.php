@@ -112,6 +112,9 @@ class OAuthController extends Controller
                 'display_name' => $displayName,
                 'password_hash' => null,
                 'email_verified_at' => $oauthUser->getEmail() ? now() : null,
+                'invite_credits' => (bool) config('cloudmarktplaats.features.invites')
+                    ? (int) config('cloudmarktplaats.gamification.starting_invite_credits')
+                    : 0,
             ]);
 
             UserIdentity::firstOrCreate(

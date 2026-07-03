@@ -31,6 +31,7 @@ it('creates a new user from a github oauth callback', function (): void {
     )->toBeTrue();
     expect($user->legalAcceptances()->count())->toBe(2);
     expect(auth()->id())->toBe($user->id);
+    expect($user->invite_credits)->toBe(3);
 });
 
 it('logs in an existing user matched by github identity', function (): void {
