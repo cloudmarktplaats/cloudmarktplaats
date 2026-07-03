@@ -9,8 +9,14 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 
+/**
+ * @property Carbon|null $used_at
+ * @property Carbon|null $expires_at
+ * @property Carbon|null $revoked_at
+ */
 class InviteCode extends Model
 {
     /** @use HasFactory<InviteCodeFactory> */
