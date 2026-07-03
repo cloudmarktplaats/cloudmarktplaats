@@ -23,4 +23,18 @@
 
         <button class="w-full rounded bg-blue-600 px-4 py-2 text-white">Account aanmaken</button>
     </form>
+
+    @if (config('cloudmarktplaats.features.oauth_github') || config('cloudmarktplaats.features.oauth_gitlab'))
+        <div class="my-4 flex items-center gap-3 text-sm text-gray-500">
+            <span class="h-px flex-1 bg-gray-200"></span>of<span class="h-px flex-1 bg-gray-200"></span>
+        </div>
+        <div class="space-y-2">
+            @if (config('cloudmarktplaats.features.oauth_github'))
+                <a href="/oauth/github/redirect" class="block w-full rounded border px-4 py-2 text-center hover:bg-gray-50">Registreren met GitHub</a>
+            @endif
+            @if (config('cloudmarktplaats.features.oauth_gitlab'))
+                <a href="/oauth/gitlab/redirect" class="block w-full rounded border px-4 py-2 text-center hover:bg-gray-50">Registreren met GitLab</a>
+            @endif
+        </div>
+    @endif
 </div>
