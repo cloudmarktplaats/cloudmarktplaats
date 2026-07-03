@@ -84,6 +84,13 @@ class UserResource extends Resource
                     ->boolean()
                     ->label('2FA'),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('karma')
+                    ->state(fn (User $record): int => $record->karma)
+                    ->badge(),
+                Tables\Columns\TextColumn::make('invitedBy.username')
+                    ->label('Invited by')
+                    ->placeholder('—')
+                    ->searchable(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('role')->options([
