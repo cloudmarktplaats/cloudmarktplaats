@@ -1,7 +1,7 @@
 # Gamification & trust — design (voorstel)
 
 **Datum:** 2026-07-03
-**Status:** VOORSTEL — wacht op Nick's richtingskeuzes (zie "Open beslissingen"). Defaults hieronder zijn mijn aanbeveling, niet vastgelegd.
+**Status:** GOEDGEKEURD door Nick (2026-07-03, "go op spec"). De open beslissingen zijn vastgelegd op de aanbevolen defaults: (1) publieke downvotes geschrapt, (2) fase 1 = invites+karma, (3) open registratie + invites-voor-voorsprong, (4) karma-trigger = invitee's eerste gepubliceerde advertentie. Fase 1 gaat naar implementatieplan.
 
 ## Leidend principe
 
