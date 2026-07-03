@@ -14,6 +14,9 @@ use Tests\TestCase;
 |
 */
 
+// Note: withoutVite() lives in Tests\TestCase::setUp() so it applies to
+// both Pest and class-based tests (avoids ViteManifestNotFoundException
+// when CI's test job hasn't built public/build/manifest.json).
 pest()->extend(TestCase::class)
     ->use(RefreshDatabase::class)
     ->in('Feature');
