@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Homelab;
 
+use App\Exceptions\InvalidUploadException;
 use App\Jobs\Homelab\StoreHomelabPhotoJob;
 use App\Models\HomelabPost;
 use Illuminate\Database\Eloquent\Collection;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
@@ -30,8 +32,10 @@ class Feed extends Component
 
     public string $body = '';
 
+    #[Locked]
     public int $perPage = 12;
 
+    #[Locked]
     public int $page = 1;
 
     public function mount(): void
@@ -41,6 +45,7 @@ class Feed extends Component
 
     public function submit(): void
     {
+        abort_unless((bool) config('cloudmarktplaats.features.homelab_feed'), 404);
         abort_unless(auth()->check(), 403);
 
         $this->validate([
@@ -55,6 +60,19 @@ class Feed extends Component
         abort_if($photo === null, 422);
 
         $userId = (int) auth()->id();
+
+        // Unconditional attempts-limiter: regardless of whether the upload
+        // is valid, cap how often this account can drive the (expensive)
+        // decode pipeline per hour. Distinct from the 24h success-limiter
+        // below, which only fires once a post is actually persisted.
+        $attemptsKey = "homelab-post-attempts:user:{$userId}";
+        if (RateLimiter::tooManyAttempts($attemptsKey, maxAttempts: 5)) {
+            $this->addError('photo', 'Te veel uploadpogingen. Probeer het over een uur opnieuw.');
+
+            return;
+        }
+        RateLimiter::hit($attemptsKey, decaySeconds: 3600);
+
         $key = "homelab-post:user:{$userId}";
         if (RateLimiter::tooManyAttempts($key, maxAttempts: 1)) {
             $this->addError('body', 'Eén post per dag — probeer het morgen weer.');
@@ -62,23 +80,29 @@ class Feed extends Component
             return;
         }
 
-        $post = DB::transaction(function () use ($userId, $photo): HomelabPost {
-            $post = HomelabPost::query()->create([
-                'user_id' => $userId,
-                'body' => $this->body,
-                'photo_path' => 'pending',
-            ]);
+        try {
+            $post = DB::transaction(function () use ($userId, $photo): HomelabPost {
+                $post = HomelabPost::query()->create([
+                    'user_id' => $userId,
+                    'body' => $this->body,
+                    'photo_path' => 'pending',
+                ]);
 
-            // Synchroon binnen de transactie: de rij wordt pas zichtbaar
-            // (published mét echt foto-pad) zodra de pipeline slaagde.
-            (new StoreHomelabPhotoJob(
-                $post->id,
-                (string) file_get_contents((string) $photo->getRealPath()),
-                (string) $photo->getMimeType(),
-            ))->handle();
+                // Synchroon binnen de transactie: de rij wordt pas zichtbaar
+                // (published mét echt foto-pad) zodra de pipeline slaagde.
+                (new StoreHomelabPhotoJob(
+                    $post->id,
+                    (string) file_get_contents((string) $photo->getRealPath()),
+                    (string) $photo->getMimeType(),
+                ))->handle();
 
-            return $post;
-        });
+                return $post;
+            });
+        } catch (InvalidUploadException) {
+            $this->addError('photo', 'Foto kon niet verwerkt worden: geen geldig beeldbestand of afmetingen buiten bereik.');
+
+            return;
+        }
 
         RateLimiter::hit($key, decaySeconds: 86400);
 
@@ -93,7 +117,9 @@ class Feed extends Component
 
     public function deleteOwn(string $ulid): void
     {
-        $post = HomelabPost::query()->where('ulid', $ulid)->firstOrFail();
+        abort_unless((bool) config('cloudmarktplaats.features.homelab_feed'), 404);
+
+        $post = HomelabPost::query()->where('ulid', $ulid)->published()->firstOrFail();
 
         abort_unless((int) auth()->id() === $post->user_id, 403);
 
@@ -105,10 +131,12 @@ class Feed extends Component
      */
     public function posts(): Collection
     {
+        $limit = min($this->perPage * $this->page, 480);
+
         return HomelabPost::query()
             ->published()
             ->orderByDesc('created_at')
-            ->limit($this->perPage * $this->page)
+            ->limit($limit)
             ->get();
     }
 

@@ -7,10 +7,12 @@ namespace App\Livewire\Homelab;
 use App\Models\HomelabPost;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\View;
+use Livewire\Attributes\Locked;
 use Livewire\Component;
 
 class Recent extends Component
 {
+    #[Locked]
     public int $limit = 3;
 
     /**
