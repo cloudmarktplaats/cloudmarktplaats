@@ -17,15 +17,19 @@ it('shows the user their own stats and earned badges', function () {
         ->assertSee('Eerste verkoop'); // a derived badge
 });
 
-it('only reflects the authenticated user (no other user data)', function () {
+it('only reflects the authenticated user (no other user data leaks)', function () {
     $me = User::factory()->create();
     $other = User::factory()->create();
-    Listing::factory()->sold()->for($other)->count(5)->create();
+    Listing::factory()->sold()->for($other)->count(12)->create();
 
+    // $me has zero activity — if $other's sold listings leaked into
+    // $me's stats, $me would see the sale/trader badges. They must not.
     Livewire::actingAs($me)
         ->test(Stats::class)
         ->assertOk()
-        ->assertDontSee('Handelaar'); // 'other' would have it; I must not
+        ->assertDontSee('Eerste verkoop')
+        ->assertDontSee('Handelaar')
+        ->assertSee('Nog geen badges');
 });
 
 it('404s when the stats feature is off', function () {
