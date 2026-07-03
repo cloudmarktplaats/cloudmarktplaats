@@ -7,6 +7,7 @@ namespace App\Livewire\Homelab;
 use App\Jobs\Homelab\StoreHomelabPhotoJob;
 use App\Models\HomelabPost;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -61,17 +62,23 @@ class Feed extends Component
             return;
         }
 
-        $post = HomelabPost::query()->create([
-            'user_id' => $userId,
-            'body' => $this->body,
-            'photo_path' => 'pending',
-        ]);
+        $post = DB::transaction(function () use ($userId, $photo): HomelabPost {
+            $post = HomelabPost::query()->create([
+                'user_id' => $userId,
+                'body' => $this->body,
+                'photo_path' => 'pending',
+            ]);
 
-        (new StoreHomelabPhotoJob(
-            $post->id,
-            (string) file_get_contents((string) $photo->getRealPath()),
-            (string) $photo->getMimeType(),
-        ))->handle();
+            // Synchroon binnen de transactie: de rij wordt pas zichtbaar
+            // (published mét echt foto-pad) zodra de pipeline slaagde.
+            (new StoreHomelabPhotoJob(
+                $post->id,
+                (string) file_get_contents((string) $photo->getRealPath()),
+                (string) $photo->getMimeType(),
+            ))->handle();
+
+            return $post;
+        });
 
         RateLimiter::hit($key, decaySeconds: 86400);
 

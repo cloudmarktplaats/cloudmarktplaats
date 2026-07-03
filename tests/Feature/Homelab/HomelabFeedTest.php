@@ -6,6 +6,7 @@ use App\Livewire\Homelab\Feed;
 use App\Models\HomelabPost;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 
 it('shows the feed to guests but not the post form', function () {
@@ -68,6 +69,13 @@ it('rate limits to one post per 24h per account', function () {
         ->assertHasErrors(['body']);
 
     expect(HomelabPost::query()->count())->toBe(1);
+
+    // Pin the decay duration itself (24h), not just "blocked right now" —
+    // that would also pass with a much shorter decay. `travel()` can't be
+    // used here: it desyncs Carbon's test-time from the real filesystem
+    // mtimes Livewire's fake-upload cleanup relies on, and a follow-up
+    // upload after travelling forward gets silently emptied out.
+    expect(RateLimiter::availableIn("homelab-post:user:{$user->id}"))->toBeGreaterThan(23 * 3600);
 });
 
 it('404s when the feature flag is off', function () {
