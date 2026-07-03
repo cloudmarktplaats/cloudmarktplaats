@@ -8,7 +8,7 @@ use App\Models\HomelabPost;
 use App\Models\KarmaEvent;
 use App\Models\Listing;
 use App\Models\User;
-use Illuminate\Support\Carbon;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class StatsService
@@ -16,7 +16,7 @@ class StatsService
     /**
      * A user's own stats. Never includes anyone else's data.
      *
-     * @return array{member_since: \Carbon\Carbon, listings_published: int, listings_sold: int, homelab_posts: int, karma: int, people_activated: int}
+     * @return array{member_since: Carbon, listings_published: int, listings_sold: int, homelab_posts: int, karma: int, people_activated: int}
      */
     public function forUser(User $user): array
     {
