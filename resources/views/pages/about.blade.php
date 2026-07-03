@@ -90,7 +90,7 @@
                     ['label' => '02', 'name' => 'Sponsoring', 'body' => 'Bedrijven en zelfstandigen die de community willen steunen, krijgen een vermelding op een sponsorpagina. Geen native advertenties. Geen invloed op moderatie.'],
                     ['label' => '03', 'name' => 'Premium listings (later)', 'body' => 'Optioneel je advertentie boven aan de pagina. Niet om onze rekening te vullen — om de rekening van de hoster te betalen.'],
                 ] as $item)
-                    <div class="flex items-start gap-4 rounded-xl border border-cmp-border bg-cmp-surface p-5">
+                    <div class="flex items-start gap-4 rounded-sm border border-cmp-border bg-cmp-surface p-5">
                         <span class="font-mono text-[11px] text-cmp-blue mt-1 tracking-widest shrink-0">{{ $item['label'] }}</span>
                         <div>
                             <h3 class="text-base font-semibold">{{ $item['name'] }}</h3>

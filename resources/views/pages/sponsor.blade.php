@@ -58,7 +58,7 @@
     <section class="mx-auto max-w-5xl px-5 sm:px-8 py-16 sm:py-20">
 
         {{-- Amber notice — sponsoring sub-project nog niet live --}}
-        <div role="status" class="mb-12 flex items-start gap-3 rounded-lg border border-cmp-amber/40 bg-cmp-amber/10 px-4 py-3 text-sm text-cmp-amber">
+        <div role="status" class="mb-12 flex items-start gap-3 rounded-sm border border-cmp-amber/40 bg-cmp-amber/10 px-4 py-3 text-sm text-cmp-amber">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mt-0.5 shrink-0" aria-hidden="true">
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
@@ -91,7 +91,7 @@
         {{-- Tier cards --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
             @foreach ($tiers as $tier)
-                <div class="relative rounded-xl bg-cmp-surface p-6 flex flex-col {{ $tier['featured'] ? 'border-2 border-cmp-blue' : 'border border-cmp-border' }}">
+                <div class="relative rounded-sm bg-cmp-surface p-6 flex flex-col {{ $tier['featured'] ? 'border-2 border-cmp-blue' : 'border border-cmp-border' }}">
                     @if ($tier['featured'])
                         <span class="absolute -top-3 left-6 font-mono text-[10px] tracking-widest bg-cmp-blue text-white px-2 py-1 rounded">
                             FEATURED
@@ -127,7 +127,7 @@
         </div>
 
         {{-- Wat sponsors NIET krijgen --}}
-        <section class="mt-16 rounded-xl border border-cmp-border bg-cmp-bg2 p-8">
+        <section class="mt-16 rounded-sm border border-cmp-border bg-cmp-bg2 p-8">
             <div class="cmp-section-label mb-4">Niet</div>
             <h2 class="text-2xl font-bold tracking-display-tight">Wat sponsors <span class="text-cmp-muted">niet</span> krijgen</h2>
 

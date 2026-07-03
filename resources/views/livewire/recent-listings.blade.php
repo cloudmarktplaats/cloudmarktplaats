@@ -1,31 +1,16 @@
-@php
-    $conditionLabels = [
-        'new'        => 'Nieuw',
-        'used'       => 'Gebruikt',
-        'defective'  => 'Defect',
-        'for_parts'  => 'Voor onderdelen',
-    ];
-    $conditionColor = [
-        'new'        => 'text-cmp-blue',
-        'used'       => 'text-cmp-signal',
-        'defective'  => 'text-cmp-amber',
-        'for_parts'  => 'text-cmp-muted',
-    ];
-@endphp
-
 <section aria-labelledby="recent-heading">
     <div class="flex items-end justify-between mb-6">
         <div>
             <div class="cmp-section-label mb-3">Recent aanbod</div>
             <h2 id="recent-heading" class="text-2xl font-bold tracking-display-tight">Net geplaatst</h2>
         </div>
-        <a href="{{ route('listings.index') }}" class="hidden sm:inline text-sm text-cmp-muted hover:text-cmp-blue">
+        <a href="{{ route('listings.index') }}" class="hidden sm:inline text-sm text-cmp-muted hover:text-cmp-ink">
             Alle advertenties →
         </a>
     </div>
 
     @if ($listings->isEmpty())
-        <div class="rounded-xl border border-cmp-border bg-cmp-surface p-8 text-center">
+        <div class="rounded-sm border border-cmp-border bg-cmp-surface p-8 text-center">
             <p class="text-cmp-muted mb-4">Nog geen advertenties. Wees de eerste.</p>
             <a href="{{ route('register') }}" class="cmp-btn cmp-btn-primary">Plaats er een</a>
         </div>
@@ -37,8 +22,8 @@
                     $href = '/listings/'.$listing->ulid.'-'.$listing->slug;
                 @endphp
                 <a href="{{ $href }}"
-                   class="group block rounded-xl border border-cmp-border bg-cmp-surface overflow-hidden transition-colors duration-150 hover:border-cmp-blue/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-cmp-blue-light">
-                    <div class="relative h-40 bg-gradient-to-br from-cmp-bg3 to-cmp-bg2 flex items-center justify-center overflow-hidden">
+                   class="group block rounded-sm border border-cmp-border bg-cmp-surface overflow-hidden transition-colors duration-150 hover:border-cmp-ink focus:outline-none focus-visible:ring-2 focus-visible:ring-cmp-signal">
+                    <div class="relative h-40 bg-cmp-bg2 flex items-center justify-center overflow-hidden">
                         @if ($photo)
                             <img src="{{ $photo->urlFor('card') }}"
                                  alt="Foto van {{ $listing->title }}"
@@ -50,16 +35,16 @@
                         @endif
                     </div>
                     <div class="p-3.5">
-                        <div class="text-xl font-bold tracking-display-tight">
-                            € {{ number_format($listing->price_cents / 100, 2, ',', '.') }}
+                        <div class="flex items-baseline justify-between gap-3">
+                            <h3 class="truncate font-medium text-cmp-text" title="{{ $listing->title }}">{{ $listing->title }}</h3>
+                            <span class="shrink-0 font-mono text-sm font-medium">
+                                € {{ number_format($listing->price_cents / 100, 2, ',', '.') }}
+                            </span>
                         </div>
-                        <div class="text-sm text-cmp-muted truncate mt-0.5">{{ $listing->title }}</div>
-                        <div class="mt-2 flex items-center justify-between">
+                        <div class="mt-2.5 flex items-center justify-between">
+                            <span class="cmp-label-chip">{{ $listing->conditionLabel() }}</span>
                             <span class="font-mono text-[10px] text-cmp-faint">
                                 {{ $listing->region_postcode ?: 'Nederland' }}
-                            </span>
-                            <span class="font-mono text-[10px] {{ $conditionColor[$listing->condition] ?? 'text-cmp-muted' }}">
-                                {{ $conditionLabels[$listing->condition] ?? $listing->condition }}
                             </span>
                         </div>
                     </div>
@@ -68,7 +53,7 @@
         </div>
 
         <div class="mt-6 text-center sm:hidden">
-            <a href="{{ route('listings.index') }}" class="text-sm text-cmp-muted hover:text-cmp-blue">
+            <a href="{{ route('listings.index') }}" class="text-sm text-cmp-muted hover:text-cmp-ink">
                 Bekijk alle advertenties →
             </a>
         </div>

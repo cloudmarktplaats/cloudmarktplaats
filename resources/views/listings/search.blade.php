@@ -10,23 +10,23 @@
             name="q"
             value="{{ $q }}"
             placeholder="Zoek naar hardware, merken, modellen…"
-            class="w-full rounded border p-2"
+            class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal"
             autofocus
         >
-        <button class="rounded bg-blue-600 px-4 py-2 text-white">Zoeken</button>
+        <button class="cmp-btn cmp-btn-primary">Zoeken</button>
     </form>
 
     @if ($q === '')
-        <p class="text-gray-500">Voer een zoekterm in om resultaten te zien.</p>
+        <p class="text-cmp-muted">Voer een zoekterm in om resultaten te zien.</p>
     @elseif ($results->isEmpty())
-        <p class="rounded border bg-white p-6 text-gray-500">Geen resultaten voor "<strong>{{ $q }}</strong>".</p>
+        <p class="rounded border bg-white p-6 text-cmp-muted">Geen resultaten voor "<strong>{{ $q }}</strong>".</p>
     @else
-        <p class="text-sm text-gray-500">{{ $results->total() }} resultaat(en) voor "<strong>{{ $q }}</strong>"</p>
+        <p class="text-sm text-cmp-muted">{{ $results->total() }} resultaat(en) voor "<strong>{{ $q }}</strong>"</p>
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             @foreach ($results as $listing)
                 <a href="/listings/{{ $listing->ulid }}-{{ $listing->slug }}" class="block rounded border bg-white p-4 shadow-sm transition hover:shadow">
                     <h2 class="font-semibold">{{ $listing->title }}</h2>
-                    <p class="text-sm text-gray-500">€ {{ number_format($listing->price_cents / 100, 2, ',', '.') }}</p>
+                    <p class="text-sm text-cmp-muted">€ {{ number_format($listing->price_cents / 100, 2, ',', '.') }}</p>
                 </a>
             @endforeach
         </div>

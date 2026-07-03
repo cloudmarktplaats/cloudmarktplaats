@@ -33,7 +33,7 @@
 
         <ol class="grid grid-cols-1 md:grid-cols-2 gap-4" role="list">
             @foreach ($values as $i => [$title, $body])
-                <li class="group rounded-xl border border-cmp-border bg-cmp-surface p-6 transition-colors duration-150 hover:border-cmp-blue/70">
+                <li class="group rounded-sm border border-cmp-border bg-cmp-surface p-6 transition-colors duration-150 hover:border-cmp-blue/70">
                     <div class="font-mono text-[11px] text-cmp-blue tracking-widest mb-3">
                         {{ str_pad((string)($i + 1), 2, '0', STR_PAD_LEFT) }}
                     </div>

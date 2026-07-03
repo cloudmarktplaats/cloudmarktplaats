@@ -1,19 +1,19 @@
-<div class="mx-auto max-w-md rounded border bg-white p-6 shadow">
+<div class="mx-auto max-w-md rounded-sm border border-cmp-border bg-cmp-surface p-6">
     <h1 class="mb-4 text-xl font-bold">Account aanmaken</h1>
     <form wire:submit="submit" class="space-y-3">
-        <input type="email" wire:model="email" placeholder="email" class="w-full rounded border p-2" required>
+        <input type="email" wire:model="email" placeholder="email" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('email') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <input wire:model="username" placeholder="username" class="w-full rounded border p-2" required>
+        <input wire:model="username" placeholder="username" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('username') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <input wire:model="display_name" placeholder="weergavenaam" class="w-full rounded border p-2" required>
+        <input wire:model="display_name" placeholder="weergavenaam" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('display_name') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <input type="password" wire:model="password" placeholder="wachtwoord" class="w-full rounded border p-2" required>
+        <input type="password" wire:model="password" placeholder="wachtwoord" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <input type="password" wire:model="password_confirmation" placeholder="herhaal wachtwoord" class="w-full rounded border p-2" required>
+        <input type="password" wire:model="password_confirmation" placeholder="herhaal wachtwoord" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
 
         <label class="flex items-start space-x-2 text-sm">
             <input type="checkbox" wire:model="accept_tos" class="mt-1">
@@ -21,19 +21,19 @@
         </label>
         @error('accept_tos') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <button class="w-full rounded bg-blue-600 px-4 py-2 text-white">Account aanmaken</button>
+        <button class="w-full cmp-btn cmp-btn-primary">Account aanmaken</button>
     </form>
 
     @if (config('cloudmarktplaats.features.oauth_github') || config('cloudmarktplaats.features.oauth_gitlab'))
-        <div class="my-4 flex items-center gap-3 text-sm text-gray-500">
-            <span class="h-px flex-1 bg-gray-200"></span>of<span class="h-px flex-1 bg-gray-200"></span>
+        <div class="my-4 flex items-center gap-3 text-sm text-cmp-muted">
+            <span class="h-px flex-1 bg-cmp-bg2"></span>of<span class="h-px flex-1 bg-cmp-bg2"></span>
         </div>
         <div class="space-y-2">
             @if (config('cloudmarktplaats.features.oauth_github'))
-                <a href="/oauth/github/redirect" class="block w-full rounded border px-4 py-2 text-center hover:bg-gray-50">Registreren met GitHub</a>
+                <a href="/oauth/github/redirect" class="block w-full rounded-sm border border-cmp-ink px-4 py-2 text-center font-medium hover:bg-cmp-ink hover:text-white transition-colors">Registreren met GitHub</a>
             @endif
             @if (config('cloudmarktplaats.features.oauth_gitlab'))
-                <a href="/oauth/gitlab/redirect" class="block w-full rounded border px-4 py-2 text-center hover:bg-gray-50">Registreren met GitLab</a>
+                <a href="/oauth/gitlab/redirect" class="block w-full rounded-sm border border-cmp-ink px-4 py-2 text-center font-medium hover:bg-cmp-ink hover:text-white transition-colors">Registreren met GitLab</a>
             @endif
         </div>
     @endif

@@ -25,8 +25,9 @@
             <div>
                 <div class="cmp-section-label mb-4">Community</div>
                 <ul class="space-y-2 text-sm text-cmp-muted">
-                    <li><a href="https://github.com/cloudmarktplaats/cloudmarktplaats" class="hover:text-cmp-text" rel="noopener external">GitHub</a></li>
-                    <li><a href="https://github.com/cloudmarktplaats/cloudmarktplaats/issues" class="hover:text-cmp-text" rel="noopener external">Issues &amp; bugs</a></li>
+                    <li><a href="https://github.com/NickAldewereld/cloudmarktplaats" class="hover:text-cmp-text" rel="noopener external">GitHub</a></li>
+                    <li><a href="https://github.com/NickAldewereld/cloudmarktplaats/issues" class="hover:text-cmp-text" rel="noopener external">Issues &amp; bugs</a></li>
+                    <li><a href="https://github.com/sponsors/NickAldewereld" class="hover:text-cmp-text" rel="noopener external">GitHub Sponsors</a></li>
                     <li><a href="mailto:sponsoring@cloudmarktplaats.nl" class="hover:text-cmp-text">sponsoring@cloudmarktplaats.nl</a></li>
                 </ul>
             </div>
@@ -35,7 +36,7 @@
         <div class="mt-12 border-t border-cmp-border pt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <p class="font-mono text-[11px] text-cmp-faint">
                 cloudmarktplaats.nl · AGPL-3.0 ·
-                <a href="https://github.com/cloudmarktplaats/cloudmarktplaats" class="underline hover:text-cmp-muted" rel="noopener external">code op GitHub</a>
+                <a href="https://github.com/NickAldewereld/cloudmarktplaats" class="underline hover:text-cmp-muted" rel="noopener external">code op GitHub</a>
             </p>
             <p class="font-mono text-[11px] text-cmp-faint">
                 Geen trackers. Geen cookiebanner. Geen bullshit.

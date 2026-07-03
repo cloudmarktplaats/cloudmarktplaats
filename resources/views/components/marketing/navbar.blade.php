@@ -1,9 +1,9 @@
-<header class="border-b border-cmp-border bg-cmp-bg/80 backdrop-blur supports-[backdrop-filter]:bg-cmp-bg/60 sticky top-0 z-30">
+<header class="border-b border-cmp-border bg-cmp-surface/90 backdrop-blur supports-[backdrop-filter]:bg-cmp-surface/75 sticky top-0 z-30">
     <nav class="mx-auto flex max-w-6xl items-center justify-between px-5 py-4 sm:px-8">
         <a href="{{ route('home') }}" class="flex items-center gap-3" aria-label="Cloudmarktplaats — naar de homepage">
             <x-marketing.logo :size="36" />
             <span class="font-display text-lg font-bold tracking-display-tight text-cmp-text">
-                cloud<span class="text-cmp-blue">marktplaats</span><span class="text-cmp-muted">.nl</span>
+                cloud<span class="text-cmp-signal">marktplaats</span><span class="text-cmp-muted">.nl</span>
             </span>
         </a>
 

@@ -63,7 +63,7 @@
             @foreach ($columns as $col)
                 <section
                     aria-labelledby="col-{{ $loop->index }}"
-                    class="flex flex-col rounded-xl border border-cmp-border bg-cmp-surface p-6"
+                    class="flex flex-col rounded-sm border border-cmp-border bg-cmp-surface p-6"
                 >
                     <div class="flex items-center gap-2">
                         <span class="h-2 w-2 rounded-full {{ $col['dot'] }}" aria-hidden="true"></span>

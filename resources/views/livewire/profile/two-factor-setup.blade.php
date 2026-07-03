@@ -1,7 +1,7 @@
 <div class="mx-auto max-w-xl space-y-6 rounded border bg-white p-6 shadow">
     <header>
         <h1 class="text-xl font-bold">Tweefactor-authenticatie</h1>
-        <p class="text-sm text-gray-600">
+        <p class="text-sm text-cmp-muted">
             Beveilig je account met een eenmalige TOTP-code uit je authenticator-app
             (zoals Aegis, 1Password, Bitwarden, Google Authenticator).
         </p>
@@ -15,16 +15,16 @@
 
         <section class="space-y-3">
             <h2 class="text-lg font-semibold">Recovery-codes opnieuw genereren</h2>
-            <p class="text-xs text-gray-600">
+            <p class="text-xs text-cmp-muted">
                 Geef je huidige TOTP-code op om 8 nieuwe codes te genereren. De oude
                 codes worden ongeldig.
             </p>
             <form wire:submit="regenerate" class="space-y-2">
                 <input type="text" inputmode="numeric" autocomplete="one-time-code"
                        wire:model="code" placeholder="123456" maxlength="6"
-                       class="w-full rounded border p-2 font-mono">
+                       class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal font-mono">
                 @error('code') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                <button class="rounded bg-blue-600 px-3 py-1 text-sm text-white">Genereer nieuwe codes</button>
+                <button class="rounded-sm bg-cmp-ink px-3 py-1 text-sm text-white hover:bg-cmp-signal">Genereer nieuwe codes</button>
             </form>
         </section>
 
@@ -33,17 +33,17 @@
             <form wire:submit="disable" class="space-y-2">
                 <input type="text" inputmode="numeric" autocomplete="one-time-code"
                        wire:model="code" placeholder="TOTP-code" maxlength="6"
-                       class="w-full rounded border p-2 font-mono">
+                       class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal font-mono">
                 @if (auth()->user()->identities()->where('provider', 'password')->exists())
                     <input type="password" wire:model="password" placeholder="Wachtwoord"
-                           class="w-full rounded border p-2">
+                           class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
                 @endif
                 @error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                 <button class="rounded border border-red-300 px-3 py-1 text-sm text-red-700 hover:bg-red-50">Uitschakelen</button>
             </form>
         </section>
     @elseif (! $secret && ! $enabled)
-        <button type="button" wire:click="start" class="rounded bg-blue-600 px-3 py-2 text-sm text-white">
+        <button type="button" wire:click="start" class="rounded-sm bg-cmp-ink px-3 py-2 text-sm text-white hover:bg-cmp-signal">
             Start 2FA-setup
         </button>
     @endif
@@ -52,18 +52,18 @@
         <section class="space-y-3">
             <h2 class="text-lg font-semibold">Stap 1 — scan de QR-code</h2>
             <div>{!! $this->qrSvg() !!}</div>
-            <details class="text-xs text-gray-600">
+            <details class="text-xs text-cmp-muted">
                 <summary class="cursor-pointer">Of voer het geheim handmatig in</summary>
-                <code class="mt-1 block break-all rounded bg-gray-100 p-2 font-mono">{{ $secret }}</code>
+                <code class="mt-1 block break-all rounded bg-cmp-bg2 p-2 font-mono">{{ $secret }}</code>
             </details>
 
             <h2 class="text-lg font-semibold">Stap 2 — bevestig met een code</h2>
             <form wire:submit="confirm" class="space-y-2">
                 <input type="text" inputmode="numeric" autocomplete="one-time-code"
                        wire:model="code" placeholder="123456" maxlength="6"
-                       class="w-full rounded border p-2 font-mono">
+                       class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal font-mono">
                 @error('code') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-                <button class="rounded bg-blue-600 px-3 py-1 text-sm text-white">Bevestig</button>
+                <button class="rounded-sm bg-cmp-ink px-3 py-1 text-sm text-white hover:bg-cmp-signal">Bevestig</button>
             </form>
         </section>
     @endif

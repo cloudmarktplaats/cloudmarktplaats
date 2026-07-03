@@ -1,4 +1,4 @@
-<div class="rounded-xl border border-cmp-border bg-cmp-surface p-5 sm:p-6">
+<div class="rounded-sm border border-cmp-border bg-cmp-surface p-5 sm:p-6">
     @if ($sent)
         <div class="flex items-start gap-3" role="status">
             <svg class="mt-0.5 shrink-0 text-cmp-signal" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
