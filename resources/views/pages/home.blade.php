@@ -65,7 +65,7 @@
                 <dt class="font-mono text-sm font-medium uppercase tracking-wide">Privacy als architectuur</dt>
                 <dd class="text-sm text-cmp-muted leading-relaxed">
                     IP-adressen gewist na 24 uur. EXIF gestript bij upload. Geen trackers, geen
-                    analytics. Kijk maar in de <a href="https://github.com/NickAldewereld/cloudmarktplaats" class="text-cmp-blue underline hover:text-cmp-blue-dark" rel="noopener external">code</a>.
+                    analytics. Kijk maar in de <a href="https://github.com/cloudmarktplaats/cloudmarktplaats" class="text-cmp-blue underline hover:text-cmp-blue-dark" rel="noopener external">code</a>.
                 </dd>
             </div>
             <div class="grid grid-cols-1 gap-2 py-5 sm:grid-cols-[220px,1fr] sm:gap-8">
