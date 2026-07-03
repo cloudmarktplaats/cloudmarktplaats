@@ -7,7 +7,6 @@ use App\Services\Storage\LocalStorage;
 use App\Services\Storage\StorageInterface;
 use App\Services\Storage\StorageManager;
 use Illuminate\Support\Facades\Storage;
-use InvalidArgumentException;
 
 it('binds StorageInterface to the configured driver', function () {
     config()->set('cloudmarktplaats.storage.driver', 'local');

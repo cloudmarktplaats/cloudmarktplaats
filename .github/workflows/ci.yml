@@ -15,6 +15,24 @@ jobs:
       - run: composer install --no-progress --no-interaction
       - run: ./vendor/bin/pint --test
 
+  # Dependency CVE gate. `composer audit` honours the advisories listed in
+  # composer.json config.audit.ignore (the 3 Laravel-11 email/URL CVEs with
+  # no backport). Any NEW advisory outside that list fails the build, so we
+  # learn about it on push instead of during an incident. npm audit covers
+  # only production deps — dev-server CVEs (vite) don't ship.
+  security:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with: { php-version: '8.3' }
+      - run: composer install --no-progress --no-interaction
+      - run: composer audit
+      - uses: actions/setup-node@v4
+        with: { node-version: '20' }
+      - run: npm ci
+      - run: npm audit --omit=dev --audit-level=high
+
   static:
     runs-on: ubuntu-latest
     steps:
