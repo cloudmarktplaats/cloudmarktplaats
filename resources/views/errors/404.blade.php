@@ -3,9 +3,14 @@
     description="De pagina die je zocht bestaat hier niet (meer)."
 >
 
-    <section class="mx-auto max-w-2xl px-5 sm:px-8 py-24 sm:py-32">
+    <section class="relative mx-auto max-w-2xl px-5 sm:px-8 py-24 sm:py-32">
 
-        <p class="font-mono text-cmp-muted text-[120px] sm:text-[180px] leading-none tracking-tight">404</p>
+        {{-- Easter egg: a faint glyph-rain drifts behind the 404 — a small
+             "lost in the machine" nod. JS attaches a canvas here; it stays
+             subtle and switches off under prefers-reduced-motion. --}}
+        <div data-matrix-rain aria-hidden="true" class="pointer-events-none absolute inset-0 -z-10 overflow-hidden"></div>
+
+        <p class="relative font-mono text-cmp-muted text-[120px] sm:text-[180px] leading-none tracking-tight">404</p>
 
         <h1 class="mt-4 text-3xl sm:text-4xl font-bold tracking-display-tighter">Niet gevonden</h1>
 
