@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Events\Listings\ListingPublished;
+use App\Listeners\Gamification\AwardInviteKarmaOnFirstListing;
 use App\Models\HomelabPost;
 use App\Models\Listing;
 use App\Models\User;
@@ -58,6 +60,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             SocialiteWasCalled::class,
             [GitLabExtendSocialite::class, 'handle'],
+        );
+
+        Event::listen(
+            ListingPublished::class,
+            AwardInviteKarmaOnFirstListing::class,
         );
 
         // Morph map for polymorphic relations. Keeping aliases stable
