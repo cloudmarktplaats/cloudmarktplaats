@@ -23,10 +23,14 @@ class ResetPassword extends Component
 
     public string $password_confirmation = '';
 
-    public function mount(string $token = '', string $email = ''): void
+    public function mount(string $token = ''): void
     {
+        // The reset link carries the address in the query string
+        // (…/reset-password/{token}?email=…), not as a route parameter,
+        // so it must be read from the request — otherwise the readonly
+        // email field renders empty and the form can never be submitted.
         $this->token = $token;
-        $this->email = $email;
+        $this->email = (string) request()->query('email', '');
     }
 
     public function submit(): void
