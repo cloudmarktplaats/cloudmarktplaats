@@ -7,6 +7,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use App\Services\Admin\AdminActionLogger;
+use App\Services\Gamification\KarmaService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -123,6 +124,7 @@ class UserResource extends Resource
                         AdminActionLogger::log('user.ban', 'user', $user->id, [
                             'reason' => $data['reason'],
                         ]);
+                        app(KarmaService::class)->revokeInviteActivation($user);
                     }),
                 Tables\Actions\Action::make('unban')
                     ->icon('heroicon-o-check-circle')
