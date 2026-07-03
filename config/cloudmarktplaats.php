@@ -16,6 +16,7 @@ return [
         'web3_escrow' => env('FEATURE_WEB3_ESCROW', false),
         'ipfs_pinning' => env('FEATURE_IPFS', false),
         'umami_analytics' => env('FEATURE_UMAMI', false),
+        'homelab_feed' => env('FEATURE_HOMELAB_FEED', true),
     ],
     'storage' => [
         'driver' => env('LISTING_STORAGE_DRIVER', 'local'),
