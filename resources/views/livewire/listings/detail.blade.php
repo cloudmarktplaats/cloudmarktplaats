@@ -4,6 +4,23 @@
         Terug naar het aanbod
     </a>
 
+    @if ($listing->state !== 'published')
+        @php
+            $stateLabels = [
+                'draft'          => ['Concept', 'Deze advertentie is nog een concept en is niet zichtbaar voor anderen.'],
+                'pending_review' => ['In moderatie', 'Deze advertentie wacht op goedkeuring en is nog niet zichtbaar voor anderen. Alleen jij ziet deze preview.'],
+                'rejected'       => ['Afgewezen', 'Deze advertentie is afgewezen door een moderator en is niet zichtbaar voor anderen.'],
+                'sold'           => ['Verkocht', 'Deze advertentie is als verkocht gemarkeerd.'],
+                'archived'       => ['Gearchiveerd', 'Deze advertentie is gearchiveerd en niet meer zichtbaar in het aanbod.'],
+            ];
+            [$stateLabel, $stateHint] = $stateLabels[$listing->state] ?? [ucfirst($listing->state), 'Deze advertentie is niet openbaar zichtbaar.'];
+        @endphp
+        <div class="mt-6 flex items-start gap-3 rounded-sm border-2 border-cmp-ink bg-cmp-surface px-4 py-3">
+            <span class="cmp-label-chip">{{ $stateLabel }}</span>
+            <p class="text-sm text-cmp-muted">{{ $stateHint }}</p>
+        </div>
+    @endif
+
     <article class="mt-6 overflow-hidden rounded-sm border border-cmp-border bg-cmp-surface">
         @if ($listing->photos->isNotEmpty())
             <div class="grid grid-cols-1 gap-1 bg-cmp-bg2 sm:grid-cols-3">

@@ -49,11 +49,47 @@ it('Detail renders a published listing for anonymous visitors', function () {
         ->assertSee('Vintage workstation');
 });
 
-it('Detail 404s for non-published listings', function () {
+it('Detail 404s for non-published listings for anonymous visitors', function () {
     $listing = Listing::factory()->create(['state' => 'draft']);
 
     $this->get("/listings/{$listing->ulid}-{$listing->slug}")
         ->assertNotFound();
+});
+
+it('Detail lets the owner preview their own pending listing', function () {
+    $owner = User::factory()->create();
+    $listing = Listing::factory()->for($owner)->create([
+        'state' => 'pending_review',
+        'title' => 'Wachtende advertentie',
+    ]);
+
+    Livewire::actingAs($owner)
+        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->assertOk()
+        ->assertSee('Wachtende advertentie')
+        ->assertSee('In moderatie');
+});
+
+it('Detail 404s a non-owner viewing someone elses pending listing', function () {
+    $listing = Listing::factory()->create(['state' => 'pending_review']);
+    $stranger = User::factory()->create();
+
+    Livewire::actingAs($stranger)
+        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->assertNotFound();
+});
+
+it('Detail lets a moderator preview any pending listing', function () {
+    $listing = Listing::factory()->create([
+        'state' => 'pending_review',
+        'title' => 'Moderatie-preview',
+    ]);
+    $moderator = User::factory()->moderator()->create();
+
+    Livewire::actingAs($moderator)
+        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->assertOk()
+        ->assertSee('Moderatie-preview');
 });
 
 it('homepage serves the marketing page for guests', function () {
