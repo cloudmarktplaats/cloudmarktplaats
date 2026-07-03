@@ -58,6 +58,11 @@
         <livewire:homelab.recent :limit="3" />
     </section>
 
+    {{-- ========== COÖPERATIEVE E-WASTE-TELLER ========== --}}
+    <section class="mx-auto max-w-6xl px-5 sm:px-8 pb-12">
+        <livewire:rescued-counter />
+    </section>
+
     {{-- ========== PRINCIPES ALS DATASHEET ========== --}}
     <section aria-labelledby="features-heading" class="mx-auto max-w-6xl px-5 sm:px-8 pb-16">
         <div class="cmp-section-label mb-3">Waar het op rust</div>
