@@ -79,6 +79,22 @@
         "allow-plugins": {
             "pestphp/pest-plugin": true,
             "php-http/discovery": true
+        },
+        "audit": {
+            "ignore": {
+                "PKSA-m5cs-t1y6-qpcs": {
+                    "reason": "Laravel Framework: Temporary Signed URL Path Confusion (GHSA-crmm-hgp2-wgrp) - fixed only in <12.61.1|>=13.0.0,<13.12.0. No 11.x backport exists; every 11.x release (incl. latest v11.54.0) is flagged. Requires Laravel 12 upgrade (separate project).",
+                    "apply": "all"
+                },
+                "PKSA-3r5d-mb8f-1qw9": {
+                    "reason": "Laravel Framework: CRLF injection in default email rule (GHSA-5vg9-5847-vvmq) - fixed only in <12.60.0|>=13.0.0,<=13.9.0. No 11.x backport exists; every 11.x release is flagged. Requires Laravel 12 upgrade (separate project).",
+                    "apply": "all"
+                },
+                "PKSA-mdq4-51ck-6kdq": {
+                    "reason": "Laravel CRLF injection in default email rule (CVE-2026-48019, GHSA-5vg9-5847-vvmq) - affected range explicitly covers all of >=11.0.0,<12.0.0 with fix only at >=12.60.0. No 11.x backport exists. Requires Laravel 12 upgrade (separate project).",
+                    "apply": "all"
+                }
+            }
         }
     },
     "minimum-stability": "stable",
