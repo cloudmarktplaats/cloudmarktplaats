@@ -76,12 +76,20 @@ class StoreListingPhotoJob implements ShouldQueue
             );
         }
 
-        $image = Image::read($this->bytes);
-        $w = $image->width();
-        $h = $image->height();
+        // Cheap header-only dimension check before the expensive decode: a
+        // hostile upload that passes MIME sniffing but is a decompression
+        // bomb (e.g. a tiny PNG that expands to gigapixels) should never
+        // reach Image::read().
+        $info = getimagesizefromstring($this->bytes);
+        if ($info === false) {
+            throw new InvalidUploadException('Not a readable image');
+        }
+        [$w, $h] = $info;
         if ($w < self::MIN_DIM || $h < self::MIN_DIM || $w > self::MAX_DIM || $h > self::MAX_DIM) {
             throw new InvalidUploadException("Image dimensions out of bounds ({$w}x{$h})");
         }
+
+        $image = Image::read($this->bytes);
 
         // Privacy: drop EXIF / IPTC / XMP metadata before re-encoding.
         $stripped = clone $image;

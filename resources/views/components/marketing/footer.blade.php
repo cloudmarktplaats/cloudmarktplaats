@@ -17,6 +17,9 @@
                     <li><a href="{{ route('listings.index') }}" class="hover:text-cmp-text">Alle advertenties</a></li>
                     <li><a href="{{ route('listings.search') }}" class="hover:text-cmp-text">Zoeken</a></li>
                     <li><a href="{{ route('roadmap') }}" class="hover:text-cmp-text">Roadmap</a></li>
+                    @if (config('cloudmarktplaats.features.homelab_feed'))
+                        <li><a href="{{ route('homelabs') }}" class="hover:text-cmp-text">Homelabs</a></li>
+                    @endif
                     <li><a href="{{ route('register') }}" class="hover:text-cmp-text">Account aanmaken</a></li>
                     <li><a href="{{ route('login') }}" class="hover:text-cmp-text">Inloggen</a></li>
                 </ul>

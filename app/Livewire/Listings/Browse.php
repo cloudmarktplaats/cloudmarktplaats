@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
+use Livewire\Attributes\Locked;
 use Livewire\Attributes\Url;
 use Livewire\Component;
 
@@ -59,6 +60,7 @@ class Browse extends Component
     public ?int $seed = null;
 
     /** How many cards are currently revealed; grows by 12 per loadMore(). */
+    #[Locked]
     public int $perPage = 12;
 
     public function mount(?string $categoryPath = null): void
