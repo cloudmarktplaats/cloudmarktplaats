@@ -13,6 +13,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\SiweOnboarding;
 use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Homelab\Feed as HomelabFeed;
 use App\Livewire\Listings\Browse as ListingsBrowse;
 use App\Livewire\Listings\Detail as ListingDetail;
 use App\Livewire\Listings\Wizard as ListingWizard;
@@ -34,6 +35,9 @@ Route::view('/waarden', 'pages.values')->name('values');
 Route::view('/faq', 'pages.faq')->name('faq');
 Route::view('/sponsors', 'pages.sponsor')->name('sponsor');
 Route::view('/roadmap', 'pages.roadmap')->name('roadmap');
+
+// Homelab-showcase: publieke feed, posten vereist login (flag-gated in mount()).
+Route::get('/homelabs', HomelabFeed::class)->name('homelabs');
 
 Route::get('/healthz', HealthController::class);
 
