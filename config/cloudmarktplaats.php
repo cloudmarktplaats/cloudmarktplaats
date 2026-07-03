@@ -18,6 +18,7 @@ return [
         'umami_analytics' => env('FEATURE_UMAMI', false),
         'homelab_feed' => env('FEATURE_HOMELAB_FEED', true),
         'invites' => env('FEATURE_INVITES', true),
+        'stats' => env('FEATURE_STATS', true),
     ],
     'gamification' => [
         'starting_invite_credits' => 3,
