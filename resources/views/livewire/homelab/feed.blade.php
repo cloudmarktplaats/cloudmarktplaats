@@ -57,6 +57,16 @@
                             <span class="cmp-label-chip">Homelab</span>
                             <span class="font-mono text-[10px] text-cmp-faint">{{ $post->created_at->diffForHumans() }}</span>
                         </div>
+                        @auth
+                            @if ($post->user_id === auth()->id())
+                                <button type="button"
+                                        wire:click="deleteOwn('{{ $post->ulid }}')"
+                                        wire:confirm="Post verwijderen?"
+                                        class="self-start font-mono text-[10px] text-cmp-muted underline hover:text-cmp-amber">
+                                    Verwijder mijn post
+                                </button>
+                            @endif
+                        @endauth
                     </div>
                 </article>
             @endforeach

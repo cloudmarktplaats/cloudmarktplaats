@@ -91,6 +91,15 @@ class Feed extends Component
         $this->page++;
     }
 
+    public function deleteOwn(string $ulid): void
+    {
+        $post = HomelabPost::query()->where('ulid', $ulid)->firstOrFail();
+
+        abort_unless((int) auth()->id() === $post->user_id, 403);
+
+        $post->update(['status' => 'removed']);
+    }
+
     /**
      * @return Collection<int, HomelabPost>
      */
