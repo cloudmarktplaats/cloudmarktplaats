@@ -84,4 +84,16 @@
         </a>
     </section>
     @endif
+
+    @if (config('cloudmarktplaats.features.stats'))
+    <section>
+        <h2 class="text-lg font-semibold">Statistieken</h2>
+        <p class="text-sm text-cmp-muted">
+            Bekijk je persoonlijke cijfers en verdiende badges.
+        </p>
+        <a href="{{ route('profile.stats') }}" class="mt-2 inline-block rounded border px-3 py-1 text-sm hover:bg-cmp-bg">
+            Bekijk je statistieken
+        </a>
+    </section>
+    @endif
 </div>

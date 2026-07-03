@@ -20,6 +20,7 @@ use App\Livewire\Listings\Detail as ListingDetail;
 use App\Livewire\Listings\Wizard as ListingWizard;
 use App\Livewire\Profile\Invites as ProfileInvites;
 use App\Livewire\Profile\Security as ProfileSecurity;
+use App\Livewire\Profile\Stats as ProfileStats;
 use App\Livewire\Profile\TwoFactorSetup;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
 use Illuminate\Support\Facades\Route;
@@ -107,6 +108,10 @@ Route::get('/profile/security/2fa', TwoFactorSetup::class)
 Route::get('/profile/invites', ProfileInvites::class)
     ->middleware(['auth', 'verified'])
     ->name('profile.invites');
+
+Route::get('/profile/stats', ProfileStats::class)
+    ->middleware('auth')
+    ->name('profile.stats');
 
 // 2FA challenge after primary auth — guest-accessible because the user
 // is not yet seated in the session at this point.
