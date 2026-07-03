@@ -72,4 +72,14 @@
             2FA beheren
         </a>
     </section>
+
+    <section>
+        <h2 class="text-lg font-semibold">Uitnodigingen</h2>
+        <p class="text-sm text-cmp-muted">
+            Bekijk je karma en genereer uitnodigingscodes voor nieuwe leden.
+        </p>
+        <a href="{{ route('profile.invites') }}" class="mt-2 inline-block rounded border px-3 py-1 text-sm hover:bg-cmp-bg">
+            Uitnodigingen beheren
+        </a>
+    </section>
 </div>
