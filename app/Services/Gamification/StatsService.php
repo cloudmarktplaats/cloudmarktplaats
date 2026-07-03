@@ -1,0 +1,48 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services\Gamification;
+
+use App\Models\HomelabPost;
+use App\Models\KarmaEvent;
+use App\Models\Listing;
+use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+
+class StatsService
+{
+    /**
+     * A user's own stats. Never includes anyone else's data.
+     *
+     * @return array{member_since: \Carbon\Carbon, listings_published: int, listings_sold: int, homelab_posts: int, karma: int, people_activated: int}
+     */
+    public function forUser(User $user): array
+    {
+        return [
+            'member_since' => $user->created_at ?? now(),
+            'listings_published' => Listing::query()->where('user_id', $user->id)->where('state', 'published')->count(),
+            'listings_sold' => Listing::query()->where('user_id', $user->id)->where('state', 'sold')->count(),
+            'homelab_posts' => HomelabPost::query()->where('user_id', $user->id)->published()->count(),
+            'karma' => $user->karma,
+            'people_activated' => KarmaEvent::query()
+                ->where('user_id', $user->id)
+                ->where('type', 'invite_activation')
+                ->count(),
+        ];
+    }
+
+    /**
+     * Platform-wide cooperative counter: devices given a second life.
+     * Cached to keep the public homepage cheap.
+     */
+    public function rescuedCount(): int
+    {
+        return (int) Cache::remember(
+            'stats:rescued',
+            300,
+            fn (): int => Listing::query()->where('state', 'sold')->count(),
+        );
+    }
+}

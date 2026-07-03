@@ -37,4 +37,9 @@ class ListingFactory extends Factory
     {
         return $this->state(fn () => ['state' => 'published', 'published_at' => now()]);
     }
+
+    public function sold(): static
+    {
+        return $this->state(fn () => ['state' => 'sold', 'published_at' => now()]);
+    }
 }
