@@ -17,6 +17,11 @@ return [
         'ipfs_pinning' => env('FEATURE_IPFS', false),
         'umami_analytics' => env('FEATURE_UMAMI', false),
         'homelab_feed' => env('FEATURE_HOMELAB_FEED', true),
+        'invites' => env('FEATURE_INVITES', true),
+    ],
+    'gamification' => [
+        'starting_invite_credits' => 3,
+        'karma_invite_activation' => 10,
     ],
     'storage' => [
         'driver' => env('LISTING_STORAGE_DRIVER', 'local'),

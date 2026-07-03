@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\HomelabPost;
 use App\Models\Listing;
+use App\Models\User;
 use App\Services\Auth\SiweMessageBuilder;
 use App\Services\Search\PostgresSearchService;
 use App\Services\Search\SearchInterface;
@@ -66,6 +67,7 @@ class AppServiceProvider extends ServiceProvider
         Relation::enforceMorphMap([
             'listing' => Listing::class,
             'homelab_post' => HomelabPost::class,
+            'user' => User::class,
         ]);
     }
 }

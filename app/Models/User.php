@@ -10,6 +10,7 @@ use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -28,6 +29,8 @@ class User extends Authenticatable implements CanResetPassword, FilamentUser, Ha
         'username',
         'display_name',
         'role',
+        'invited_by',
+        'invite_credits',
     ];
 
     /** @var list<string> */
@@ -50,6 +53,7 @@ class User extends Authenticatable implements CanResetPassword, FilamentUser, Ha
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'is_banned' => 'boolean',
+            'invite_credits' => 'integer',
         ];
     }
 
@@ -77,6 +81,29 @@ class User extends Authenticatable implements CanResetPassword, FilamentUser, Ha
     public function hasIdentity(string $provider): bool
     {
         return $this->identities()->where('provider', $provider)->exists();
+    }
+
+    /** @return BelongsTo<User, $this> */
+    public function invitedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'invited_by');
+    }
+
+    /** @return HasMany<InviteCode, $this> */
+    public function invitesSent(): HasMany
+    {
+        return $this->hasMany(InviteCode::class, 'inviter_user_id');
+    }
+
+    /** @return HasMany<KarmaEvent, $this> */
+    public function karmaEvents(): HasMany
+    {
+        return $this->hasMany(KarmaEvent::class);
+    }
+
+    public function getKarmaAttribute(): int
+    {
+        return (int) $this->karmaEvents()->sum('points');
     }
 
     public function hasRole(string ...$roles): bool
