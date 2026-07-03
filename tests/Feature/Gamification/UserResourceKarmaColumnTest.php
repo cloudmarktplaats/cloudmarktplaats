@@ -7,7 +7,7 @@ use App\Models\KarmaEvent;
 use App\Models\User;
 use Livewire\Livewire;
 
-it('shows karma and inviter on the users table', function () {
+it('shows karma and inviter columns on the users table', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $inviter = User::factory()->create(['username' => 'thementor']);
     $invitee = User::factory()->create(['invited_by' => $inviter->id]);
@@ -15,6 +15,8 @@ it('shows karma and inviter on the users table', function () {
 
     Livewire::actingAs($admin)
         ->test(ListUsers::class)
-        ->assertSee('thementor')
-        ->assertSee('7');
+        ->assertTableColumnExists('karma')
+        ->assertTableColumnExists('invitedBy.username')
+        ->assertTableColumnStateSet('karma', 7, record: $invitee)
+        ->assertTableColumnStateSet('invitedBy.username', 'thementor', record: $invitee);
 });
