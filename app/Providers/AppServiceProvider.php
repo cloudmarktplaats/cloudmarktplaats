@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\HomelabPost;
 use App\Models\Listing;
 use App\Services\Auth\SiweMessageBuilder;
 use App\Services\Search\PostgresSearchService;
@@ -64,6 +65,7 @@ class AppServiceProvider extends ServiceProvider
         // and gives Filament a short label for the reportable target.
         Relation::enforceMorphMap([
             'listing' => Listing::class,
+            'homelab_post' => HomelabPost::class,
         ]);
     }
 }

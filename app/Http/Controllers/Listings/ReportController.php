@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Listings;
 
 use App\Http\Controllers\Controller;
+use App\Models\HomelabPost;
 use App\Models\Listing;
 use App\Models\Report;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
@@ -27,6 +29,37 @@ class ReportController extends Controller
 {
     public function storeForListing(Request $request, Listing $listing): RedirectResponse
     {
+        return $this->storeFor(
+            $request,
+            $listing,
+            'Je hebt deze advertentie al gerapporteerd; onze moderators bekijken het.'
+        );
+    }
+
+    public function storeForHomelabPost(Request $request, HomelabPost $post): RedirectResponse
+    {
+        return $this->storeFor(
+            $request,
+            $post,
+            'Je hebt deze post al gerapporteerd; onze moderators bekijken het.'
+        );
+    }
+
+    /**
+     * Shared report-creation flow for any reportable model.
+     *
+     * Dedup: a user must not be able to file the same report twice
+     * against the same reportable while their first one is still open.
+     * We re-allow once the moderation team has closed (resolved /
+     * dismissed) the original — that gives reporters a path to flag a
+     * re-listing of the same offending content. Implemented as a
+     * controller check rather than a unique index because the dedup
+     * semantics are scoped to "open" status, which a partial unique
+     * index could express but at the cost of pulling Postgres-specific
+     * syntax into the schema.
+     */
+    private function storeFor(Request $request, Model $reportable, string $alreadyMessage): RedirectResponse
+    {
         $userId = (int) $request->user()?->id;
 
         $key = "reports:user:{$userId}";
@@ -40,28 +73,19 @@ class ReportController extends Controller
             'details' => ['nullable', 'string', 'max:1000'],
         ]);
 
-        // Dedup: a user must not be able to file the same report twice
-        // against the same listing while their first one is still open.
-        // We re-allow once the moderation team has closed (resolved /
-        // dismissed) the original — that gives reporters a path to flag a
-        // re-listing of the same offending content. Implemented as a
-        // controller check rather than a unique index because the dedup
-        // semantics are scoped to "open" status, which a partial unique
-        // index could express but at the cost of pulling Postgres-specific
-        // syntax into the schema.
         $alreadyOpen = Report::query()
-            ->where('reportable_type', $listing->getMorphClass())
-            ->where('reportable_id', $listing->id)
+            ->where('reportable_type', $reportable->getMorphClass())
+            ->where('reportable_id', $reportable->getKey())
             ->where('reporter_user_id', $userId)
             ->where('status', 'open')
             ->exists();
         if ($alreadyOpen) {
-            return back()->with('status', 'Je hebt deze advertentie al gerapporteerd; onze moderators bekijken het.');
+            return back()->with('status', $alreadyMessage);
         }
 
         Report::query()->create([
-            'reportable_type' => $listing->getMorphClass(),
-            'reportable_id' => $listing->id,
+            'reportable_type' => $reportable->getMorphClass(),
+            'reportable_id' => $reportable->getKey(),
             'reporter_user_id' => $userId,
             'reason' => $data['reason'],
             'details' => $data['details'] ?? null,

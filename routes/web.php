@@ -147,3 +147,7 @@ Route::get('/search', SearchController::class)->name('listings.search');
 Route::post('/reports/listing/{listing}', [ReportController::class, 'storeForListing'])
     ->middleware('auth')
     ->name('reports.listing.store');
+
+Route::post('/reports/homelab/{post:ulid}', [ReportController::class, 'storeForHomelabPost'])
+    ->middleware('auth')
+    ->name('reports.homelab.store');

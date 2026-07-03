@@ -66,6 +66,19 @@
                                     Verwijder mijn post
                                 </button>
                             @endif
+
+                            <details class="mt-1">
+                                <summary class="cursor-pointer font-mono text-[10px] text-cmp-faint hover:text-cmp-amber">Rapporteer</summary>
+                                <form method="POST" action="{{ route('reports.homelab.store', $post->ulid) }}" class="mt-2 flex items-center gap-2">
+                                    @csrf
+                                    <select name="reason" class="rounded-sm border-cmp-border text-xs focus:border-cmp-signal focus:ring-cmp-signal">
+                                        <option value="illegal">Illegaal</option>
+                                        <option value="spam">Spam</option>
+                                        <option value="other" selected>Anders</option>
+                                    </select>
+                                    <button class="rounded-sm bg-cmp-ink px-2 py-1 text-[11px] text-white hover:bg-cmp-signal">Verstuur</button>
+                                </form>
+                            </details>
                         @endauth
                     </div>
                 </article>
