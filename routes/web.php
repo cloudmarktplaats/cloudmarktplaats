@@ -3,6 +3,7 @@
 use App\Http\Controllers\Auth\OAuthController;
 use App\Http\Controllers\Auth\Web3Controller;
 use App\Http\Controllers\HealthController;
+use App\Http\Controllers\LegalController;
 use App\Http\Controllers\Listings\ReportController;
 use App\Http\Controllers\Listings\SearchController;
 use App\Livewire\Auth\ForgotPassword;
@@ -109,6 +110,12 @@ Route::get('/2fa/challenge', TwoFactorChallenge::class)
 Route::get('/legal/accept', LegalAccept::class)
     ->middleware('auth')
     ->name('legal.accept');
+
+// Public, versioned legal documents. `{type}` is whitelisted to
+// tos|privacy inside the controller; `?lang=en` switches locale.
+Route::get('/legal/{type}', [LegalController::class, 'show'])
+    ->where('type', 'tos|privacy')
+    ->name('legal.show');
 
 // Listing wizard — auth + verified + legal guard. Drafts are persisted
 // after every step so users can resume via /listings/{ulid}/edit. The

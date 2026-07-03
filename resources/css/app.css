@@ -137,6 +137,21 @@
     .cmp-label-chip {
         @apply inline-flex items-center border border-cmp-ink bg-white px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide text-cmp-ink;
     }
+
+    /* Rendered markdown for legal pages. We deliberately don't ship
+       @tailwindcss/typography for two documents — this scoped rule set
+       covers exactly the elements the legal markdown produces. */
+    .legal-prose { @apply text-cmp-text leading-relaxed; }
+    .legal-prose h1 { @apply font-display text-2xl font-bold tracking-display-tight mt-10 mb-3; }
+    .legal-prose h2 { @apply font-display text-xl font-bold tracking-display-tight mt-8 mb-2; }
+    .legal-prose h3 { @apply font-display text-base font-bold mt-6 mb-2; }
+    .legal-prose p { @apply my-3 text-[15px] text-cmp-text; }
+    .legal-prose ul { @apply my-3 list-disc space-y-1 pl-6 text-[15px]; }
+    .legal-prose ol { @apply my-3 list-decimal space-y-1 pl-6 text-[15px]; }
+    .legal-prose a { @apply text-cmp-blue underline hover:text-cmp-blue-dark; }
+    .legal-prose strong { @apply font-semibold text-cmp-ink; }
+    .legal-prose hr { @apply my-8 border-cmp-border; }
+    .legal-prose code { @apply font-mono text-[13px] bg-cmp-bg2 px-1 py-0.5 rounded-sm; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -34,11 +34,26 @@ class Detail extends Component
     {
         $listing = Listing::query()
             ->where('ulid', $ulid)
-            ->where('state', 'published')
             ->first();
 
         if ($listing === null) {
             abort(404);
+        }
+
+        // Non-published listings (draft / pending_review / rejected / sold /
+        // archived) are hidden from the public, but the owner must be able
+        // to preview their own submission — otherwise "plaats advertentie"
+        // lands on a 404 while moderation is pending. Staff moderators can
+        // preview too (they approve from here). Everyone else gets 404, so
+        // the listing's existence isn't disclosed before it's published.
+        if ($listing->state !== 'published') {
+            $user = auth()->user();
+            $canPreview = $user !== null
+                && ($user->id === $listing->user_id || $user->hasRole('admin', 'moderator'));
+
+            if (! $canPreview) {
+                abort(404);
+            }
         }
 
         // Canonicalize the URL. The ulid alone identifies the listing, so
@@ -53,10 +68,14 @@ class Detail extends Component
 
         $this->listing = $listing;
 
-        Bus::dispatchAfterResponse(new IncrementViewJob(
-            $listing->id,
-            hash('sha256', (string) request()->ip().(string) config('app.key')),
-        ));
+        // Only count views on the public, published page — a seller
+        // refreshing their own pending preview shouldn't inflate the counter.
+        if ($listing->state === 'published') {
+            Bus::dispatchAfterResponse(new IncrementViewJob(
+                $listing->id,
+                hash('sha256', (string) request()->ip().(string) config('app.key')),
+            ));
+        }
     }
 
     public function render(): View
