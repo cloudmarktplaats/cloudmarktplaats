@@ -57,3 +57,26 @@ it('a banned user is always new', function () {
     Transaction::factory()->completed()->count(10)->create(['seller_user_id' => $u->id]);
     expect(app(TrustLevelService::class)->forUser($u)['key'])->toBe('new');
 });
+
+it('drops a veteran below veteran once one of their confirmed buyers gets banned', function () {
+    // Anti-farming: a seller who built veteran status on 5 completed
+    // transactions from 5 distinct (sockpuppet) buyers must lose that
+    // status once one buyer is caught and banned — that buyer's sale no
+    // longer counts toward the seller's trust.
+    $seller = User::factory()->create(['email_verified_at' => now(), 'created_at' => now()->subDays(40)]);
+    $buyers = User::factory()->count(5)->create(['email_verified_at' => now()]);
+    foreach ($buyers as $buyer) {
+        Transaction::factory()->completed()->create([
+            'seller_user_id' => $seller->id,
+            'buyer_user_id' => $buyer->id,
+        ]);
+    }
+
+    $svc = app(TrustLevelService::class);
+    expect($svc->forUser($seller)['key'])->toBe('veteran');
+
+    $buyers->first()->forceFill(['is_banned' => true])->save();
+
+    expect(Transaction::query()->confirmedSaleFor($seller->id)->count())->toBe(4)
+        ->and($svc->forUser($seller)['key'])->not->toBe('veteran');
+});

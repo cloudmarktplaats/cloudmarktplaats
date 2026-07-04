@@ -38,10 +38,7 @@ class TrustLevelService
         }
 
         $ageDays = ($user->created_at ?? now())->diffInDays(now());
-        $sold = Transaction::query()
-            ->where('seller_user_id', $user->id)
-            ->where('status', 'completed')
-            ->count();
+        $sold = Transaction::query()->confirmedSaleFor($user->id)->count();
 
         if ($ageDays >= 30 && $sold >= 5) {
             return ['key' => 'veteran', 'label' => 'Veteraan', 'rank' => 3];

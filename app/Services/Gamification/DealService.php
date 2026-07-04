@@ -20,11 +20,14 @@ class DealService
         if ($seller->id !== $listing->user_id) {
             throw new DealException('Alleen de verkoper kan deze advertentie als verkocht markeren.');
         }
-        if ($listing->state !== 'published') {
-            throw new DealException('Alleen een gepubliceerde advertentie kan als verkocht worden gemarkeerd.');
-        }
 
         return DB::transaction(function () use ($listing, $seller, $buyerUsername): ?Transaction {
+            /** @var Listing $locked */
+            $locked = Listing::query()->lockForUpdate()->findOrFail($listing->id);
+            if ($locked->state !== 'published') {
+                throw new DealException('Alleen een gepubliceerde advertentie kan als verkocht worden gemarkeerd.');
+            }
+
             $buyer = null;
             if (is_string($buyerUsername) && trim($buyerUsername) !== '') {
                 $buyer = User::query()->where('username', strtolower(trim($buyerUsername)))->first();
@@ -36,17 +39,17 @@ class DealService
                 }
             }
 
-            $this->state->transition($listing, 'sold');
+            $this->state->transition($locked, 'sold');
 
             if ($buyer === null) {
                 return null;
             }
 
             return Transaction::query()->create([
-                'listing_id' => $listing->id,
+                'listing_id' => $locked->id,
                 'seller_user_id' => $seller->id,
                 'buyer_user_id' => $buyer->id,
-                'amount_cents' => $listing->price_cents,
+                'amount_cents' => $locked->price_cents,
                 'currency' => 'EUR',
                 'status' => 'pending',
                 'off_platform' => true,
@@ -73,9 +76,6 @@ class DealService
 
     public function confirmedSalesCount(User $seller): int
     {
-        return Transaction::query()
-            ->where('seller_user_id', $seller->id)
-            ->where('status', 'completed')
-            ->count();
+        return Transaction::query()->confirmedSaleFor($seller->id)->count();
     }
 }

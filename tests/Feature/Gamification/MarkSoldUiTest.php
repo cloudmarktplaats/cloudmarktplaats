@@ -33,3 +33,19 @@ it('does not let a non-owner mark it sold', function () {
         ->call('markSold')
         ->assertForbidden();
 });
+
+it('does not let the owner mark it sold when the deals feature is off', function () {
+    config(['cloudmarktplaats.features.deals' => false]);
+
+    $seller = User::factory()->create();
+    $listing = Listing::factory()->published()->for($seller)->create();
+
+    Livewire::actingAs($seller)
+        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->set('buyerUsername', 'koper')
+        ->call('markSold')
+        ->assertForbidden();
+
+    expect($listing->fresh()->state)->toBe('published')
+        ->and(Transaction::query()->count())->toBe(0);
+});

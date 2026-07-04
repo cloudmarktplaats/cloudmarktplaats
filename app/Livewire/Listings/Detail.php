@@ -36,6 +36,8 @@ class Detail extends Component
 
     public function markSold(): void
     {
+        abort_unless((bool) config('cloudmarktplaats.features.deals'), 403);
+
         $user = auth()->user();
         abort_unless($user !== null && $user->id === $this->listing->user_id, 403);
 
