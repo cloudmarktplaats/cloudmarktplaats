@@ -18,7 +18,7 @@
         ],
         [
             'q' => 'Hoe verdienen jullie geld?',
-            'a' => '<p>Donaties, sponsoring (zie sponsorpagina), en op termijn optionele premium listings. Geen advertenties, geen affiliate links, geen verkoop van data. Inkomsten en kosten worden gepubliceerd zodra het structureel boven nul uit komt.</p>',
+            'a' => '<p><a href="/doneren" class="text-cmp-blue underline hover:text-cmp-blue-dark">Donaties</a>, sponsoring (zie sponsorpagina), en op termijn optionele premium listings. Geen advertenties, geen affiliate links, geen verkoop van data. Inkomsten en kosten worden gepubliceerd zodra het structureel boven nul uit komt.</p>',
         ],
         [
             'q' => 'Kan ik betalen met crypto?',
@@ -48,7 +48,7 @@
         ],
         [
             'q' => 'Hoe kan ik de community steunen?',
-            'a' => '<p>In volgorde van impact: (1) plaats advertenties en gebruik het platform — netwerkeffect is wat we nodig hebben; (2) doneer eenmalig of maandelijks; (3) word sponsor of haal je werkgever over; (4) draag code, vertalingen of documentatie bij via GitHub; (5) modereer mee — meld misstanden en help nieuwe gebruikers.</p>',
+            'a' => '<p>In volgorde van impact: (1) plaats advertenties en gebruik het platform — netwerkeffect is wat we nodig hebben; (2) <a href="/doneren" class="text-cmp-blue underline hover:text-cmp-blue-dark">doneer eenmalig of maandelijks</a>; (3) word sponsor of haal je werkgever over; (4) draag code, vertalingen of documentatie bij via GitHub; (5) modereer mee — meld misstanden en help nieuwe gebruikers.</p>',
         ],
         [
             'q' => 'Wat mag ik NIET verkopen?',

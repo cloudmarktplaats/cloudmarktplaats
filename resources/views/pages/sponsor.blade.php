@@ -86,6 +86,11 @@
                 of welke advertenties geplaatst worden. Dat staat ook in de richtlijnen van het
                 moderatieteam en kan publiekelijk gecontroleerd worden via de modlog.
             </p>
+            <p class="mt-4 text-cmp-muted text-sm leading-relaxed">
+                Liever als particulier bijdragen? Een eenmalige of maandelijkse
+                <a href="{{ route('donate') }}" class="text-cmp-blue underline hover:text-cmp-blue-dark">donatie</a>
+                helpt net zo goed.
+            </p>
         </header>
 
         {{-- Tier cards --}}
