@@ -7,6 +7,7 @@
                     <li><a href="{{ route('about') }}" class="hover:text-cmp-text">Over ons</a></li>
                     <li><a href="{{ route('values') }}" class="hover:text-cmp-text">Onze waarden</a></li>
                     <li><a href="{{ route('faq') }}" class="hover:text-cmp-text">Veelgestelde vragen</a></li>
+                    <li><a href="{{ route('donate') }}" class="hover:text-cmp-text">Doneren</a></li>
                     <li><a href="{{ route('sponsor') }}" class="hover:text-cmp-text">Sponsoring</a></li>
                     <li><a href="{{ route('legal.show', 'tos') }}" class="hover:text-cmp-text">Gebruiksvoorwaarden</a></li>
                     <li><a href="{{ route('legal.show', 'privacy') }}" class="hover:text-cmp-text">Privacyverklaring</a></li>
