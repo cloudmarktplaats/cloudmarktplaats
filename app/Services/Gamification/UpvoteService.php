@@ -8,6 +8,7 @@ use App\Exceptions\UpvoteException;
 use App\Models\HomelabPost;
 use App\Models\HomelabPostUpvote;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 class UpvoteService
@@ -41,10 +42,18 @@ class UpvoteService
                 return false;
             }
 
-            HomelabPostUpvote::query()->create([
-                'homelab_post_id' => $post->id,
-                'user_id' => $voter->id,
-            ]);
+            try {
+                HomelabPostUpvote::query()->create([
+                    'homelab_post_id' => $post->id,
+                    'user_id' => $voter->id,
+                ]);
+            } catch (UniqueConstraintViolationException) {
+                // A concurrent request already created this vote (and already
+                // awarded the owner's karma). Treat as idempotent success —
+                // do NOT award again.
+                return true;
+            }
+
             if ($owner instanceof User) {
                 $this->karma->award($owner, 'homelab_upvote', 1, $post);
             }
