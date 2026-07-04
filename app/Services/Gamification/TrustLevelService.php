@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Gamification;
 
-use App\Models\Listing;
+use App\Models\Transaction;
 use App\Models\User;
 
 /**
@@ -16,12 +16,10 @@ use App\Models\User;
  * karma or invite activations — a sockpuppet invite ring cannot farm its
  * way to skipping moderation.
  *
- * PRECONDITION for enabling FEATURE_TRUST_AUTOPUBLISH: sales must reflect
- * a real counterparty. Today no code writes state='sold'; Phase 3b adds
- * seller-tags-buyer + buyer confirmation. Seller-only one-click "mark
- * sold" must NOT ship while this flag can be enabled, or sold>=5 (hence
- * veteran + auto-publish) becomes single-user farmable. Keep the flag OFF
- * until buyer-confirmed sales exist.
+ * "Sales" here means buyer-confirmed transactions (Transaction rows with
+ * status='completed', counted by seller_user_id), not seller-set listing
+ * state. A seller alone cannot mark a sale; it only becomes a completed
+ * transaction once the buyer confirms, so trust cannot be self-farmed.
  */
 class TrustLevelService
 {
@@ -40,7 +38,10 @@ class TrustLevelService
         }
 
         $ageDays = ($user->created_at ?? now())->diffInDays(now());
-        $sold = Listing::query()->where('user_id', $user->id)->where('state', 'sold')->count();
+        $sold = Transaction::query()
+            ->where('seller_user_id', $user->id)
+            ->where('status', 'completed')
+            ->count();
 
         if ($ageDays >= 30 && $sold >= 5) {
             return ['key' => 'veteran', 'label' => 'Veteraan', 'rank' => 3];

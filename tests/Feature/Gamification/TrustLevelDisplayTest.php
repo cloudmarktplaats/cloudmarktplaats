@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Filament\Resources\UserResource\Pages\ListUsers;
 use App\Livewire\Profile\Stats;
-use App\Models\Listing;
+use App\Models\Transaction;
 use App\Models\User;
 use Livewire\Livewire;
 
@@ -27,7 +27,7 @@ it('hides the trust tile when FEATURE_TRUST is off', function () {
 it('shows a trust column on the Filament users table', function () {
     $admin = User::factory()->create(['role' => 'admin']);
     $veteran = User::factory()->create(['email_verified_at' => now(), 'created_at' => now()->subDays(40)]);
-    Listing::factory()->sold()->for($veteran)->count(5)->create();
+    Transaction::factory()->completed()->count(5)->create(['seller_user_id' => $veteran->id]);
 
     Livewire::actingAs($admin)
         ->test(ListUsers::class)

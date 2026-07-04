@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Livewire\Listings\Wizard;
 use App\Models\Category;
 use App\Models\Listing;
+use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -36,7 +37,7 @@ function photoUpload(): UploadedFile
 it('auto-publishes a veteran\'s listing when autopublish is on', function () {
     config()->set('cloudmarktplaats.features.trust_autopublish', true);
     $veteran = User::factory()->create(['email_verified_at' => now(), 'created_at' => now()->subDays(40)]);
-    Listing::factory()->sold()->for($veteran)->count(5)->create();
+    Transaction::factory()->completed()->count(5)->create(['seller_user_id' => $veteran->id]);
 
     $this->actingAs($veteran);
 
@@ -55,8 +56,9 @@ it('auto-publishes a veteran\'s listing when autopublish is on', function () {
         ->assertHasNoErrors()
         ->assertRedirect();
 
-    // The veteran already owns 5 sold listings from the factory setup
-    // above, so scope to the title this test just submitted.
+    // The veteran already has 5 completed transactions (and their linked
+    // listings) from the factory setup above, so scope to the title this
+    // test just submitted.
     $listing = Listing::query()->where('user_id', $veteran->id)
         ->where('title', 'Dell PowerEdge R720 met redundante voeding')
         ->firstOrFail();
@@ -66,7 +68,7 @@ it('auto-publishes a veteran\'s listing when autopublish is on', function () {
 it('never auto-publishes a veteran\'s resubmission of a previously-rejected listing', function () {
     config()->set('cloudmarktplaats.features.trust_autopublish', true);
     $veteran = User::factory()->create(['email_verified_at' => now(), 'created_at' => now()->subDays(40)]);
-    Listing::factory()->sold()->for($veteran)->count(5)->create();
+    Transaction::factory()->completed()->count(5)->create(['seller_user_id' => $veteran->id]);
 
     // A listing that a moderator already rejected once, then the seller
     // reopened it in the wizard and reset it to draft for a resubmit.
