@@ -21,6 +21,7 @@ return [
         'stats' => env('FEATURE_STATS', true),
         'trust' => env('FEATURE_TRUST', true),
         'trust_autopublish' => env('FEATURE_TRUST_AUTOPUBLISH', false),
+        'deals' => env('FEATURE_DEALS', true),
     ],
     'gamification' => [
         'starting_invite_credits' => 3,

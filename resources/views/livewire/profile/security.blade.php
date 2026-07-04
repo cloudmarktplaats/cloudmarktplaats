@@ -96,4 +96,16 @@
         </a>
     </section>
     @endif
+
+    @if (config('cloudmarktplaats.features.deals'))
+    <section>
+        <h2 class="text-lg font-semibold">Mijn deals</h2>
+        <p class="text-sm text-cmp-muted">
+            Bevestig deals die een verkoper aan jou als koper heeft toegewezen.
+        </p>
+        <a href="{{ route('profile.deals') }}" class="mt-2 inline-block rounded border px-3 py-1 text-sm hover:bg-cmp-bg">
+            Mijn deals
+        </a>
+    </section>
+    @endif
 </div>

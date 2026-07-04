@@ -2,11 +2,17 @@
 
 namespace App\Models;
 
+use Database\Factories\TransactionFactory;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Transaction extends Model
 {
+    /** @use HasFactory<TransactionFactory> */
+    use HasFactory;
+
     /** @var list<string> */
     protected $fillable = [
         'listing_id',
@@ -53,5 +59,21 @@ class Transaction extends Model
     public function seller(): BelongsTo
     {
         return $this->belongsTo(User::class, 'seller_user_id');
+    }
+
+    /**
+     * Confirmed (buyer-completed) sales for a seller, excluding any sale
+     * whose buyer has since been banned — a sockpuppet ring cannot farm
+     * trust by having its own banned accounts still count as sales.
+     *
+     * @param  Builder<Transaction>  $query
+     * @return Builder<Transaction>
+     */
+    public function scopeConfirmedSaleFor(Builder $query, int $sellerUserId): Builder
+    {
+        return $query
+            ->where('seller_user_id', $sellerUserId)
+            ->where('status', 'completed')
+            ->whereHas('buyer', fn ($q) => $q->where('is_banned', false));
     }
 }
