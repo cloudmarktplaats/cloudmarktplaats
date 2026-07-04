@@ -6,6 +6,8 @@ namespace App\Livewire\Listings;
 
 use App\Jobs\Listings\StoreListingPhotoJob;
 use App\Models\Listing;
+use App\Services\Admin\AdminActionLogger;
+use App\Services\Gamification\TrustLevelService;
 use App\Services\Listings\InvalidStateTransition;
 use App\Services\Listings\ListingStateService;
 use Illuminate\Http\UploadedFile;
@@ -145,7 +147,20 @@ class Wizard extends Component
         }
 
         try {
-            app(ListingStateService::class)->transition($listing, 'pending_review');
+            $stateService = app(ListingStateService::class);
+            $stateService->transition($listing, 'pending_review');
+
+            // Trusted veterans skip the moderation queue (flag-gated,
+            // sales-gated — see TrustLevelService). A listing with a
+            // rejection history (moderation_notes set) is NEVER auto-
+            // published: the moderator's rejection stays binding.
+            $user = auth()->user();
+            if ($user !== null
+                && $listing->moderation_notes === null
+                && app(TrustLevelService::class)->canSkipModeration($user)) {
+                $stateService->transition($listing, 'published');
+                AdminActionLogger::log('listing.autopublish', 'listing', $listing->id);
+            }
         } catch (InvalidStateTransition $e) {
             $this->addError('state', $e->getMessage());
 

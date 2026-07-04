@@ -19,6 +19,8 @@ return [
         'homelab_feed' => env('FEATURE_HOMELAB_FEED', true),
         'invites' => env('FEATURE_INVITES', true),
         'stats' => env('FEATURE_STATS', true),
+        'trust' => env('FEATURE_TRUST', true),
+        'trust_autopublish' => env('FEATURE_TRUST_AUTOPUBLISH', false),
     ],
     'gamification' => [
         'starting_invite_credits' => 3,
