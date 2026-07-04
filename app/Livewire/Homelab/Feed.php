@@ -5,8 +5,11 @@ declare(strict_types=1);
 namespace App\Livewire\Homelab;
 
 use App\Exceptions\InvalidUploadException;
+use App\Exceptions\UpvoteException;
 use App\Jobs\Homelab\StoreHomelabPhotoJob;
 use App\Models\HomelabPost;
+use App\Models\HomelabPostUpvote;
+use App\Services\Gamification\UpvoteService;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
@@ -126,6 +129,28 @@ class Feed extends Component
         $post->update(['status' => 'removed']);
     }
 
+    public function upvote(string $ulid): void
+    {
+        abort_unless((bool) config('cloudmarktplaats.features.homelab_upvotes'), 404);
+        $user = auth()->user();
+        abort_unless($user !== null, 403);
+
+        $key = 'homelab-upvote:'.$user->id;
+        if (RateLimiter::tooManyAttempts($key, 60)) {
+            $this->addError('upvote', 'Rustig aan met waarderen.');
+
+            return;
+        }
+        RateLimiter::hit($key, 3600);
+
+        $post = HomelabPost::query()->where('ulid', $ulid)->firstOrFail();
+        try {
+            app(UpvoteService::class)->toggle($post, $user);
+        } catch (UpvoteException $e) {
+            $this->addError('upvote', $e->getMessage());
+        }
+    }
+
     /**
      * @return Collection<int, HomelabPost>
      */
@@ -135,6 +160,7 @@ class Feed extends Component
 
         return HomelabPost::query()
             ->published()
+            ->withCount('upvotes')
             ->orderByDesc('created_at')
             ->limit($limit)
             ->get();
@@ -144,9 +170,17 @@ class Feed extends Component
     {
         $posts = $this->posts();
 
+        $upvotedIds = auth()->check()
+            ? HomelabPostUpvote::query()
+                ->where('user_id', (int) auth()->id())
+                ->whereIn('homelab_post_id', $posts->pluck('id'))
+                ->pluck('homelab_post_id')->all()
+            : [];
+
         return view('livewire.homelab.feed', [
             'posts' => $posts,
             'hasMore' => HomelabPost::query()->published()->count() > $posts->count(),
+            'upvotedIds' => $upvotedIds,
         ]);
     }
 }

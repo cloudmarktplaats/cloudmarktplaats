@@ -57,6 +57,23 @@
                             <span class="cmp-label-chip">Homelab</span>
                             <span class="font-mono text-[10px] text-cmp-faint">{{ $post->created_at->diffForHumans() }}</span>
                         </div>
+                        @if (config('cloudmarktplaats.features.homelab_upvotes'))
+                            <div class="flex items-center gap-2">
+                                @auth
+                                    <button type="button" wire:click="upvote('{{ $post->ulid }}')"
+                                            @class([
+                                                'inline-flex items-center gap-1 rounded-sm border px-2 py-0.5 font-mono text-[11px] transition-colors',
+                                                'border-cmp-signal text-cmp-signal' => in_array($post->id, $upvotedIds, true),
+                                                'border-cmp-border text-cmp-muted hover:border-cmp-ink hover:text-cmp-ink' => ! in_array($post->id, $upvotedIds, true),
+                                            ])>
+                                        ▲ {{ $post->upvotes_count }}
+                                    </button>
+                                @else
+                                    <span class="inline-flex items-center gap-1 font-mono text-[11px] text-cmp-faint">▲ {{ $post->upvotes_count }}</span>
+                                    <a href="{{ route('login') }}" class="text-[11px] text-cmp-blue underline hover:text-cmp-blue-dark">log in om te waarderen</a>
+                                @endauth
+                            </div>
+                        @endif
                         @auth
                             @if ($post->user_id === auth()->id())
                                 <button type="button"

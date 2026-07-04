@@ -25,6 +25,9 @@
                                 <span class="cmp-label-chip">Homelab</span>
                                 <span class="font-mono text-[10px] text-cmp-faint">{{ $post->created_at->diffForHumans() }}</span>
                             </div>
+                            @if (config('cloudmarktplaats.features.homelab_upvotes'))
+                                <span class="font-mono text-[10px] text-cmp-faint">▲ {{ $post->upvotes_count }}</span>
+                            @endif
                         </div>
                     </article>
                 @endforeach
