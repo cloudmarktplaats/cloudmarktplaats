@@ -6,6 +6,7 @@ namespace App\Livewire\Listings;
 
 use App\Jobs\Listings\StoreListingPhotoJob;
 use App\Models\Listing;
+use App\Services\Gamification\TrustLevelService;
 use App\Services\Listings\InvalidStateTransition;
 use App\Services\Listings\ListingStateService;
 use Illuminate\Http\UploadedFile;
@@ -146,6 +147,14 @@ class Wizard extends Component
 
         try {
             app(ListingStateService::class)->transition($listing, 'pending_review');
+
+            // Trusted veterans skip the moderation queue (flag-gated,
+            // sales-gated — see TrustLevelService). Goes through the same
+            // auditable state service and fires ListingPublished.
+            $user = auth()->user();
+            if ($user !== null && app(TrustLevelService::class)->canSkipModeration($user)) {
+                app(ListingStateService::class)->transition($listing, 'published');
+            }
         } catch (InvalidStateTransition $e) {
             $this->addError('state', $e->getMessage());
 
