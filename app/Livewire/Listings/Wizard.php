@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Listings;
 
 use App\Jobs\Listings\StoreListingPhotoJob;
+use App\Models\Category;
 use App\Models\Listing;
 use App\Services\Admin\AdminActionLogger;
 use App\Services\Gamification\TrustLevelService;
@@ -206,6 +207,22 @@ class Wizard extends Component
 
     public function render(): View
     {
-        return view('livewire.listings.wizard');
+        // Group active categories under their top-level parent (first ltree
+        // segment) so the picker reads as a hierarchy instead of one flat
+        // alphabetical mix. Each group: top name => [id => label], with the
+        // top itself offered as a "— algemeen" fallback above its children.
+        $all = Category::query()->where('is_active', true)->orderBy('name')->get();
+        $byTop = $all->groupBy(fn (Category $c): string => explode('.', (string) $c->path)[0]);
+
+        $categoryGroups = [];
+        foreach ($all->filter(fn (Category $c): bool => ! str_contains((string) $c->path, '.'))->sortBy('name') as $top) {
+            $options = [$top->id => $top->name.' — algemeen'];
+            foreach ($byTop->get((string) $top->path, collect())->filter(fn (Category $c): bool => str_contains((string) $c->path, '.'))->sortBy('name') as $child) {
+                $options[$child->id] = $child->name;
+            }
+            $categoryGroups[$top->name] = $options;
+        }
+
+        return view('livewire.listings.wizard', ['categoryGroups' => $categoryGroups]);
     }
 }

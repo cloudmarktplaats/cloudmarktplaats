@@ -19,8 +19,12 @@
                 <span class="mb-1 block font-medium">Categorie</span>
                 <select wire:model="category_id" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
                     <option value="">— Kies een categorie —</option>
-                    @foreach (\App\Models\Category::query()->where('is_active', true)->orderBy('name')->get() as $cat)
-                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                    @foreach ($categoryGroups as $groupLabel => $options)
+                        <optgroup label="{{ $groupLabel }}">
+                            @foreach ($options as $id => $label)
+                                <option value="{{ $id }}">{{ $label }}</option>
+                            @endforeach
+                        </optgroup>
                     @endforeach
                 </select>
             </label>
