@@ -12,10 +12,16 @@ use App\Models\User;
  * email, account age, and completed sales. Recomputed on demand (no
  * storage), like badges.
  *
- * Moderation-skip (auto-publish) is gated on sales, never on karma or
- * invite activations: a completed sale requires a moderated listing plus
- * a real buyer, so a sockpuppet invite ring cannot farm its way to
- * skipping moderation. This is the deliberate anti-abuse boundary.
+ * Moderation-skip (auto-publish) is gated on completed SALES, never on
+ * karma or invite activations — a sockpuppet invite ring cannot farm its
+ * way to skipping moderation.
+ *
+ * PRECONDITION for enabling FEATURE_TRUST_AUTOPUBLISH: sales must reflect
+ * a real counterparty. Today no code writes state='sold'; Phase 3b adds
+ * seller-tags-buyer + buyer confirmation. Seller-only one-click "mark
+ * sold" must NOT ship while this flag can be enabled, or sold>=5 (hence
+ * veteran + auto-publish) becomes single-user farmable. Keep the flag OFF
+ * until buyer-confirmed sales exist.
  */
 class TrustLevelService
 {
@@ -48,7 +54,8 @@ class TrustLevelService
 
     public function canSkipModeration(User $user): bool
     {
-        return (bool) config('cloudmarktplaats.features.trust_autopublish')
+        return (bool) config('cloudmarktplaats.features.trust')
+            && (bool) config('cloudmarktplaats.features.trust_autopublish')
             && $this->forUser($user)['rank'] >= 3;
     }
 }

@@ -63,6 +63,39 @@ it('auto-publishes a veteran\'s listing when autopublish is on', function () {
     expect($listing->fresh()->state)->toBe('published');
 });
 
+it('never auto-publishes a veteran\'s resubmission of a previously-rejected listing', function () {
+    config()->set('cloudmarktplaats.features.trust_autopublish', true);
+    $veteran = User::factory()->create(['email_verified_at' => now(), 'created_at' => now()->subDays(40)]);
+    Listing::factory()->sold()->for($veteran)->count(5)->create();
+
+    // A listing that a moderator already rejected once, then the seller
+    // reopened it in the wizard and reset it to draft for a resubmit.
+    $listing = Listing::factory()->for($veteran)->create([
+        'category_id' => $this->category->id,
+        'state' => 'draft',
+        'moderation_notes' => 'eerder afgewezen',
+    ]);
+
+    $this->actingAs($veteran);
+
+    Livewire::test(Wizard::class, ['listing' => $listing])
+        ->set('title', 'Dell PowerEdge R720 na afwijzing opnieuw ingediend')
+        ->set('category_id', $this->category->id)
+        ->set('condition', 'used')
+        ->set('price_cents', 15000)
+        ->call('next')
+        ->set('description', 'Volledig getest, twee Xeon CPUs, 128GB RAM, geen geharde schijven.')
+        ->set('region_postcode', '3500')
+        ->set('shipping_pickup', true)
+        ->call('next')
+        ->set('photos', [photoUpload()])
+        ->call('submit')
+        ->assertHasNoErrors()
+        ->assertRedirect();
+
+    expect($listing->fresh()->state)->toBe('pending_review');
+});
+
 it('keeps a normal member\'s listing in pending_review', function () {
     config()->set('cloudmarktplaats.features.trust_autopublish', true);
     $member = User::factory()->create(['email_verified_at' => now()]);
