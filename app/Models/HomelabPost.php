@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /**
@@ -55,6 +56,12 @@ class HomelabPost extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return HasMany<HomelabPostUpvote, $this> */
+    public function upvotes(): HasMany
+    {
+        return $this->hasMany(HomelabPostUpvote::class);
     }
 
     public function photoUrl(string $variant = 'card'): string

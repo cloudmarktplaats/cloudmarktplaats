@@ -22,6 +22,7 @@ return [
         'trust' => env('FEATURE_TRUST', true),
         'trust_autopublish' => env('FEATURE_TRUST_AUTOPUBLISH', false),
         'deals' => env('FEATURE_DEALS', true),
+        'homelab_upvotes' => env('FEATURE_HOMELAB_UPVOTES', true),
     ],
     'gamification' => [
         'starting_invite_credits' => 3,
