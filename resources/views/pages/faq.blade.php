@@ -27,11 +27,20 @@
         [
             'q' => 'Wat als iemand me oplicht?',
             'notice' => 'Foundation is een advertentiebord — geen escrow, geen kopersbescherming. Lees dit aandachtig.',
-            'a' => '<p>Cloudmarktplaats is geen escrow en wij houden geen geld vast. Je sluit een koop met een andere gebruiker, niet met ons. Tips: ontmoet lokaal waar het kan, controleer hardware voordat je betaalt, gebruik betaalmethodes met kopersbescherming. Meld misbruik via de "Report"-knop op elk profiel of elke advertentie; we bannen vastgestelde oplichters en de modlog blijft beschikbaar. Reputatie en reviews komen in sub-project #4.</p>',
+            'a' => '<p>Cloudmarktplaats is geen escrow en wij houden geen geld vast. Je sluit een koop met een andere gebruiker, niet met ons. Tips: ontmoet lokaal waar het kan, controleer hardware voordat je betaalt, gebruik betaalmethodes met kopersbescherming. Meld misbruik via de "Report"-knop op elk profiel of elke advertentie; we bannen vastgestelde oplichters en de modlog blijft beschikbaar. Kijk ook naar het vertrouwensniveau van een verkoper (nieuw/lid/vertrouwd/veteraan) — dat leunt op door kopers bevestigde verkopen, niet op zelf-geclaimde sterretjes.</p>',
         ],
         [
             'q' => 'Hoe werkt het reputatiesysteem?',
-            'a' => '<p>Nog niet. Reputation/reviews zit in sub-project #4 en is op dit moment uitgeschakeld. Tot die tijd is je trust signal: oudte van het account, aantal advertenties, en — zodra het er is — feedback van eerdere transactiepartners. We bouwen liever een werkend systeem dan een fake aantal sterretjes.</p>',
+            'a' => '<p>Geen sterretjes, geen ranglijst. Je vertrouwensniveau (nieuw → lid → vertrouwd → veteraan) volgt uit <strong>je eigen bewezen activiteit</strong>: geverifieerd e-mailadres, hoe lang je account bestaat, en het aantal <strong>door de koper bevestigde</strong> verkopen. Bij het afronden van een deal tag je optioneel de koper; die bevestigt op zijn eigen pagina dat het klopte. Zo kun je jezelf geen reputatie aanpraten — er moet een echte tegenpartij bevestigen.</p>
+                    <p class="mt-3">Daarnaast is er <strong>karma</strong> (je verdient het als iemand die jij uitnodigde actief wordt, en via waardering op je homelab-posts) en zijn er verdiende <strong>badges</strong>. Karma is een privé-getal op je eigen statistiekenpagina — geen publieke score, geen wedstrijd. En het is nog vroeg: het systeem staat, de cijfers moeten met de community groeien.</p>',
+        ],
+        [
+            'q' => 'Wat is "Uit de homelabs"?',
+            'a' => '<p>Een plek om je lab te laten zien. Ingelogde gebruikers plaatsen één foto plus een korte beschrijving; de feed is <strong>volledig anoniem</strong> — bezoekers zien nooit wie postte. Anderen kunnen een post <strong>waarderen</strong> (upvote-only, geen downvotes). Het is rack-porn voor de community, en het houdt de site levendig los van het aanbod. EXIF wordt gestript, zoals overal.</p>',
+        ],
+        [
+            'q' => 'Wat zijn invite-codes en karma?',
+            'a' => '<p>Registreren kan gewoon open, maar met een <strong>invite-code</strong> van een bestaand lid krijg je een vliegende start en is duidelijk wie voor wie instaat — dat houdt de kwaliteit hoog en scammers herleidbaar. Je verdient <strong>karma</strong> als iemand die jij uitnodigde actief wordt en als je homelab-posts gewaardeerd worden. Karma ontgrendelt geen macht over anderen en staat nergens publiek; het is een privé-signaal en levert hooguit een badge op. Bewust: <em>we belonen bijdrage en vertrouwen, niet populariteit</em>.</p>',
         ],
         [
             'q' => 'Waarom geen app?',

@@ -18,7 +18,9 @@
 
                 <p class="mt-6 max-w-xl text-cmp-muted text-base sm:text-lg leading-relaxed">
                     Peer-to-peer marktplaats voor servers, netwerkspul, dev boards en alles
-                    ertussenin. Open source, privacy by design, geen cookiebanner-theater.
+                    ertussenin. Plus een anonieme homelab-showcase en reputatie die op
+                    door kopers bevestigde deals leunt — geen sterretjes-theater. Open source,
+                    privacy by design, geen cookiebanner-theater.
                 </p>
 
                 <div class="mt-8 flex flex-col sm:flex-row gap-3">
