@@ -18,6 +18,7 @@ use App\Livewire\Homelab\Feed as HomelabFeed;
 use App\Livewire\Listings\Browse as ListingsBrowse;
 use App\Livewire\Listings\Detail as ListingDetail;
 use App\Livewire\Listings\Wizard as ListingWizard;
+use App\Livewire\Profile\Deals as ProfileDeals;
 use App\Livewire\Profile\Invites as ProfileInvites;
 use App\Livewire\Profile\Security as ProfileSecurity;
 use App\Livewire\Profile\Stats as ProfileStats;
@@ -112,6 +113,10 @@ Route::get('/profile/invites', ProfileInvites::class)
 Route::get('/profile/stats', ProfileStats::class)
     ->middleware('auth')
     ->name('profile.stats');
+
+Route::get('/profile/deals', ProfileDeals::class)
+    ->middleware('auth')
+    ->name('profile.deals');
 
 // 2FA challenge after primary auth — guest-accessible because the user
 // is not yet seated in the session at this point.
