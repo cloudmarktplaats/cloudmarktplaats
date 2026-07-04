@@ -11,7 +11,10 @@ use Livewire\Livewire;
 it('shows the user their own trust level on the stats page', function () {
     $u = User::factory()->create(['email_verified_at' => now()]);
 
-    Livewire::actingAs($u)->test(Stats::class)->assertOk()->assertSee('Lid'); // member label
+    // 'Vertrouwensniveau' is emitted only by the trust tile, so this
+    // genuinely pins the tile's presence (unlike 'Lid', which collides
+    // with the "Lid sinds" member-since tile).
+    Livewire::actingAs($u)->test(Stats::class)->assertOk()->assertSee('Vertrouwensniveau');
 });
 
 it('hides the trust tile when FEATURE_TRUST is off', function () {
