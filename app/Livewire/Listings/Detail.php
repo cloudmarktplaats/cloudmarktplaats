@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Livewire\Listings;
 
+use App\Exceptions\DealException;
 use App\Jobs\Listings\IncrementViewJob;
 use App\Livewire\ContactSeller;
 use App\Models\Listing;
+use App\Services\Gamification\DealService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\View\View;
@@ -29,6 +31,28 @@ use Livewire\Component;
 class Detail extends Component
 {
     public Listing $listing;
+
+    public string $buyerUsername = '';
+
+    public function markSold(): void
+    {
+        $user = auth()->user();
+        abort_unless($user !== null && $user->id === $this->listing->user_id, 403);
+
+        try {
+            app(DealService::class)->markSold(
+                $this->listing,
+                $user,
+                $this->buyerUsername !== '' ? $this->buyerUsername : null,
+            );
+        } catch (DealException $e) {
+            $this->addError('buyerUsername', $e->getMessage());
+
+            return;
+        }
+
+        $this->listing->refresh();
+    }
 
     public function mount(string $ulid, string $slug): void
     {

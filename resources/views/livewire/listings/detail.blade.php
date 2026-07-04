@@ -21,6 +21,20 @@
         </div>
     @endif
 
+    @auth
+        @if (auth()->id() === $listing->user_id && $listing->state === 'published' && config('cloudmarktplaats.features.deals'))
+            <div class="mt-6 rounded-sm border border-cmp-border bg-cmp-surface p-4">
+                <div class="cmp-section-label mb-3">Verkocht?</div>
+                <p class="text-sm text-cmp-muted">Markeer als verkocht. Geef optioneel de gebruikersnaam van de koper op; die kan de deal dan bevestigen.</p>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                    <input wire:model="buyerUsername" placeholder="gebruikersnaam koper (optioneel)" class="rounded-sm border-cmp-border p-2 text-sm focus:border-cmp-signal focus:ring-cmp-signal">
+                    <button wire:click="markSold" wire:confirm="Advertentie als verkocht markeren?" class="cmp-btn cmp-btn-primary">Markeer als verkocht</button>
+                </div>
+                @error('buyerUsername') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+        @endif
+    @endauth
+
     <article class="mt-6 overflow-hidden rounded-sm border border-cmp-border bg-cmp-surface">
         @if ($listing->photos->isNotEmpty())
             <div class="grid grid-cols-1 gap-1 bg-cmp-bg2 sm:grid-cols-3">
