@@ -7,6 +7,7 @@ namespace App\Livewire\Profile;
 use App\Models\User;
 use App\Services\Gamification\BadgeService;
 use App\Services\Gamification\StatsService;
+use App\Services\Gamification\TrustLevelService;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -28,6 +29,9 @@ class Stats extends Component
         return view('livewire.profile.stats', [
             'stats' => $stats,
             'badges' => app(BadgeService::class)->earnedFor($stats),
+            'trust' => config('cloudmarktplaats.features.trust')
+                ? app(TrustLevelService::class)->forUser($user)
+                : null,
         ]);
     }
 }

@@ -3,6 +3,13 @@
     <h1 class="text-3xl font-bold tracking-display-tighter">Statistieken</h1>
     <p class="mt-3 text-sm text-cmp-muted">Alleen jij ziet deze pagina. Geen ranglijst, geen vergelijking — gewoon jouw activiteit.</p>
 
+    @if ($trust !== null)
+        <div class="mt-6 flex items-center gap-3 rounded-sm border-2 border-cmp-ink bg-cmp-surface px-4 py-3">
+            <span class="font-mono text-[11px] uppercase tracking-wide text-cmp-muted">Vertrouwensniveau</span>
+            <span class="cmp-label-chip">{{ $trust['label'] }}</span>
+        </div>
+    @endif
+
     <dl class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
         @php
             $tiles = [

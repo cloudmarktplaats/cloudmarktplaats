@@ -7,6 +7,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use App\Services\Admin\AdminActionLogger;
+use App\Services\Gamification\TrustLevelService;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -85,6 +86,10 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->sortable(),
                 Tables\Columns\TextColumn::make('karma')
                     ->state(fn (User $record): int => $record->karma)
+                    ->badge(),
+                Tables\Columns\TextColumn::make('trust')
+                    ->label('Trust')
+                    ->state(fn (User $record): string => app(TrustLevelService::class)->forUser($record)['label'])
                     ->badge(),
                 Tables\Columns\TextColumn::make('invitedBy.username')
                     ->label('Invited by')
