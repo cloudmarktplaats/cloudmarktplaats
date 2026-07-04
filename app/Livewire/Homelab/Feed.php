@@ -143,7 +143,7 @@ class Feed extends Component
         }
         RateLimiter::hit($key, 3600);
 
-        $post = HomelabPost::query()->where('ulid', $ulid)->firstOrFail();
+        $post = HomelabPost::query()->where('ulid', $ulid)->published()->firstOrFail();
         try {
             app(UpvoteService::class)->toggle($post, $user);
         } catch (UpvoteException $e) {

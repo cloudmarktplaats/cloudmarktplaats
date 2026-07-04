@@ -6,6 +6,8 @@
         alleen het rack. EXIF wordt gestript, zoals altijd.
     </p>
 
+    @error('upvote') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+
     @auth
         <form wire:submit="submit" class="mt-8 max-w-xl space-y-3 rounded-sm border border-cmp-border bg-cmp-surface p-5">
             @if (session('homelab-status'))

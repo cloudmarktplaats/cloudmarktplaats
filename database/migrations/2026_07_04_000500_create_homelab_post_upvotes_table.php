@@ -15,7 +15,7 @@ return new class extends Migration
             $t->foreignId('user_id')->constrained()->cascadeOnDelete();
             $t->foreignId('homelab_post_id')->constrained()->cascadeOnDelete();
             $t->timestamps();
-            $t->unique(['user_id', 'homelab_post_id']);
+            $t->unique(['homelab_post_id', 'user_id']);
         });
     }
 
