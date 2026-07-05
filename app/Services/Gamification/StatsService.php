@@ -45,4 +45,25 @@ class StatsService
             fn (): int => Listing::query()->where('state', 'sold')->count(),
         );
     }
+
+    /**
+     * Live platform-wide numbers for the public homepage. Real counts, no
+     * inflation — the "founding members" figure drives the beta-cohort FOMO.
+     * Cached briefly so the landing page stays cheap under load.
+     *
+     * @return array{founding_members: int, listings_live: int, rescued: int, homelabs: int}
+     */
+    public function homepageStats(): array
+    {
+        /** @var array{founding_members: int, listings_live: int, rescued: int, homelabs: int} */
+        return Cache::remember('stats:homepage', 60, fn (): array => [
+            'founding_members' => User::query()->where('is_banned', false)->count(),
+            'listings_live' => Listing::query()->where('state', 'published')->count(),
+            'rescued' => Listing::query()->where('state', 'sold')->count(),
+            'homelabs' => HomelabPost::query()->published()->count(),
+        ]);
+    }
+
+    /** Beta cohort size — the scarcity anchor on the homepage. */
+    public const FOUNDING_COHORT = 100;
 }

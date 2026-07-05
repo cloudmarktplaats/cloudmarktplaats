@@ -47,6 +47,13 @@
         </div>
     </section>
 
+    {{-- ========== BETA-COHORT + LIVE STATS (FOMO) ========== --}}
+    @if (config('cloudmarktplaats.features.stats'))
+        <section class="mx-auto max-w-6xl px-5 sm:px-8 pb-4">
+            <livewire:launch-stats />
+        </section>
+    @endif
+
     {{-- ========== RECENT LISTINGS — de marktplaats ís de homepage ========== --}}
     <section class="mx-auto max-w-6xl px-5 sm:px-8 py-12">
         <livewire:recent-listings :limit="6" />
@@ -56,13 +63,6 @@
     <section class="mx-auto max-w-6xl px-5 sm:px-8 pb-12">
         <livewire:homelab.recent :limit="3" />
     </section>
-
-    {{-- ========== COÖPERATIEVE E-WASTE-TELLER ========== --}}
-    @if (config('cloudmarktplaats.features.stats'))
-        <section class="mx-auto max-w-6xl px-5 sm:px-8 pb-12">
-            <livewire:rescued-counter />
-        </section>
-    @endif
 
     {{-- ========== PRINCIPES ALS DATASHEET ========== --}}
     <section aria-labelledby="features-heading" class="mx-auto max-w-6xl px-5 sm:px-8 pb-16">
