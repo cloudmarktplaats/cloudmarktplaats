@@ -90,6 +90,29 @@ class CategorySeeder extends Seeder
                 'Data-, SAS- & SATA-kabels' => 'datakabel',
                 'Adapters & converters' => 'adapter',
             ],
+            'av' => [
+                'Beamers & projectoren' => 'beamer',
+                'Schermen & signage' => 'signage',
+                'Audio (mengpanelen, versterkers, speakers)' => 'audio',
+                'Microfoons' => 'microfoon',
+                "Camera's & capture" => 'camera',
+                'Streaming & encoders' => 'streaming',
+            ],
+            'meet' => [
+                'Oscilloscopen' => 'oscilloscoop',
+                'Multimeters' => 'multimeter',
+                'Labvoedingen' => 'labvoeding',
+                'Logic analyzers' => 'logic',
+                'Functiegeneratoren' => 'functiegenerator',
+                'Soldeer- & reworkstations' => 'soldeer',
+            ],
+            'fabrication' => [
+                'FDM-printers' => 'fdm',
+                'Resin-printers (SLA/DLP)' => 'resin',
+                'CNC-frezen & lasers' => 'cnc',
+                'Filament & resin' => 'filament',
+                'Printeronderdelen & upgrades' => 'printeronderdeel',
+            ],
         ];
 
         foreach ($subs as $parentSlug => $children) {
