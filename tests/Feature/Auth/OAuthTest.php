@@ -7,12 +7,15 @@ use App\Models\User;
 use App\Models\UserIdentity;
 
 beforeEach(function (): void {
+    // Anonymous requests default to Dutch via SetLocale (no session cookie
+    // set), so fixtures use 'nl' to match the locale used during the
+    // actual OAuth callback request.
     LegalDocument::factory()->tos()->create([
-        'locale' => app()->getLocale(),
+        'locale' => 'nl',
         'published_at' => now(),
     ]);
     LegalDocument::factory()->privacy()->create([
-        'locale' => app()->getLocale(),
+        'locale' => 'nl',
         'published_at' => now(),
     ]);
 });

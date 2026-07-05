@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\LegalAcceptance;
 use App\Http\Middleware\RoleMiddleware;
+use App\Http\Middleware\SetLocale;
 use App\Jobs\IpStripperJob;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -24,6 +25,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // trust X-Forwarded-* so request scheme/host/IP reflect the public
         // edge (e.g. for https URL generation and rate-limit keys).
         $middleware->trustProxies(at: '*');
+
+        // Set the app locale (nl default, en optional) from the session on
+        // every web request — driven by the language switcher.
+        $middleware->web(append: [SetLocale::class]);
 
         // `role:admin,moderator` guards staff-only routes such as the
         // Filament admin panel.

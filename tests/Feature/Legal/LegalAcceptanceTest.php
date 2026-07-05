@@ -10,10 +10,13 @@ use Livewire\Livewire;
 
 beforeEach(function () {
     $this->user = User::factory()->create(['email_verified_at' => now()]);
-    // Tests use the app's default locale (en) so the LegalDocument::current
-    // lookup in {@see App\Http\Middleware\LegalAcceptance} matches the
-    // factory-created rows below.
-    $this->locale = app()->getLocale();
+    // Anonymous requests default to Dutch via SetLocale (no session cookie
+    // set), so fixtures use 'nl' to match the LegalDocument::current lookup
+    // in {@see App\Http\Middleware\LegalAcceptance} during the actual request.
+    // Some cases below call Livewire::test() directly, which never runs the
+    // 'web' middleware group, so set the app locale explicitly too.
+    $this->locale = 'nl';
+    app()->setLocale('nl');
 });
 
 it('redirects a user with stale acceptance to /legal/accept when hitting a legal-guarded route', function () {

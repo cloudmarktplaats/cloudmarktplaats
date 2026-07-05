@@ -53,7 +53,7 @@
 </head>
 <body class="bg-cmp-bg text-cmp-text font-sans antialiased">
 
-    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-cmp-ink focus:text-white focus:px-3 focus:py-2 focus:rounded-sm">Naar de inhoud</a>
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:bg-cmp-ink focus:text-white focus:px-3 focus:py-2 focus:rounded-sm">{{ __('Naar de inhoud') }}</a>
 
     <x-marketing.navbar />
 

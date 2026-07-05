@@ -1,18 +1,18 @@
 <section aria-labelledby="recent-heading">
     <div class="flex items-end justify-between mb-6">
         <div>
-            <div class="cmp-section-label mb-3">Recent aanbod</div>
-            <h2 id="recent-heading" class="text-2xl font-bold tracking-display-tight">Net geplaatst</h2>
+            <div class="cmp-section-label mb-3">{{ __('Recent aanbod') }}</div>
+            <h2 id="recent-heading" class="text-2xl font-bold tracking-display-tight">{{ __('Net geplaatst') }}</h2>
         </div>
         <a href="{{ route('listings.index') }}" class="hidden sm:inline text-sm text-cmp-muted hover:text-cmp-ink">
-            Alle advertenties →
+            {{ __('Alle advertenties →') }}
         </a>
     </div>
 
     @if ($listings->isEmpty())
         <div class="rounded-sm border border-cmp-border bg-cmp-surface p-8 text-center">
-            <p class="text-cmp-muted mb-4">Nog geen advertenties. Wees de eerste.</p>
-            <a href="{{ route('register') }}" class="cmp-btn cmp-btn-primary">Plaats er een</a>
+            <p class="text-cmp-muted mb-4">{{ __('Nog geen advertenties. Wees de eerste.') }}</p>
+            <a href="{{ route('register') }}" class="cmp-btn cmp-btn-primary">{{ __('Plaats er een') }}</a>
         </div>
     @else
         <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -54,7 +54,7 @@
 
         <div class="mt-6 text-center sm:hidden">
             <a href="{{ route('listings.index') }}" class="text-sm text-cmp-muted hover:text-cmp-ink">
-                Bekijk alle advertenties →
+                {{ __('Bekijk alle advertenties →') }}
             </a>
         </div>
     @endif
