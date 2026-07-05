@@ -36,8 +36,6 @@ class SiweOnboarding extends Component
 
     public string $username = '';
 
-    public string $display_name = '';
-
     public bool $accept_tos = false;
 
     public function mount(string $address): void
@@ -51,7 +49,6 @@ class SiweOnboarding extends Component
             'address' => ['required', 'regex:/^0x[a-fA-F0-9]{40}$/'],
             'email' => ['required', 'email', 'unique:users,email'],
             'username' => ['required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9_-]+$/i', 'unique:users,username'],
-            'display_name' => ['required', 'string', 'max:64'],
             'accept_tos' => ['accepted'],
         ]);
 
@@ -59,7 +56,9 @@ class SiweOnboarding extends Component
             $u = User::create([
                 'email' => $this->email,
                 'username' => strtolower($this->username),
-                'display_name' => $this->display_name,
+                // Display name defaults to the chosen username; editable later
+                // in profile settings.
+                'display_name' => $this->username,
                 'password_hash' => null,
                 'invite_credits' => (bool) config('cloudmarktplaats.features.invites')
                     ? (int) config('cloudmarktplaats.gamification.starting_invite_credits')

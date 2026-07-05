@@ -24,7 +24,6 @@ it('creates user + siwe identity from onboarding form', function (): void {
     Livewire::test(SiweOnboarding::class, ['address' => $address])
         ->set('email', 'wallet@b.nl')
         ->set('username', 'walletuser')
-        ->set('display_name', 'Wallet')
         ->set('accept_tos', true)
         ->call('submit')
         ->assertRedirect('/');
@@ -40,13 +39,13 @@ it('creates user + siwe identity from onboarding form', function (): void {
     )->toBeTrue();
     expect($u->legalAcceptances()->count())->toBe(2);
     expect($u->invite_credits)->toBe(3);
+    expect($u->display_name)->toBe('walletuser');
 });
 
 it('rejects onboarding when ToS is not accepted', function (): void {
     Livewire::test(SiweOnboarding::class, ['address' => '0xdead000000000000000000000000000000000002'])
         ->set('email', 'no-tos@b.nl')
         ->set('username', 'notosuser')
-        ->set('display_name', 'NoTos')
         ->set('accept_tos', false)
         ->call('submit')
         ->assertHasErrors(['accept_tos']);

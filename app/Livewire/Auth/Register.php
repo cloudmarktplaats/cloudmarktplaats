@@ -22,8 +22,6 @@ class Register extends Component
 
     public string $username = '';
 
-    public string $display_name = '';
-
     public string $password = '';
 
     public string $password_confirmation = '';
@@ -45,7 +43,6 @@ class Register extends Component
         $this->validate([
             'email' => ['required', 'email', 'unique:users,email'],
             'username' => ['required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9_-]+$/i', 'unique:users,username'],
-            'display_name' => ['required', 'string', 'max:64'],
             'password' => ['required', 'string', 'min:10', 'confirmed'],
             'accept_tos' => ['accepted'],
         ]);
@@ -59,7 +56,10 @@ class Register extends Component
                 $u = User::create([
                     'email' => $this->email,
                     'username' => strtolower($this->username),
-                    'display_name' => $this->display_name,
+                    // Display name defaults to the chosen username; it can be
+                    // changed later in profile settings. One name field at
+                    // signup keeps registration friction low.
+                    'display_name' => $this->username,
                     'password_hash' => Hash::make($this->password),
                     'invite_credits' => $startingCredits,
                 ]);

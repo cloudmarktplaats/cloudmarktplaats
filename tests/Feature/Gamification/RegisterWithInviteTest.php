@@ -18,7 +18,7 @@ it('links the new account to the inviter when a valid code is used', function ()
     $code = app(InviteService::class)->generate($inviter);
 
     Livewire::test(Register::class)
-        ->set('email', 'new@b.nl')->set('username', 'newbie')->set('display_name', 'New')
+        ->set('email', 'new@b.nl')->set('username', 'newbie')
         ->set('password', 'secret-1234')->set('password_confirmation', 'secret-1234')
         ->set('accept_tos', true)
         ->set('invite_code', $code->code)
@@ -32,7 +32,7 @@ it('links the new account to the inviter when a valid code is used', function ()
 
 it('rejects registration with an invalid invite code', function () {
     Livewire::test(Register::class)
-        ->set('email', 'x@b.nl')->set('username', 'xuser')->set('display_name', 'X')
+        ->set('email', 'x@b.nl')->set('username', 'xuser')
         ->set('password', 'secret-1234')->set('password_confirmation', 'secret-1234')
         ->set('accept_tos', true)
         ->set('invite_code', 'BOGUS00000')

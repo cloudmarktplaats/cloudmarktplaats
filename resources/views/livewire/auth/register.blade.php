@@ -6,9 +6,7 @@
 
         <input wire:model="username" placeholder="username" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('username') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
-        <input wire:model="display_name" placeholder="weergavenaam" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
-        @error('display_name') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+        <p class="text-xs text-cmp-faint -mt-1">Dit is je naam op het platform. Je kunt later in je profiel een aparte weergavenaam kiezen.</p>
 
         <input type="password" wire:model="password" placeholder="wachtwoord" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror

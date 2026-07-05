@@ -13,10 +13,6 @@
                class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('username') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <input wire:model="display_name" placeholder="weergavenaam"
-               class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
-        @error('display_name') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-
         <label class="flex items-start space-x-2 text-sm">
             <input type="checkbox" wire:model="accept_tos" class="mt-1">
             <span>Ik accepteer de <a href="/legal/tos" class="underline">algemene voorwaarden</a> en <a href="/legal/privacy" class="underline">privacy policy</a>.</span>

@@ -69,7 +69,6 @@ it('walks the full §14 acceptance scenario from register to anonymous detail-pa
     Livewire::test(Register::class)
         ->set('email', 'seller@example.nl')
         ->set('username', 'seller')
-        ->set('display_name', 'Acceptance Seller')
         ->set('password', 'pa55phrase-acceptance')
         ->set('password_confirmation', 'pa55phrase-acceptance')
         ->set('accept_tos', true)

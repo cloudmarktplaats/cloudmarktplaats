@@ -23,7 +23,6 @@ it('creates a user with password identity and legal acceptance', function () {
     Livewire::test(Register::class)
         ->set('email', 'new@example.nl')
         ->set('username', 'newuser')
-        ->set('display_name', 'New User')
         ->set('password', 'secret-pass-123')
         ->set('password_confirmation', 'secret-pass-123')
         ->set('accept_tos', true)
@@ -34,11 +33,13 @@ it('creates a user with password identity and legal acceptance', function () {
     expect($user)->not->toBeNull();
     expect($user->identities()->where('provider', 'password')->exists())->toBeTrue();
     expect($user->legalAcceptances()->count())->toBe(2);
+    // Display name defaults to the chosen username (single name field at signup).
+    expect($user->display_name)->toBe('newuser');
 });
 
 it('rejects mismatched passwords', function () {
     Livewire::test(Register::class)
-        ->set('email', 'a@b.nl')->set('username', 'a')->set('display_name', 'A')
+        ->set('email', 'a@b.nl')->set('username', 'abc')
         ->set('password', 'aaa')->set('password_confirmation', 'bbb')->set('accept_tos', true)
         ->call('submit')
         ->assertHasErrors(['password' => 'confirmed']);
@@ -46,7 +47,7 @@ it('rejects mismatched passwords', function () {
 
 it('rejects when ToS not accepted', function () {
     Livewire::test(Register::class)
-        ->set('email', 'a@b.nl')->set('username', 'abc')->set('display_name', 'A')
+        ->set('email', 'a@b.nl')->set('username', 'abcd')
         ->set('password', 'aaaaaaaaaa')->set('password_confirmation', 'aaaaaaaaaa')->set('accept_tos', false)
         ->call('submit')
         ->assertHasErrors(['accept_tos']);

@@ -2,10 +2,29 @@
     <header>
         <h1 class="text-xl font-bold">Beveiliging</h1>
         <p class="text-sm text-cmp-muted">
-            Beheer je login-methodes en tweefactor-authenticatie. Je moet altijd minstens
-            één werkende login-methode behouden.
+            Beheer je weergavenaam, login-methodes en tweefactor-authenticatie. Je moet altijd
+            minstens één werkende login-methode behouden.
         </p>
     </header>
+
+    <section class="rounded-sm border border-cmp-border p-4">
+        <h2 class="font-semibold">Weergavenaam</h2>
+        <p class="mt-1 text-sm text-cmp-muted">
+            De naam die anderen bij je advertenties zien. Je gebruikersnaam (je unieke handle)
+            blijft ongewijzigd.
+        </p>
+        <form wire:submit="saveDisplayName" class="mt-3 flex flex-wrap items-start gap-2">
+            <div class="min-w-0 flex-1">
+                <input wire:model="displayName" placeholder="weergavenaam"
+                       class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+                @error('displayName') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+            </div>
+            <button type="submit" class="cmp-btn cmp-btn-secondary">Opslaan</button>
+        </form>
+        @if (session('display_name_saved'))
+            <p class="mt-2 text-sm text-cmp-signal">Weergavenaam opgeslagen.</p>
+        @endif
+    </section>
 
     @error('identity')
         <p class="rounded border border-red-200 bg-red-50 p-2 text-sm text-red-700">{{ $message }}</p>

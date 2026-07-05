@@ -23,6 +23,28 @@ use Livewire\Component;
 #[Layout('layouts.app')]
 class Security extends Component
 {
+    public string $displayName = '';
+
+    public function mount(): void
+    {
+        /** @var User $user */
+        $user = auth()->user();
+        $this->displayName = (string) $user->display_name;
+    }
+
+    public function saveDisplayName(): void
+    {
+        $this->validate([
+            'displayName' => ['required', 'string', 'min:2', 'max:64'],
+        ]);
+
+        /** @var User $user */
+        $user = auth()->user();
+        $user->update(['display_name' => trim($this->displayName)]);
+
+        session()->flash('display_name_saved', true);
+    }
+
     public function unlink(int $identityId): void
     {
         /** @var User $user */
