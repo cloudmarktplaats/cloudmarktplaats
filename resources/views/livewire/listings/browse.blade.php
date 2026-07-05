@@ -5,13 +5,13 @@
         <div>
             <div class="cmp-section-label mb-3">
                 @if ($categoryPath)
-                    Categorie · {{ $categoryPath }}
+                    {{ __('Categorie') }} · {{ $categoryPath }}
                 @else
-                    De rommelmarkt
+                    {{ __('De rommelmarkt') }}
                 @endif
             </div>
             <h1 class="text-3xl font-bold tracking-display-tighter sm:text-4xl">
-                Snuffel rond.
+                {{ __('Snuffel rond.') }}
             </h1>
         </div>
 
@@ -27,7 +27,7 @@
                 ])
                 aria-pressed="{{ $sort !== 'shuffle' ? 'true' : 'false' }}"
             >
-                Recent
+                {{ __('Recent') }}
             </button>
             <button
                 type="button"
@@ -39,24 +39,24 @@
                 ])
                 aria-pressed="{{ $sort === 'shuffle' ? 'true' : 'false' }}"
             >
-                Verras me
+                {{ __('Verras me') }}
             </button>
         </div>
     </div>
 
     {{-- Search stays available, but deliberately secondary to the grid. --}}
     <p class="mt-4 text-sm text-cmp-muted">
-        Iets specifieks zoeken?
-        <a href="{{ route('listings.search') }}" class="text-cmp-blue underline hover:text-cmp-blue-dark">Doorzoek het aanbod</a>.
+        {{ __('Iets specifieks zoeken?') }}
+        <a href="{{ route('listings.search') }}" class="text-cmp-blue underline hover:text-cmp-blue-dark">{{ __('Doorzoek het aanbod') }}</a>.
     </p>
 
     @if ($listings->isEmpty())
         {{-- Empty state. --}}
         <div class="mt-12 rounded-sm border border-dashed border-cmp-border bg-cmp-surface px-6 py-16 text-center">
-            <p class="font-display text-xl font-bold">Nog niks te snuffelen. Wees de eerste.</p>
-            <p class="mt-2 text-sm text-cmp-muted">Er staat hier nog geen aanbod. Plaats jouw spullen en zet de markt op gang.</p>
+            <p class="font-display text-xl font-bold">{{ __('Nog niks te snuffelen. Wees de eerste.') }}</p>
+            <p class="mt-2 text-sm text-cmp-muted">{{ __('Er staat hier nog geen aanbod. Plaats jouw spullen en zet de markt op gang.') }}</p>
             <a href="{{ route('listings.create') }}" class="cmp-btn cmp-btn-primary mt-6">
-                Plaats een advertentie
+                {{ __('Plaats een advertentie') }}
             </a>
         </div>
     @else
@@ -122,8 +122,8 @@
                     wire:loading.attr="disabled"
                     class="cmp-btn cmp-btn-secondary"
                 >
-                    <span wire:loading.remove wire:target="loadMore">Meer laden</span>
-                    <span wire:loading wire:target="loadMore">Laden…</span>
+                    <span wire:loading.remove wire:target="loadMore">{{ __('Meer laden') }}</span>
+                    <span wire:loading wire:target="loadMore">{{ __('Laden…') }}</span>
                 </button>
             </div>
         @endif

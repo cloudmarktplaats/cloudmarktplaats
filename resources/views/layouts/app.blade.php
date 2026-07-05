@@ -19,12 +19,17 @@
                 <span>cloud<span class="text-cmp-signal">marktplaats</span><span class="text-cmp-muted">.nl</span></span>
             </a>
             <div class="flex items-center gap-4 text-sm">
+                <span class="hidden sm:inline-flex items-center gap-1 font-mono text-[11px] text-cmp-faint">
+                    <a href="{{ route('locale.switch', 'nl') }}" @class(['hover:text-cmp-ink', 'text-cmp-ink font-medium' => app()->getLocale() === 'nl'])>NL</a>
+                    <span aria-hidden="true">·</span>
+                    <a href="{{ route('locale.switch', 'en') }}" @class(['hover:text-cmp-ink', 'text-cmp-ink font-medium' => app()->getLocale() === 'en'])>EN</a>
+                </span>
                 @auth
                     <span class="font-mono text-[12px] text-cmp-muted">{{ auth()->user()->display_name }}</span>
-                    <form method="POST" action="/logout" class="inline">@csrf <button class="cmp-btn-ghost text-sm">Uitloggen</button></form>
+                    <form method="POST" action="/logout" class="inline">@csrf <button class="cmp-btn-ghost text-sm">{{ __('Uitloggen') }}</button></form>
                 @else
-                    <a href="/login" class="cmp-btn-ghost text-sm">Inloggen</a>
-                    <a href="/register" class="text-sm font-medium text-cmp-ink hover:text-cmp-signal">Account aanmaken</a>
+                    <a href="/login" class="cmp-btn-ghost text-sm">{{ __('Inloggen') }}</a>
+                    <a href="/register" class="text-sm font-medium text-cmp-ink hover:text-cmp-signal">{{ __('Account aanmaken') }}</a>
                 @endauth
             </div>
         </nav>

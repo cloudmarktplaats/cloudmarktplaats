@@ -1,9 +1,8 @@
 <div class="mx-auto max-w-6xl px-5 py-10 sm:px-8 sm:py-14">
-    <div class="cmp-section-label mb-3">Uit de homelabs</div>
-    <h1 class="text-3xl font-bold tracking-display-tighter sm:text-4xl">Laat je lab zien.</h1>
+    <div class="cmp-section-label mb-3">{{ __('Uit de homelabs') }}</div>
+    <h1 class="text-3xl font-bold tracking-display-tighter sm:text-4xl">{{ __('Laat je lab zien.') }}</h1>
     <p class="mt-4 max-w-xl text-sm text-cmp-muted">
-        Eén foto, een korte beschrijving, volledig anoniem. Geen naam, geen profiel —
-        alleen het rack. EXIF wordt gestript, zoals altijd.
+        {{ __('Eén foto, een korte beschrijving, volledig anoniem. Geen naam, geen profiel — alleen het rack. EXIF wordt gestript, zoals altijd.') }}
     </p>
 
     @error('upvote') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
@@ -19,30 +18,30 @@
             @error('photo') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
             <textarea wire:model="body" rows="3" maxlength="500"
-                      placeholder="Wat draait er, en waarom?"
+                      placeholder="{{ __('Wat draait er, en waarom?') }}"
                       class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal"></textarea>
             @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
             <div class="flex items-center justify-between">
-                <span class="font-mono text-[11px] text-cmp-faint">max 500 tekens · 1 post per dag · anoniem</span>
+                <span class="font-mono text-[11px] text-cmp-faint">{{ __('max 500 tekens · 1 post per dag · anoniem') }}</span>
                 <button class="cmp-btn cmp-btn-primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove>Post je lab</span>
-                    <span wire:loading>Uploaden…</span>
+                    <span wire:loading.remove>{{ __('Post je lab') }}</span>
+                    <span wire:loading>{{ __('Uploaden…') }}</span>
                 </button>
             </div>
         </form>
     @else
         <div class="mt-8 max-w-xl rounded-sm border border-dashed border-cmp-border bg-cmp-surface p-5">
             <p class="text-sm text-cmp-muted">
-                <a href="{{ route('login') }}" class="text-cmp-blue underline hover:text-cmp-blue-dark">Log in om jouw lab te tonen</a>
-                — de feed toont nooit wie je bent.
+                <a href="{{ route('login') }}" class="text-cmp-blue underline hover:text-cmp-blue-dark">{{ __('Log in om jouw lab te tonen') }}</a>
+                — {{ __('de feed toont nooit wie je bent.') }}
             </p>
         </div>
     @endauth
 
     @if ($posts->isEmpty())
         <div class="mt-12 rounded-sm border border-dashed border-cmp-border bg-cmp-surface px-6 py-16 text-center">
-            <p class="font-display text-xl font-bold">Nog geen labs. Die van jou kan de eerste zijn.</p>
+            <p class="font-display text-xl font-bold">{{ __('Nog geen labs. Die van jou kan de eerste zijn.') }}</p>
         </div>
     @else
         <div class="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -50,13 +49,13 @@
                 <article wire:key="homelab-{{ $post->ulid }}"
                          class="flex flex-col overflow-hidden rounded-sm border border-cmp-border bg-cmp-surface">
                     <div class="aspect-[4/3] overflow-hidden bg-cmp-bg2">
-                        <img src="{{ $post->photoUrl('card') }}" alt="Homelab-foto" loading="lazy"
+                        <img src="{{ $post->photoUrl('card') }}" alt="{{ __('Homelab-foto') }}" loading="lazy"
                              class="h-full w-full object-cover">
                     </div>
                     <div class="flex flex-1 flex-col gap-2 p-4">
                         <p class="text-sm text-cmp-text">{{ $post->body }}</p>
                         <div class="mt-auto flex items-center justify-between pt-1">
-                            <span class="cmp-label-chip">Homelab</span>
+                            <span class="cmp-label-chip">{{ __('Homelab') }}</span>
                             <span class="font-mono text-[10px] text-cmp-faint">{{ $post->created_at->diffForHumans() }}</span>
                         </div>
                         @if (config('cloudmarktplaats.features.homelab_upvotes'))
@@ -72,7 +71,7 @@
                                     </button>
                                 @else
                                     <span class="inline-flex items-center gap-1 font-mono text-[11px] text-cmp-faint">▲ {{ $post->upvotes_count }}</span>
-                                    <a href="{{ route('login') }}" class="text-[11px] text-cmp-blue underline hover:text-cmp-blue-dark">log in om te waarderen</a>
+                                    <a href="{{ route('login') }}" class="text-[11px] text-cmp-blue underline hover:text-cmp-blue-dark">{{ __('log in om te waarderen') }}</a>
                                 @endauth
                             </div>
                         @endif
@@ -80,22 +79,22 @@
                             @if ($post->user_id === auth()->id())
                                 <button type="button"
                                         wire:click="deleteOwn('{{ $post->ulid }}')"
-                                        wire:confirm="Post verwijderen?"
+                                        wire:confirm="{{ __('Post verwijderen?') }}"
                                         class="self-start font-mono text-[10px] text-cmp-muted underline hover:text-cmp-amber">
-                                    Verwijder mijn post
+                                    {{ __('Verwijder mijn post') }}
                                 </button>
                             @endif
 
                             <details class="mt-1">
-                                <summary class="cursor-pointer font-mono text-[10px] text-cmp-faint hover:text-cmp-amber">Rapporteer</summary>
+                                <summary class="cursor-pointer font-mono text-[10px] text-cmp-faint hover:text-cmp-amber">{{ __('Rapporteer') }}</summary>
                                 <form method="POST" action="{{ route('reports.homelab.store', $post->ulid) }}" class="mt-2 flex items-center gap-2">
                                     @csrf
                                     <select name="reason" class="rounded-sm border-cmp-border text-xs focus:border-cmp-signal focus:ring-cmp-signal">
-                                        <option value="illegal">Illegaal</option>
-                                        <option value="spam">Spam</option>
-                                        <option value="other" selected>Anders</option>
+                                        <option value="illegal">{{ __('Illegaal') }}</option>
+                                        <option value="spam">{{ __('Spam') }}</option>
+                                        <option value="other" selected>{{ __('Anders') }}</option>
                                     </select>
-                                    <button class="rounded-sm bg-cmp-ink px-2 py-1 text-[11px] text-white hover:bg-cmp-signal">Verstuur</button>
+                                    <button class="rounded-sm bg-cmp-ink px-2 py-1 text-[11px] text-white hover:bg-cmp-signal">{{ __('Verstuur') }}</button>
                                 </form>
                             </details>
                         @endauth
@@ -107,8 +106,8 @@
         @if ($hasMore)
             <div x-data x-intersect.margin.400px="$wire.loadMore()" class="mt-10 flex justify-center">
                 <button type="button" wire:click="loadMore" wire:loading.attr="disabled" class="cmp-btn cmp-btn-secondary">
-                    <span wire:loading.remove wire:target="loadMore">Meer laden</span>
-                    <span wire:loading wire:target="loadMore">Laden…</span>
+                    <span wire:loading.remove wire:target="loadMore">{{ __('Meer laden') }}</span>
+                    <span wire:loading wire:target="loadMore">{{ __('Laden…') }}</span>
                 </button>
             </div>
         @endif

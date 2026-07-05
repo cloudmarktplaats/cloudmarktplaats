@@ -76,11 +76,11 @@ class Listing extends Model
      */
     public function conditionLabel(): string
     {
-        return match ($this->condition) {
-            'new' => 'Nieuw',
-            'used' => 'Gebruikt',
-            'defective' => 'Defect',
-            'for_parts' => 'Voor onderdelen',
+        return (string) match ($this->condition) {
+            'new' => __('Nieuw'),
+            'used' => __('Gebruikt'),
+            'defective' => __('Defect'),
+            'for_parts' => __('Voor onderdelen'),
         };
     }
 

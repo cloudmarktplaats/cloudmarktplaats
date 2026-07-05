@@ -1,24 +1,24 @@
 <div class="mx-auto max-w-2xl rounded-sm border border-cmp-border bg-cmp-surface p-6">
-    <h1 class="mb-4 text-2xl font-bold">Nieuwe advertentie</h1>
+    <h1 class="mb-4 text-2xl font-bold">{{ __('Nieuwe advertentie') }}</h1>
 
     <ol class="mb-6 flex items-center gap-2 text-sm">
-        <li class="rounded px-3 py-1 {{ $step === 1 ? 'bg-cmp-ink text-white' : 'bg-cmp-bg2 text-cmp-muted' }}">1. Basis</li>
-        <li class="rounded px-3 py-1 {{ $step === 2 ? 'bg-cmp-ink text-white' : 'bg-cmp-bg2 text-cmp-muted' }}">2. Details</li>
-        <li class="rounded px-3 py-1 {{ $step === 3 ? 'bg-cmp-ink text-white' : 'bg-cmp-bg2 text-cmp-muted' }}">3. Foto's</li>
+        <li class="rounded px-3 py-1 {{ $step === 1 ? 'bg-cmp-ink text-white' : 'bg-cmp-bg2 text-cmp-muted' }}">1. {{ __('Basis') }}</li>
+        <li class="rounded px-3 py-1 {{ $step === 2 ? 'bg-cmp-ink text-white' : 'bg-cmp-bg2 text-cmp-muted' }}">2. {{ __('Details') }}</li>
+        <li class="rounded px-3 py-1 {{ $step === 3 ? 'bg-cmp-ink text-white' : 'bg-cmp-bg2 text-cmp-muted' }}">3. {{ __("Foto's") }}</li>
     </ol>
 
     @if ($step === 1)
         <form wire:submit="next" class="space-y-3">
             <label class="block text-sm">
-                <span class="mb-1 block font-medium">Titel</span>
+                <span class="mb-1 block font-medium">{{ __('Titel') }}</span>
                 <input wire:model="title" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
             </label>
             @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
             <label class="block text-sm">
-                <span class="mb-1 block font-medium">Categorie</span>
+                <span class="mb-1 block font-medium">{{ __('Categorie') }}</span>
                 <select wire:model="category_id" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
-                    <option value="">— Kies een categorie —</option>
+                    <option value="">{{ __('— Kies een categorie —') }}</option>
                     @foreach ($categoryGroups as $groupLabel => $options)
                         <optgroup label="{{ $groupLabel }}">
                             @foreach ($options as $id => $label)
@@ -31,72 +31,72 @@
             @error('category_id') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
             <label class="block text-sm">
-                <span class="mb-1 block font-medium">Staat</span>
+                <span class="mb-1 block font-medium">{{ __('Staat') }}</span>
                 <select wire:model="condition" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
-                    <option value="new">Nieuw</option>
-                    <option value="used">Gebruikt</option>
-                    <option value="defective">Defect</option>
-                    <option value="for_parts">Voor onderdelen</option>
+                    <option value="new">{{ __('Nieuw') }}</option>
+                    <option value="used">{{ __('Gebruikt') }}</option>
+                    <option value="defective">{{ __('Defect') }}</option>
+                    <option value="for_parts">{{ __('Voor onderdelen') }}</option>
                 </select>
             </label>
             @error('condition') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
             <label class="block text-sm">
-                <span class="mb-1 block font-medium">Prijs (in centen)</span>
+                <span class="mb-1 block font-medium">{{ __('Prijs (in centen)') }}</span>
                 <input wire:model="price_cents" type="number" min="0" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
             </label>
             @error('price_cents') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
             <label class="flex items-center gap-2 text-sm">
                 <input wire:model="is_trade_allowed" type="checkbox">
-                <span>Ruilen toegestaan</span>
+                <span>{{ __('Ruilen toegestaan') }}</span>
             </label>
 
-            <button class="w-full cmp-btn cmp-btn-primary">Volgende</button>
+            <button class="w-full cmp-btn cmp-btn-primary">{{ __('Volgende') }}</button>
         </form>
     @elseif ($step === 2)
         <form wire:submit="next" class="space-y-3">
             <label class="block text-sm">
-                <span class="mb-1 block font-medium">Beschrijving (markdown)</span>
+                <span class="mb-1 block font-medium">{{ __('Beschrijving (markdown)') }}</span>
                 <textarea wire:model="description" rows="8" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required></textarea>
             </label>
             @error('description') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
             <label class="block text-sm">
-                <span class="mb-1 block font-medium">Postcode (4 cijfers)</span>
+                <span class="mb-1 block font-medium">{{ __('Postcode (4 cijfers)') }}</span>
                 <input wire:model="region_postcode" maxlength="4" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
             </label>
             @error('region_postcode') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
             <fieldset class="space-y-1 text-sm">
-                <legend class="font-medium">Verzendopties</legend>
+                <legend class="font-medium">{{ __('Verzendopties') }}</legend>
                 <label class="flex items-center gap-2">
-                    <input type="checkbox" wire:model="shipping_pickup"> Ophalen
+                    <input type="checkbox" wire:model="shipping_pickup"> {{ __('Ophalen') }}
                 </label>
                 <label class="flex items-center gap-2">
-                    <input type="checkbox" wire:model="shipping_post"> Verzending via post
+                    <input type="checkbox" wire:model="shipping_post"> {{ __('Verzending via post') }}
                 </label>
             </fieldset>
 
             <div class="flex justify-between">
-                <button type="button" wire:click="back" class="rounded border px-4 py-2">Terug</button>
-                <button class="cmp-btn cmp-btn-primary">Volgende</button>
+                <button type="button" wire:click="back" class="rounded border px-4 py-2">{{ __('Terug') }}</button>
+                <button class="cmp-btn cmp-btn-primary">{{ __('Volgende') }}</button>
             </div>
         </form>
     @else
         <form wire:submit="submit" class="space-y-3" enctype="multipart/form-data">
             <label class="block text-sm">
-                <span class="mb-1 block font-medium">Foto's (1–10, max 8MB elk)</span>
+                <span class="mb-1 block font-medium">{{ __('Foto\'s (1–10, max 8MB elk)') }}</span>
                 <input type="file" wire:model="photos" multiple accept="image/jpeg,image/png,image/webp" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
             </label>
             @error('photos') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
             @error('photos.*') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-            <p class="text-xs text-cmp-muted">EXIF (waaronder GPS) wordt automatisch verwijderd na uploaden.</p>
+            <p class="text-xs text-cmp-muted">{{ __('EXIF (waaronder GPS) wordt automatisch verwijderd na uploaden.') }}</p>
 
             <div class="flex justify-between">
-                <button type="button" wire:click="back" class="rounded border px-4 py-2">Terug</button>
-                <button class="rounded bg-green-600 px-4 py-2 text-white">Indienen voor moderatie</button>
+                <button type="button" wire:click="back" class="rounded border px-4 py-2">{{ __('Terug') }}</button>
+                <button class="rounded bg-green-600 px-4 py-2 text-white">{{ __('Indienen voor moderatie') }}</button>
             </div>
         </form>
     @endif

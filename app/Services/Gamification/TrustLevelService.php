@@ -29,25 +29,25 @@ class TrustLevelService
     public function forUser(User $user): array
     {
         if ($user->is_banned) {
-            return ['key' => 'new', 'label' => 'Nieuw', 'rank' => 0];
+            return ['key' => 'new', 'label' => (string) __('Nieuw'), 'rank' => 0];
         }
 
         $verified = $user->email_verified_at !== null;
         if (! $verified) {
-            return ['key' => 'new', 'label' => 'Nieuw', 'rank' => 0];
+            return ['key' => 'new', 'label' => (string) __('Nieuw'), 'rank' => 0];
         }
 
         $ageDays = ($user->created_at ?? now())->diffInDays(now());
         $sold = Transaction::query()->confirmedSaleFor($user->id)->count();
 
         if ($ageDays >= 30 && $sold >= 5) {
-            return ['key' => 'veteran', 'label' => 'Veteraan', 'rank' => 3];
+            return ['key' => 'veteran', 'label' => (string) __('Veteraan'), 'rank' => 3];
         }
         if ($ageDays >= 14 && $sold >= 2) {
-            return ['key' => 'trusted', 'label' => 'Vertrouwd', 'rank' => 2];
+            return ['key' => 'trusted', 'label' => (string) __('Vertrouwd'), 'rank' => 2];
         }
 
-        return ['key' => 'member', 'label' => 'Lid', 'rank' => 1];
+        return ['key' => 'member', 'label' => (string) __('Lid'), 'rank' => 1];
     }
 
     public function canSkipModeration(User $user): bool

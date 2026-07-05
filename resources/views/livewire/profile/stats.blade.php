@@ -1,11 +1,11 @@
 <div class="mx-auto max-w-2xl px-5 py-10 sm:px-8 sm:py-14">
-    <div class="cmp-section-label mb-3">Jouw cijfers</div>
-    <h1 class="text-3xl font-bold tracking-display-tighter">Statistieken</h1>
-    <p class="mt-3 text-sm text-cmp-muted">Alleen jij ziet deze pagina. Geen ranglijst, geen vergelijking — gewoon jouw activiteit.</p>
+    <div class="cmp-section-label mb-3">{{ __('Jouw cijfers') }}</div>
+    <h1 class="text-3xl font-bold tracking-display-tighter">{{ __('Statistieken') }}</h1>
+    <p class="mt-3 text-sm text-cmp-muted">{{ __('Alleen jij ziet deze pagina. Geen ranglijst, geen vergelijking — gewoon jouw activiteit.') }}</p>
 
     @if ($trust !== null)
         <div class="mt-6 flex items-center gap-3 rounded-sm border-2 border-cmp-ink bg-cmp-surface px-4 py-3">
-            <span class="font-mono text-[11px] uppercase tracking-wide text-cmp-muted">Vertrouwensniveau</span>
+            <span class="font-mono text-[11px] uppercase tracking-wide text-cmp-muted">{{ __('Vertrouwensniveau') }}</span>
             <span class="cmp-label-chip">{{ $trust['label'] }}</span>
         </div>
     @endif
@@ -13,12 +13,12 @@
     <dl class="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
         @php
             $tiles = [
-                ['Lid sinds', $stats['member_since']->translatedFormat('M Y')],
-                ['Advertenties live', $stats['listings_published']],
-                ['Verkocht', $stats['listings_sold']],
-                ['Homelab-posts', $stats['homelab_posts']],
-                ['Karma', $stats['karma']],
-                ['Mensen geactiveerd', $stats['people_activated']],
+                [__('Lid sinds'), $stats['member_since']->translatedFormat('M Y')],
+                [__('Advertenties live'), $stats['listings_published']],
+                [__('Verkocht'), $stats['listings_sold']],
+                [__('Homelab-posts'), $stats['homelab_posts']],
+                [__('Karma'), $stats['karma']],
+                [__('Mensen geactiveerd'), $stats['people_activated']],
             ];
         @endphp
         @foreach ($tiles as [$label, $value])
@@ -29,7 +29,7 @@
         @endforeach
     </dl>
 
-    <div class="cmp-section-label mb-3 mt-10">Badges</div>
+    <div class="cmp-section-label mb-3 mt-10">{{ __('Badges') }}</div>
     @if (count($badges) > 0)
         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
             @foreach ($badges as $badge)
@@ -40,6 +40,6 @@
             @endforeach
         </div>
     @else
-        <p class="text-sm text-cmp-muted">Nog geen badges. Plaats een advertentie of laat je homelab zien om er een te verdienen.</p>
+        <p class="text-sm text-cmp-muted">{{ __('Nog geen badges. Plaats een advertentie of laat je homelab zien om er een te verdienen.') }}</p>
     @endif
 </div>

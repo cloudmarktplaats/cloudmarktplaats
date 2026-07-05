@@ -24,12 +24,12 @@ class BadgeService
         $activated = (int) ($stats['people_activated'] ?? 0);
 
         $definitions = [
-            ['key' => 'first_listing', 'label' => 'Eerste advertentie', 'description' => 'Je plaatste je eerste advertentie.', 'earned' => ($published + $sold) >= 1],
-            ['key' => 'first_sale', 'label' => 'Eerste verkoop', 'description' => 'Je eerste stuk hardware kreeg een tweede leven.', 'earned' => $sold >= 1],
-            ['key' => 'trader', 'label' => 'Handelaar', 'description' => 'Tien of meer verkopen.', 'earned' => $sold >= 10],
-            ['key' => 'homelab_hero', 'label' => 'Homelab-held', 'description' => 'Je liet je lab zien.', 'earned' => $homelab >= 1],
-            ['key' => 'host', 'label' => 'Gastheer', 'description' => 'Iemand die je uitnodigde werd actief.', 'earned' => $activated >= 1],
-            ['key' => 'pillar', 'label' => 'Community-pilaar', 'description' => 'Vijftig of meer karma.', 'earned' => $karma >= 50],
+            ['key' => 'first_listing', 'label' => (string) __('Eerste advertentie'), 'description' => (string) __('Je plaatste je eerste advertentie.'), 'earned' => ($published + $sold) >= 1],
+            ['key' => 'first_sale', 'label' => (string) __('Eerste verkoop'), 'description' => (string) __('Je eerste stuk hardware kreeg een tweede leven.'), 'earned' => $sold >= 1],
+            ['key' => 'trader', 'label' => (string) __('Handelaar'), 'description' => (string) __('Tien of meer verkopen.'), 'earned' => $sold >= 10],
+            ['key' => 'homelab_hero', 'label' => (string) __('Homelab-held'), 'description' => (string) __('Je liet je lab zien.'), 'earned' => $homelab >= 1],
+            ['key' => 'host', 'label' => (string) __('Gastheer'), 'description' => (string) __('Iemand die je uitnodigde werd actief.'), 'earned' => $activated >= 1],
+            ['key' => 'pillar', 'label' => (string) __('Community-pilaar'), 'description' => (string) __('Vijftig of meer karma.'), 'earned' => $karma >= 50],
         ];
 
         return array_values(array_map(

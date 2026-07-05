@@ -3,56 +3,56 @@
     // for legally-sensitive answers (DAC7, liability).
     $faqs = [
         [
-            'q' => 'Is dit legaal?',
-            'a' => '<p>Ja. Cloudmarktplaats is een advertentiebord tussen particulieren (en kleine bedrijven), vergelijkbaar met Marktplaats of Tweakers V&amp;A. Verkoop tussen consumenten valt onder gewone Nederlandse koop- en consumentenwetgeving. Wij faciliteren ontmoeting, geen transactie.</p>',
+            'q' => __('Is dit legaal?'),
+            'a' => __('<p>Ja. Cloudmarktplaats is een advertentiebord tussen particulieren (en kleine bedrijven), vergelijkbaar met Marktplaats of Tweakers V&amp;A. Verkoop tussen consumenten valt onder gewone Nederlandse koop- en consumentenwetgeving. Wij faciliteren ontmoeting, geen transactie.</p>'),
         ],
         [
-            'q' => 'Wat doen jullie met mijn data?',
-            'a' => '<p>Het minimale. We slaan op: e-mailadres, gebruikersnaam, advertenties, foto\'s (zonder EXIF/GPS — die worden bij upload gestript). Je IP-adres bewaren we maximaal 24 uur voor incident-response, daarna wordt het automatisch gewist (<code class="font-mono text-cmp-text text-[12px]">IpStripperJob</code>). We delen niets met derden behalve waar dat wettelijk moet. We hebben geen Google Analytics, geen Facebook Pixel, geen Hotjar, en geen cookiebanner — omdat we geen non-essentiële cookies zetten.</p>',
+            'q' => __('Wat doen jullie met mijn data?'),
+            'a' => __('<p>Het minimale. We slaan op: e-mailadres, gebruikersnaam, advertenties, foto\'s (zonder EXIF/GPS — die worden bij upload gestript). Je IP-adres bewaren we maximaal 24 uur voor incident-response, daarna wordt het automatisch gewist (<code class="font-mono text-cmp-text text-[12px]">IpStripperJob</code>). We delen niets met derden behalve waar dat wettelijk moet. We hebben geen Google Analytics, geen Facebook Pixel, geen Hotjar, en geen cookiebanner — omdat we geen non-essentiële cookies zetten.</p>'),
         ],
         [
-            'q' => 'Rapporteren jullie aan de Belastingdienst?',
-            'notice' => 'Deze informatie is geen juridisch advies. Zie <code class="font-mono text-cmp-text text-[12px]">docs/dac7-position.md</code> voor de volledige analyse.',
-            'a' => '<p>Voor nu: <strong>nee</strong>. De DAC7-richtlijn verplicht platforms om verkopers te rapporteren boven 30 transacties óf €2.000 omzet per kalenderjaar — maar alleen wanneer betalingen via het platform lopen. Bij ons gebeurt afhandeling offline (Tikkie, contant, overschrijving). We zien je transacties niet en kunnen ze dus ook niet rapporteren.</p>
-                    <p class="mt-3">Dat verandert pas als we ooit een betaalstroom op-platform aanzetten (de Web3-escrow-module, sub-project #7, staat in de roadmap maar is uitgeschakeld). Op dat moment activeren we ook de DAC7-export en houden we per verkoper de drempel bij. Je krijgt dan ruim van tevoren bericht.</p>',
+            'q' => __('Rapporteren jullie aan de Belastingdienst?'),
+            'notice' => __('Deze informatie is geen juridisch advies. Zie <code class="font-mono text-cmp-text text-[12px]">docs/dac7-position.md</code> voor de volledige analyse.'),
+            'a' => __('<p>Voor nu: <strong>nee</strong>. De DAC7-richtlijn verplicht platforms om verkopers te rapporteren boven 30 transacties óf €2.000 omzet per kalenderjaar — maar alleen wanneer betalingen via het platform lopen. Bij ons gebeurt afhandeling offline (Tikkie, contant, overschrijving). We zien je transacties niet en kunnen ze dus ook niet rapporteren.</p>
+                    <p class="mt-3">Dat verandert pas als we ooit een betaalstroom op-platform aanzetten (de Web3-escrow-module, sub-project #7, staat in de roadmap maar is uitgeschakeld). Op dat moment activeren we ook de DAC7-export en houden we per verkoper de drempel bij. Je krijgt dan ruim van tevoren bericht.</p>'),
         ],
         [
-            'q' => 'Hoe verdienen jullie geld?',
-            'a' => '<p><a href="/doneren" class="text-cmp-blue underline hover:text-cmp-blue-dark">Donaties</a>, sponsoring (zie sponsorpagina), en op termijn optionele premium listings. Geen advertenties, geen affiliate links, geen verkoop van data. Inkomsten en kosten worden gepubliceerd zodra het structureel boven nul uit komt.</p>',
+            'q' => __('Hoe verdienen jullie geld?'),
+            'a' => __('<p><a href="/doneren" class="text-cmp-blue underline hover:text-cmp-blue-dark">Donaties</a>, sponsoring (zie sponsorpagina), en op termijn optionele premium listings. Geen advertenties, geen affiliate links, geen verkoop van data. Inkomsten en kosten worden gepubliceerd zodra het structureel boven nul uit komt.</p>'),
         ],
         [
-            'q' => 'Kan ik betalen met crypto?',
-            'a' => '<p>Op dit moment niet. Cloudmarktplaats faciliteert nu zelf geen betalingen — koper en verkoper regelen dat onderling, dus als jullie het allebei in een coin willen doen, prima. Voor de toekomst staat Web3-escrow (smart contract als tussenpartij) in de roadmap, gated achter een feature flag. Als en wanneer dat live gaat, lees je het hier eerst.</p>',
+            'q' => __('Kan ik betalen met crypto?'),
+            'a' => __('<p>Op dit moment niet. Cloudmarktplaats faciliteert nu zelf geen betalingen — koper en verkoper regelen dat onderling, dus als jullie het allebei in een coin willen doen, prima. Voor de toekomst staat Web3-escrow (smart contract als tussenpartij) in de roadmap, gated achter een feature flag. Als en wanneer dat live gaat, lees je het hier eerst.</p>'),
         ],
         [
-            'q' => 'Wat als iemand me oplicht?',
-            'notice' => 'Foundation is een advertentiebord — geen escrow, geen kopersbescherming. Lees dit aandachtig.',
-            'a' => '<p>Cloudmarktplaats is geen escrow en wij houden geen geld vast. Je sluit een koop met een andere gebruiker, niet met ons. Tips: ontmoet lokaal waar het kan, controleer hardware voordat je betaalt, gebruik betaalmethodes met kopersbescherming. Meld misbruik via de "Report"-knop op elk profiel of elke advertentie; we bannen vastgestelde oplichters en de modlog blijft beschikbaar. Kijk ook naar het vertrouwensniveau van een verkoper (nieuw/lid/vertrouwd/veteraan) — dat leunt op door kopers bevestigde verkopen, niet op zelf-geclaimde sterretjes.</p>',
+            'q' => __('Wat als iemand me oplicht?'),
+            'notice' => __('Foundation is een advertentiebord — geen escrow, geen kopersbescherming. Lees dit aandachtig.'),
+            'a' => __('<p>Cloudmarktplaats is geen escrow en wij houden geen geld vast. Je sluit een koop met een andere gebruiker, niet met ons. Tips: ontmoet lokaal waar het kan, controleer hardware voordat je betaalt, gebruik betaalmethodes met kopersbescherming. Meld misbruik via de "Report"-knop op elk profiel of elke advertentie; we bannen vastgestelde oplichters en de modlog blijft beschikbaar. Kijk ook naar het vertrouwensniveau van een verkoper (nieuw/lid/vertrouwd/veteraan) — dat leunt op door kopers bevestigde verkopen, niet op zelf-geclaimde sterretjes.</p>'),
         ],
         [
-            'q' => 'Hoe werkt het reputatiesysteem?',
-            'a' => '<p>Geen sterretjes, geen ranglijst. Je vertrouwensniveau (nieuw → lid → vertrouwd → veteraan) volgt uit <strong>je eigen bewezen activiteit</strong>: geverifieerd e-mailadres, hoe lang je account bestaat, en het aantal <strong>door de koper bevestigde</strong> verkopen. Bij het afronden van een deal tag je optioneel de koper; die bevestigt op zijn eigen pagina dat het klopte. Zo kun je jezelf geen reputatie aanpraten — er moet een echte tegenpartij bevestigen.</p>
-                    <p class="mt-3">Daarnaast is er <strong>karma</strong> (je verdient het als iemand die jij uitnodigde actief wordt, en via waardering op je homelab-posts) en zijn er verdiende <strong>badges</strong>. Karma is een privé-getal op je eigen statistiekenpagina — geen publieke score, geen wedstrijd. En het is nog vroeg: het systeem staat, de cijfers moeten met de community groeien.</p>',
+            'q' => __('Hoe werkt het reputatiesysteem?'),
+            'a' => __('<p>Geen sterretjes, geen ranglijst. Je vertrouwensniveau (nieuw → lid → vertrouwd → veteraan) volgt uit <strong>je eigen bewezen activiteit</strong>: geverifieerd e-mailadres, hoe lang je account bestaat, en het aantal <strong>door de koper bevestigde</strong> verkopen. Bij het afronden van een deal tag je optioneel de koper; die bevestigt op zijn eigen pagina dat het klopte. Zo kun je jezelf geen reputatie aanpraten — er moet een echte tegenpartij bevestigen.</p>
+                    <p class="mt-3">Daarnaast is er <strong>karma</strong> (je verdient het als iemand die jij uitnodigde actief wordt, en via waardering op je homelab-posts) en zijn er verdiende <strong>badges</strong>. Karma is een privé-getal op je eigen statistiekenpagina — geen publieke score, geen wedstrijd. En het is nog vroeg: het systeem staat, de cijfers moeten met de community groeien.</p>'),
         ],
         [
-            'q' => 'Wat is "Uit de homelabs"?',
-            'a' => '<p>Een plek om je lab te laten zien. Ingelogde gebruikers plaatsen één foto plus een korte beschrijving; de feed is <strong>volledig anoniem</strong> — bezoekers zien nooit wie postte. Anderen kunnen een post <strong>waarderen</strong> (upvote-only, geen downvotes). Het is rack-porn voor de community, en het houdt de site levendig los van het aanbod. EXIF wordt gestript, zoals overal.</p>',
+            'q' => __('Wat is "Uit de homelabs"?'),
+            'a' => __('<p>Een plek om je lab te laten zien. Ingelogde gebruikers plaatsen één foto plus een korte beschrijving; de feed is <strong>volledig anoniem</strong> — bezoekers zien nooit wie postte. Anderen kunnen een post <strong>waarderen</strong> (upvote-only, geen downvotes). Het is rack-porn voor de community, en het houdt de site levendig los van het aanbod. EXIF wordt gestript, zoals overal.</p>'),
         ],
         [
-            'q' => 'Wat zijn invite-codes en karma?',
-            'a' => '<p>Registreren kan gewoon open, maar met een <strong>invite-code</strong> van een bestaand lid krijg je een vliegende start en is duidelijk wie voor wie instaat — dat houdt de kwaliteit hoog en scammers herleidbaar. Je verdient <strong>karma</strong> als iemand die jij uitnodigde actief wordt en als je homelab-posts gewaardeerd worden. Karma ontgrendelt geen macht over anderen en staat nergens publiek; het is een privé-signaal en levert hooguit een badge op. Bewust: <em>we belonen bijdrage en vertrouwen, niet populariteit</em>.</p>',
+            'q' => __('Wat zijn invite-codes en karma?'),
+            'a' => __('<p>Registreren kan gewoon open, maar met een <strong>invite-code</strong> van een bestaand lid krijg je een vliegende start en is duidelijk wie voor wie instaat — dat houdt de kwaliteit hoog en scammers herleidbaar. Je verdient <strong>karma</strong> als iemand die jij uitnodigde actief wordt en als je homelab-posts gewaardeerd worden. Karma ontgrendelt geen macht over anderen en staat nergens publiek; het is een privé-signaal en levert hooguit een badge op. Bewust: <em>we belonen bijdrage en vertrouwen, niet populariteit</em>.</p>'),
         ],
         [
-            'q' => 'Waarom geen app?',
-            'a' => '<p>Cloudmarktplaats werkt als progressive web app: je kan hem aan je beginscherm vastpinnen en hij draait offline waar het kan. Geen native iOS- of Android-app om drie redenen: (1) we hebben er geen capaciteit voor; (2) we willen geen 15% omzet aan Apple of Google afdragen voor een app die niets bijzonders doet; (3) we willen niet dat Apple of Google bepaalt welke advertenties bij ons online mogen. Als de community een eigen app wil bouwen op onze open API: graag.</p>',
+            'q' => __('Waarom geen app?'),
+            'a' => __('<p>Cloudmarktplaats werkt als progressive web app: je kan hem aan je beginscherm vastpinnen en hij draait offline waar het kan. Geen native iOS- of Android-app om drie redenen: (1) we hebben er geen capaciteit voor; (2) we willen geen 15% omzet aan Apple of Google afdragen voor een app die niets bijzonders doet; (3) we willen niet dat Apple of Google bepaalt welke advertenties bij ons online mogen. Als de community een eigen app wil bouwen op onze open API: graag.</p>'),
         ],
         [
-            'q' => 'Hoe kan ik de community steunen?',
-            'a' => '<p>In volgorde van impact: (1) plaats advertenties en gebruik het platform — netwerkeffect is wat we nodig hebben; (2) <a href="/doneren" class="text-cmp-blue underline hover:text-cmp-blue-dark">doneer eenmalig of maandelijks</a>; (3) word sponsor of haal je werkgever over; (4) draag code, vertalingen of documentatie bij via GitHub; (5) modereer mee — meld misstanden en help nieuwe gebruikers.</p>',
+            'q' => __('Hoe kan ik de community steunen?'),
+            'a' => __('<p>In volgorde van impact: (1) plaats advertenties en gebruik het platform — netwerkeffect is wat we nodig hebben; (2) <a href="/doneren" class="text-cmp-blue underline hover:text-cmp-blue-dark">doneer eenmalig of maandelijks</a>; (3) word sponsor of haal je werkgever over; (4) draag code, vertalingen of documentatie bij via GitHub; (5) modereer mee — meld misstanden en help nieuwe gebruikers.</p>'),
         ],
         [
-            'q' => 'Wat mag ik NIET verkopen?',
-            'a' => '<ul class="list-disc list-outside ml-5 space-y-1.5">
+            'q' => __('Wat mag ik NIET verkopen?'),
+            'a' => __('<ul class="list-disc list-outside ml-5 space-y-1.5">
                 <li>Wapens en munitie (Wwm), inclusief geconverteerde tools die als wapen kunnen dienen.</li>
                 <li>Drugs, precursoren, lachgas in commerciële hoeveelheden.</li>
                 <li>Gestolen waar — serienummers worden steekproefsgewijs gecontroleerd.</li>
@@ -63,7 +63,7 @@
                 <li>Hardware met actieve, voorgeprogrammeerde malware (dual-use security tools mag, mits eerlijk beschreven).</li>
                 <li>Levende dieren, menselijke biomaterialen, of wat verder dan ook in de Telecomwet, Geneesmiddelenwet of Warenwet thuishoort en niet hier.</li>
             </ul>
-            <p class="mt-3">In twijfel? Plaats het, en als het over de schreef is hoor je het van de moderatie. We modereren in dialoog, niet met een hakbijl.</p>',
+            <p class="mt-3">In twijfel? Plaats het, en als het over de schreef is hoor je het van de moderatie. We modereren in dialoog, niet met een hakbijl.</p>'),
         ],
     ];
 
@@ -83,8 +83,8 @@
 @endphp
 
 <x-layouts.marketing
-    title="Veelgestelde vragen — Cloudmarktplaats"
-    description="Tien vragen die je waarschijnlijk hebt, met eerlijke antwoorden. Inclusief de juridisch gevoelige."
+    :title="__('Veelgestelde vragen — Cloudmarktplaats')"
+    :description="__('Tien vragen die je waarschijnlijk hebt, met eerlijke antwoorden. Inclusief de juridisch gevoelige.')"
     :canonical="url('/faq')"
     :jsonLd="$jsonLd"
 >
@@ -92,10 +92,10 @@
     <section class="mx-auto max-w-3xl px-5 sm:px-8 py-16 sm:py-20">
 
         <header class="mb-12">
-            <div class="cmp-section-label mb-4">FAQ</div>
+            <div class="cmp-section-label mb-4">{{ __('FAQ') }}</div>
             <h1 class="text-4xl sm:text-5xl font-bold tracking-display-tighter leading-[1.05]">
-                Tien vragen.<br>
-                <span class="text-cmp-muted">Eerlijke antwoorden.</span>
+                {{ __('Tien vragen.') }}<br>
+                <span class="text-cmp-muted">{{ __('Eerlijke antwoorden.') }}</span>
             </h1>
         </header>
 
@@ -158,9 +158,9 @@
         </div>
 
         <div class="mt-14 pt-6 border-t border-cmp-border font-mono text-[11px] text-cmp-muted flex flex-wrap gap-x-6 gap-y-2">
-            <a href="{{ route('about') }}" class="hover:text-cmp-blue">→ Over ons</a>
-            <a href="{{ route('values') }}" class="hover:text-cmp-blue">→ Onze waarden</a>
-            <a href="https://github.com/cloudmarktplaats/cloudmarktplaats/issues" class="hover:text-cmp-blue" rel="noopener external">→ Een vraag stellen op GitHub</a>
+            <a href="{{ route('about') }}" class="hover:text-cmp-blue">{{ __('→ Over ons') }}</a>
+            <a href="{{ route('values') }}" class="hover:text-cmp-blue">{{ __('→ Onze waarden') }}</a>
+            <a href="https://github.com/cloudmarktplaats/cloudmarktplaats/issues" class="hover:text-cmp-blue" rel="noopener external">{{ __('→ Een vraag stellen op GitHub') }}</a>
         </div>
 
     </section>

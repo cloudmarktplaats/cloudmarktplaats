@@ -1,9 +1,7 @@
 <div class="mx-auto max-w-2xl rounded-sm border border-cmp-border bg-cmp-surface p-6">
-    <h1 class="mb-2 text-2xl font-bold">Bijgewerkte voorwaarden</h1>
+    <h1 class="mb-2 text-2xl font-bold">{{ __('Bijgewerkte voorwaarden') }}</h1>
     <p class="mb-4 text-sm text-cmp-muted">
-        Onze gebruiksvoorwaarden en/of privacyverklaring zijn bijgewerkt
-        sinds je laatste akkoord. Lees ze door en accepteer hieronder om
-        verder te gaan.
+        {{ __('Onze gebruiksvoorwaarden en/of privacyverklaring zijn bijgewerkt sinds je laatste akkoord. Lees ze door en accepteer hieronder om verder te gaan.') }}
     </p>
 
     @foreach($documents as $doc)
@@ -11,9 +9,9 @@
             <header class="mb-2 flex items-center justify-between">
                 <h2 class="text-lg font-semibold">
                     @if($doc['type'] === 'tos')
-                        Gebruiksvoorwaarden
+                        {{ __('Gebruiksvoorwaarden') }}
                     @else
-                        Privacyverklaring
+                        {{ __('Privacyverklaring') }}
                     @endif
                     <span class="ml-2 text-sm text-cmp-muted">v{{ $doc['version'] }}</span>
                 </h2>
@@ -29,11 +27,11 @@
             type="submit"
             class="cmp-btn cmp-btn-primary"
         >
-            Ik accepteer
+            {{ __('Ik accepteer') }}
         </button>
         <form action="/logout" method="POST" class="mt-2 inline-block">
             @csrf
-            <button type="submit" class="text-sm text-cmp-muted hover:text-cmp-ink">Uitloggen</button>
+            <button type="submit" class="text-sm text-cmp-muted hover:text-cmp-ink">{{ __('Uitloggen') }}</button>
         </form>
     </form>
 </div>

@@ -3,55 +3,55 @@
         [
             'name'     => 'Community',
             'price'    => '€50',
-            'period'   => '/maand',
-            'subtitle' => 'Voor zelfstandigen, kleine bedrijven, individuen die het hosting-geld helpen ophoesten.',
+            'period'   => '/'.__('maand'),
+            'subtitle' => __('Voor zelfstandigen, kleine bedrijven, individuen die het hosting-geld helpen ophoesten.'),
             'featured' => false,
             'perks'    => [
-                'Vermelding (naam + link) op de sponsorpagina',
-                'Toegang tot een privé-Matrix-kanaal met andere sponsors en het kernteam',
-                'Goed gevoel',
+                __('Vermelding (naam + link) op de sponsorpagina'),
+                __('Toegang tot een privé-Matrix-kanaal met andere sponsors en het kernteam'),
+                __('Goed gevoel'),
             ],
         ],
         [
             'name'     => 'Partner',
             'price'    => '€200',
-            'period'   => '/maand',
-            'subtitle' => 'Voor bedrijven met een actieve betrokkenheid bij de Nederlandse tech-community.',
+            'period'   => '/'.__('maand'),
+            'subtitle' => __('Voor bedrijven met een actieve betrokkenheid bij de Nederlandse tech-community.'),
             'featured' => false,
             'perks'    => [
-                'Alles van Community',
-                'Logo (vector, ingebed — geen tracking-pixel)',
-                'Korte tekst (≤ 60 woorden) over wat je doet',
-                'Twee gastposts per jaar op het community-blog',
+                __('Alles van Community'),
+                __('Logo (vector, ingebed — geen tracking-pixel)'),
+                __('Korte tekst (≤ 60 woorden) over wat je doet'),
+                __('Twee gastposts per jaar op het community-blog'),
             ],
         ],
         [
             'name'     => 'Founding Sponsor',
             'price'    => '€500',
-            'period'   => '/maand',
-            'subtitle' => 'Voor partijen die meer dan een logo willen zijn.',
+            'period'   => '/'.__('maand'),
+            'subtitle' => __('Voor partijen die meer dan een logo willen zijn.'),
             'featured' => true,
             'perks'    => [
-                'Alles van Partner',
-                'Vermelding als founding sponsor in de README van de open source codebase',
-                'Stemrecht op de jaarlijkse community-vergadering over uitgaven van het sponsorfonds',
-                'Persoonlijke kennismaking met het kernteam',
+                __('Alles van Partner'),
+                __('Vermelding als founding sponsor in de README van de open source codebase'),
+                __('Stemrecht op de jaarlijkse community-vergadering over uitgaven van het sponsorfonds'),
+                __('Persoonlijke kennismaking met het kernteam'),
             ],
         ],
     ];
 
     $notGetting = [
-        'Geen toegang tot gebruikersdata. We hebben hem niet, dus we kunnen hem niet leveren.',
-        'Geen native ads, geen sponsored listings, geen voorrang in zoekresultaten.',
-        'Geen invloed op moderatiebeslissingen.',
-        'Geen exclusiviteit. Concurrenten kunnen óók sponsor zijn — gezonde markt.',
-        'Geen exit-traject. Als je stopt met sponsoren, verdwijnt de vermelding aan het eind van de lopende maand. Geen drama, geen contract.',
+        __('Geen toegang tot gebruikersdata. We hebben hem niet, dus we kunnen hem niet leveren.'),
+        __('Geen native ads, geen sponsored listings, geen voorrang in zoekresultaten.'),
+        __('Geen invloed op moderatiebeslissingen.'),
+        __('Geen exclusiviteit. Concurrenten kunnen óók sponsor zijn — gezonde markt.'),
+        __('Geen exit-traject. Als je stopt met sponsoren, verdwijnt de vermelding aan het eind van de lopende maand. Geen drama, geen contract.'),
     ];
 @endphp
 
 <x-layouts.marketing
-    title="Sponsoring — Cloudmarktplaats"
-    description="Sponsor de community, niet onze CPM. Drie tiers, transparant verdienmodel, geen invloed op moderatie."
+    :title="__('Sponsoring — Cloudmarktplaats')"
+    :description="__('Sponsor de community, niet onze CPM. Drie tiers, transparant verdienmodel, geen invloed op moderatie.')"
     :canonical="url('/sponsors')"
 >
 
@@ -63,33 +63,28 @@
                 <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
             </svg>
             <p>
-                <strong class="font-semibold">Sponsoring is in opbouw.</strong>
-                Interesse? Mail ons — we plannen een gesprek zodra de betalingsinfrastructuur live is.
+                <strong class="font-semibold">{{ __('Sponsoring is in opbouw.') }}</strong>
+                {{ __('Interesse? Mail ons — we plannen een gesprek zodra de betalingsinfrastructuur live is.') }}
             </p>
         </div>
 
         <header class="max-w-2xl mb-14">
-            <div class="cmp-section-label mb-4">Sponsoring</div>
+            <div class="cmp-section-label mb-4">{{ __('Sponsoring') }}</div>
             <h1 class="text-4xl sm:text-5xl font-bold tracking-display-tighter leading-[1.05]">
-                Sponsor de community,<br>
-                <span class="text-cmp-muted">niet ons CPM.</span>
+                {{ __('Sponsor de community,') }}<br>
+                <span class="text-cmp-muted">{{ __('niet ons CPM.') }}</span>
             </h1>
 
             <p class="mt-6 text-cmp-text/90 text-[15px] leading-[1.75]">
-                Sponsoring bij Cloudmarktplaats is geen advertentie. Je krijgt geen banner tussen de
-                zoekresultaten, geen native ad in een feed, geen pixel die meeloopt. Je krijgt een
-                vermelding — letterlijk, op een aparte pagina — omdat je een marktplaats zonder
-                surveillance-kapitalisme overeind helpt houden. Dat is het.
+                {{ __('Sponsoring bij Cloudmarktplaats is geen advertentie. Je krijgt geen banner tussen de zoekresultaten, geen native ad in een feed, geen pixel die meeloopt. Je krijgt een vermelding — letterlijk, op een aparte pagina — omdat je een marktplaats zonder surveillance-kapitalisme overeind helpt houden. Dat is het.') }}
             </p>
             <p class="mt-4 text-cmp-muted text-sm leading-relaxed">
-                Sponsors hebben <strong class="text-cmp-text">geen</strong> invloed op moderatie, ranking,
-                of welke advertenties geplaatst worden. Dat staat ook in de richtlijnen van het
-                moderatieteam en kan publiekelijk gecontroleerd worden via de modlog.
+                {!! __('Sponsors hebben <strong class="text-cmp-text">geen</strong> invloed op moderatie, ranking, of welke advertenties geplaatst worden. Dat staat ook in de richtlijnen van het moderatieteam en kan publiekelijk gecontroleerd worden via de modlog.') !!}
             </p>
             <p class="mt-4 text-cmp-muted text-sm leading-relaxed">
-                Liever als particulier bijdragen? Een eenmalige of maandelijkse
-                <a href="{{ route('donate') }}" class="text-cmp-blue underline hover:text-cmp-blue-dark">donatie</a>
-                helpt net zo goed.
+                {{ __('Liever als particulier bijdragen? Een eenmalige of maandelijkse') }}
+                <a href="{{ route('donate') }}" class="text-cmp-blue underline hover:text-cmp-blue-dark">{{ __('donatie') }}</a>
+                {{ __('helpt net zo goed.') }}
             </p>
         </header>
 
@@ -125,7 +120,7 @@
 
                     <a href="mailto:sponsoring@cloudmarktplaats.nl?subject=Sponsoring%20-%20{{ rawurlencode($tier['name']) }}"
                        class="mt-8 cmp-btn {{ $tier['featured'] ? 'cmp-btn-primary' : 'cmp-btn-secondary' }} justify-center">
-                        Mail ons over {{ $tier['name'] }}
+                        {{ __('Mail ons over :tier', ['tier' => $tier['name']]) }}
                     </a>
                 </div>
             @endforeach
@@ -133,8 +128,8 @@
 
         {{-- Wat sponsors NIET krijgen --}}
         <section class="mt-16 rounded-sm border border-cmp-border bg-cmp-bg2 p-8">
-            <div class="cmp-section-label mb-4">Niet</div>
-            <h2 class="text-2xl font-bold tracking-display-tight">Wat sponsors <span class="text-cmp-muted">niet</span> krijgen</h2>
+            <div class="cmp-section-label mb-4">{{ __('Niet') }}</div>
+            <h2 class="text-2xl font-bold tracking-display-tight">{!! __('Wat sponsors <span class="text-cmp-muted">niet</span> krijgen') !!}</h2>
 
             <ul class="mt-6 space-y-3">
                 @foreach ($notGetting as $item)
@@ -150,11 +145,10 @@
 
         {{-- Interesse --}}
         <section class="mt-16 text-center">
-            <h2 class="text-2xl font-bold tracking-display-tight">Interesse?</h2>
+            <h2 class="text-2xl font-bold tracking-display-tight">{{ __('Interesse?') }}</h2>
             <p class="mt-3 max-w-xl mx-auto text-cmp-muted text-sm leading-relaxed">
-                Mail <a href="mailto:sponsoring@cloudmarktplaats.nl" class="text-cmp-blue hover:text-cmp-blue-light underline underline-offset-4">sponsoring@cloudmarktplaats.nl</a>.
-                We sturen je geen verkoopdeck — wel een eerlijk gesprek over wat je van een sponsorship
-                verwacht en of dat klopt bij wat we kunnen bieden.
+                {{ __('Mail') }} <a href="mailto:sponsoring@cloudmarktplaats.nl" class="text-cmp-blue hover:text-cmp-blue-light underline underline-offset-4">sponsoring@cloudmarktplaats.nl</a>.
+                {{ __('We sturen je geen verkoopdeck — wel een eerlijk gesprek over wat je van een sponsorship verwacht en of dat klopt bij wat we kunnen bieden.') }}
             </p>
         </section>
 
