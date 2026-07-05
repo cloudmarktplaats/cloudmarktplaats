@@ -16,12 +16,13 @@ class StatsService
     /**
      * A user's own stats. Never includes anyone else's data.
      *
-     * @return array{member_since: Carbon, listings_published: int, listings_sold: int, homelab_posts: int, karma: int, people_activated: int}
+     * @return array{member_since: Carbon, listings_published: int, listings_sold: int, homelab_posts: int, karma: int, people_activated: int, is_founding_member: bool}
      */
     public function forUser(User $user): array
     {
         return [
             'member_since' => $user->created_at ?? now(),
+            'is_founding_member' => (bool) $user->is_founding_member,
             'listings_published' => Listing::query()->where('user_id', $user->id)->where('state', 'published')->count(),
             'listings_sold' => Listing::query()->where('user_id', $user->id)->where('state', 'sold')->count(),
             'homelab_posts' => HomelabPost::query()->where('user_id', $user->id)->published()->count(),

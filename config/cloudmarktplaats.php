@@ -23,6 +23,9 @@ return [
         'trust_autopublish' => env('FEATURE_TRUST_AUTOPUBLISH', false),
         'deals' => env('FEATURE_DEALS', true),
         'homelab_upvotes' => env('FEATURE_HOMELAB_UPVOTES', true),
+        // Close registration once the first-100 founding cohort is full and
+        // collect emails on a waitlist instead. Set false to keep signups open.
+        'waitlist' => env('FEATURE_WAITLIST', true),
     ],
     'gamification' => [
         'starting_invite_credits' => 3,

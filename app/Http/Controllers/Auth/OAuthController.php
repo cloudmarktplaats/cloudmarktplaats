@@ -10,6 +10,7 @@ use App\Models\LegalDocument;
 use App\Models\User;
 use App\Models\UserIdentity;
 use App\Services\Auth\OAuthProviderRegistry;
+use App\Services\FoundingCohort;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -100,8 +101,16 @@ class OAuthController extends Controller
             }
         }
 
-        // 3. Onboarding: brand-new user.
-        $user = DB::transaction(function () use ($oauthUser, $providerKey, $uid, $provider, $request) {
+        // 3. Onboarding: brand-new user. Once the founding cohort is full and
+        // the waitlist is on, registration is closed — send them to the
+        // waitlist page rather than silently creating an account.
+        if (! app(FoundingCohort::class)->isRegistrationOpen()) {
+            return redirect('/register')->with('cohort_full', true);
+        }
+
+        $foundingMember = app(FoundingCohort::class)->hasFoundingSpot();
+
+        $user = DB::transaction(function () use ($oauthUser, $providerKey, $uid, $provider, $request, $foundingMember) {
             $emailResolved = $oauthUser->getEmail() ?: "{$uid}@{$provider}.local";
             $nickname = $oauthUser->getNickname() ?: ($provider.'_'.$uid);
             $displayName = $oauthUser->getName() ?: ($oauthUser->getNickname() ?: 'New user');
@@ -115,6 +124,7 @@ class OAuthController extends Controller
                 'invite_credits' => (bool) config('cloudmarktplaats.features.invites')
                     ? (int) config('cloudmarktplaats.gamification.starting_invite_credits')
                     : 0,
+                'is_founding_member' => $foundingMember,
             ]);
 
             UserIdentity::firstOrCreate(

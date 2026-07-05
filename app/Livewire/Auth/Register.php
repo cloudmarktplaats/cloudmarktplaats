@@ -7,6 +7,8 @@ use App\Models\LegalAcceptance;
 use App\Models\LegalDocument;
 use App\Models\User;
 use App\Models\UserIdentity;
+use App\Models\WaitlistEntry;
+use App\Services\FoundingCohort;
 use App\Services\Gamification\InviteService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
@@ -30,6 +32,10 @@ class Register extends Component
 
     public string $invite_code = '';
 
+    public string $waitlist_email = '';
+
+    public bool $waitlisted = false;
+
     public function mount(): void
     {
         $code = request()->query('invite');
@@ -38,8 +44,23 @@ class Register extends Component
         }
     }
 
+    /** Founding cohort full → capture an email for the waitlist instead. */
+    public function joinWaitlist(): void
+    {
+        $this->validate([
+            'waitlist_email' => ['required', 'email', 'unique:waitlist_entries,email'],
+        ]);
+
+        WaitlistEntry::query()->create(['email' => strtolower(trim($this->waitlist_email))]);
+        $this->waitlisted = true;
+    }
+
     public function submit(): void
     {
+        // Hard gate: once the founding cohort is full and the waitlist is on,
+        // no new accounts are created — the form shows the waitlist instead.
+        abort_unless(app(FoundingCohort::class)->isRegistrationOpen(), 403);
+
         $this->validate([
             'email' => ['required', 'email', 'unique:users,email'],
             'username' => ['required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9_-]+$/i', 'unique:users,username'],
@@ -51,8 +72,10 @@ class Register extends Component
         $startingCredits = $invitesOn ? (int) config('cloudmarktplaats.gamification.starting_invite_credits') : 0;
         $code = trim($this->invite_code);
 
+        $foundingMember = app(FoundingCohort::class)->hasFoundingSpot();
+
         try {
-            $user = DB::transaction(function () use ($startingCredits, $invitesOn, $code): User {
+            $user = DB::transaction(function () use ($startingCredits, $invitesOn, $code, $foundingMember): User {
                 $u = User::create([
                     'email' => $this->email,
                     'username' => strtolower($this->username),
@@ -62,6 +85,7 @@ class Register extends Component
                     'display_name' => $this->username,
                     'password_hash' => Hash::make($this->password),
                     'invite_credits' => $startingCredits,
+                    'is_founding_member' => $foundingMember,
                 ]);
                 UserIdentity::create([
                     'user_id' => $u->id,
@@ -99,6 +123,11 @@ class Register extends Component
 
     public function render(): View
     {
-        return view('livewire.auth.register');
+        $cohort = app(FoundingCohort::class);
+
+        return view('livewire.auth.register', [
+            'registrationOpen' => $cohort->isRegistrationOpen(),
+            'spotsLeft' => $cohort->spotsLeft(),
+        ]);
     }
 }

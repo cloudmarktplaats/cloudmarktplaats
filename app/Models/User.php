@@ -32,6 +32,7 @@ class User extends Authenticatable implements CanResetPassword, FilamentUser, Ha
         'role',
         'invited_by',
         'invite_credits',
+        'is_founding_member',
         // Editable from the Filament admin edit form (Toggle + Textarea).
         // The table "ban"/"unban" actions use forceFill() so they are
         // unaffected by this list; this only enables the edit-form path,
@@ -61,6 +62,7 @@ class User extends Authenticatable implements CanResetPassword, FilamentUser, Ha
             'two_factor_secret' => 'encrypted',
             'two_factor_recovery_codes' => 'encrypted:array',
             'is_banned' => 'boolean',
+            'is_founding_member' => 'boolean',
             'invite_credits' => 'integer',
         ];
     }

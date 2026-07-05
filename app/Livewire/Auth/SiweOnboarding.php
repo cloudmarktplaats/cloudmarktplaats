@@ -8,6 +8,7 @@ use App\Models\LegalAcceptance;
 use App\Models\LegalDocument;
 use App\Models\User;
 use App\Models\UserIdentity;
+use App\Services\FoundingCohort;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -52,7 +53,15 @@ class SiweOnboarding extends Component
             'accept_tos' => ['accepted'],
         ]);
 
-        $user = DB::transaction(function (): User {
+        $cohort = app(FoundingCohort::class);
+        if (! $cohort->isRegistrationOpen()) {
+            $this->addError('email', __('De beta zit vol. Registreren kan weer zodra er een plek vrijkomt — zet je op de wachtlijst op de registratiepagina.'));
+
+            return;
+        }
+        $foundingMember = $cohort->hasFoundingSpot();
+
+        $user = DB::transaction(function () use ($foundingMember): User {
             $u = User::create([
                 'email' => $this->email,
                 'username' => strtolower($this->username),
@@ -63,6 +72,7 @@ class SiweOnboarding extends Component
                 'invite_credits' => (bool) config('cloudmarktplaats.features.invites')
                     ? (int) config('cloudmarktplaats.gamification.starting_invite_credits')
                     : 0,
+                'is_founding_member' => $foundingMember,
             ]);
 
             UserIdentity::create([

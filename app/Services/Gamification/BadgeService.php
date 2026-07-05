@@ -24,6 +24,7 @@ class BadgeService
         $activated = (int) ($stats['people_activated'] ?? 0);
 
         $definitions = [
+            ['key' => 'founding_member', 'label' => (string) __('Founding member'), 'description' => (string) __('Een van de eerste 100 leden.'), 'earned' => ($stats['is_founding_member'] ?? false) === true],
             ['key' => 'first_listing', 'label' => (string) __('Eerste advertentie'), 'description' => (string) __('Je plaatste je eerste advertentie.'), 'earned' => ($published + $sold) >= 1],
             ['key' => 'first_sale', 'label' => (string) __('Eerste verkoop'), 'description' => (string) __('Je eerste stuk hardware kreeg een tweede leven.'), 'earned' => $sold >= 1],
             ['key' => 'trader', 'label' => (string) __('Handelaar'), 'description' => (string) __('Tien of meer verkopen.'), 'earned' => $sold >= 10],
