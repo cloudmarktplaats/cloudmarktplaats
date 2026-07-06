@@ -22,3 +22,6 @@ yarn-error.log
 /.vscode
 /.zed
 docker-compose.override.yml
+
+# Private launch material (social posts, playbook) — never publish
+launch/
