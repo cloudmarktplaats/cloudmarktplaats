@@ -41,6 +41,14 @@ class Wizard extends Component
 
     public ?Listing $listing = null;
 
+    /**
+     * True when the wizard was opened to edit an existing listing (rather
+     * than create a new one). Editing a published listing re-submits it for
+     * moderation on save — see {@see submit()} — so the copy and the photo
+     * step adapt accordingly (existing photos are kept, new ones optional).
+     */
+    public bool $editing = false;
+
     public int $step = 1;
 
     // Step 1 fields
@@ -70,6 +78,7 @@ class Wizard extends Component
     {
         if ($listing !== null && $listing->exists) {
             abort_unless($listing->user_id === auth()->id(), 403);
+            $this->editing = true;
             $this->listing = $listing;
             $this->title = (string) $listing->title;
             $this->category_id = $listing->category_id;
@@ -120,8 +129,13 @@ class Wizard extends Component
 
     public function submit(): void
     {
+        // When editing an existing listing that already has photos, keeping
+        // the current photos is enough — new uploads are optional. A brand
+        // new listing still requires at least one photo.
+        $alreadyHasPhotos = $this->listing !== null && $this->listing->photos()->exists();
+
         $this->validate([
-            'photos' => ['required', 'array', 'min:1', 'max:10'],
+            'photos' => [$alreadyHasPhotos ? 'nullable' : 'required', 'array', 'max:10'],
             'photos.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
         ]);
 

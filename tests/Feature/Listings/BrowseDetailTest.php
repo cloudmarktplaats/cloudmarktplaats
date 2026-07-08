@@ -92,6 +92,29 @@ it('Detail lets a moderator preview any pending listing', function () {
         ->assertSee('Moderatie-preview');
 });
 
+it('Detail shows the edit link to the listing owner', function () {
+    $owner = User::factory()->create();
+    $listing = Listing::factory()->for($owner)->published()->create();
+
+    Livewire::actingAs($owner)
+        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->assertSee('Advertentie bewerken')
+        ->assertSee(route('listings.edit', $listing), false);
+});
+
+it('Detail hides the edit link from non-owners and guests', function () {
+    $owner = User::factory()->create();
+    $listing = Listing::factory()->for($owner)->published()->create();
+    $stranger = User::factory()->create();
+
+    Livewire::test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->assertDontSee('Advertentie bewerken');
+
+    Livewire::actingAs($stranger)
+        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->assertDontSee('Advertentie bewerken');
+});
+
 it('homepage serves the marketing page for guests', function () {
     $this->get('/')->assertStatus(200);
 });

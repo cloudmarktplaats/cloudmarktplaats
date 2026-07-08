@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Livewire\Listings\Wizard;
 use App\Models\Category;
 use App\Models\Listing;
+use App\Models\ListingPhoto;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -83,6 +84,36 @@ it('submits the wizard: dispatches photo job + transitions to pending_review', f
 
     $listing = Listing::query()->where('user_id', $this->user->id)->firstOrFail();
     expect($listing->state)->toBe('pending_review')
+        ->and($listing->photos()->count())->toBe(1);
+});
+
+it('edits a published listing: updates price + description, no new photos needed, back to moderation', function () {
+    $this->actingAs($this->user);
+
+    $listing = Listing::factory()->for($this->user)->published()->create([
+        'category_id' => $this->category->id,
+        'price_cents' => 10000,
+        'description' => 'Originele beschrijving met genoeg tekens erin.',
+    ]);
+    ListingPhoto::factory()->for($listing)->create();
+
+    Livewire::test(Wizard::class, ['listing' => $listing])
+        ->assertSet('editing', true)
+        ->set('price_cents', 27500)
+        ->call('next')
+        ->assertHasNoErrors()
+        ->set('description', 'Bijgewerkte beschrijving met ruim voldoende lengte om te slagen.')
+        ->call('next')
+        ->assertHasNoErrors()
+        // No new upload — existing photo is enough.
+        ->call('submit')
+        ->assertHasNoErrors()
+        ->assertRedirect();
+
+    $listing->refresh();
+    expect($listing->price_cents)->toBe(27500)
+        ->and($listing->description)->toContain('Bijgewerkte beschrijving')
+        ->and($listing->state)->toBe('pending_review')
         ->and($listing->photos()->count())->toBe(1);
 });
 

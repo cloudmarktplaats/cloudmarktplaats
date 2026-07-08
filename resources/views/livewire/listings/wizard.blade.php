@@ -1,5 +1,8 @@
 <div class="mx-auto max-w-2xl rounded-sm border border-cmp-border bg-cmp-surface p-6">
-    <h1 class="mb-4 text-2xl font-bold">{{ __('Nieuwe advertentie') }}</h1>
+    <h1 class="mb-1 text-2xl font-bold">{{ $editing ? __('Advertentie bewerken') : __('Nieuwe advertentie') }}</h1>
+    @if ($editing)
+        <p class="mb-4 text-sm text-cmp-muted">{{ __('Na opslaan gaat je advertentie opnieuw langs moderatie en is zolang niet zichtbaar in het aanbod.') }}</p>
+    @endif
 
     <ol class="mb-6 flex items-center gap-2 text-sm">
         <li class="rounded px-3 py-1 {{ $step === 1 ? 'bg-cmp-ink text-white' : 'bg-cmp-bg2 text-cmp-muted' }}">1. {{ __('Basis') }}</li>
@@ -85,8 +88,16 @@
         </form>
     @else
         <form wire:submit="submit" class="space-y-3" enctype="multipart/form-data">
+            @php($existingPhotoCount = $editing && $listing ? $listing->photos()->count() : 0)
+            @if ($existingPhotoCount > 0)
+                <p class="rounded-sm bg-cmp-bg2 p-3 text-sm text-cmp-muted">
+                    {{ __(':count foto(\'s) blijven behouden. Nieuwe foto\'s toevoegen is optioneel.', ['count' => $existingPhotoCount]) }}
+                </p>
+            @endif
             <label class="block text-sm">
-                <span class="mb-1 block font-medium">{{ __('Foto\'s (1–10, max 8MB elk)') }}</span>
+                <span class="mb-1 block font-medium">
+                    {{ $existingPhotoCount > 0 ? __('Foto\'s toevoegen (optioneel, max 10)') : __('Foto\'s (1–10, max 8MB elk)') }}
+                </span>
                 <input type="file" wire:model="photos" multiple accept="image/jpeg,image/png,image/webp" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
             </label>
             @error('photos') <p class="text-sm text-red-600">{{ $message }}</p> @enderror

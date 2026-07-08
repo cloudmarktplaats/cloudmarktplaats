@@ -22,6 +22,15 @@
     @endif
 
     @auth
+        @if (auth()->id() === $listing->user_id)
+            <div class="mt-6 flex flex-wrap items-center gap-2">
+                <a href="{{ route('listings.edit', $listing) }}" class="cmp-btn cmp-btn-secondary">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                    {{ __('Advertentie bewerken') }}
+                </a>
+            </div>
+        @endif
+
         @if (auth()->id() === $listing->user_id && $listing->state === 'published' && config('cloudmarktplaats.features.deals'))
             <div class="mt-6 rounded-sm border border-cmp-border bg-cmp-surface p-4">
                 <div class="cmp-section-label mb-3">{{ __('Verkocht?') }}</div>
