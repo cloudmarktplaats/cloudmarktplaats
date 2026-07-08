@@ -1,5 +1,5 @@
 <x-layouts.marketing
-    title="Cloudmarktplaats — geen Marktplaats, geen bol, wel kabels"
+    title="Cloudmarktplaats — geen Marktplaats, geen Tweakers V&A, wel kabels en RAM"
     description="Peer-to-peer marktplaats voor servers, netwerkspul, dev boards en alles ertussenin. Open source, privacy by design, geen cookiebanner-theater."
     :canonical="url('/')"
 >
@@ -12,8 +12,8 @@
 
                 <h1 class="font-display text-4xl font-bold tracking-display-tighter leading-[1.02] sm:text-6xl">
                     {{ __('Geen Marktplaats.') }}<br>
-                    {{ __('Geen bol.') }}<br>
-                    <span class="text-cmp-signal">{{ __('Wel kabels.') }}</span>
+                    {{ __('Geen Tweakers V&A.') }}<br>
+                    <span class="text-cmp-signal">{{ __('Wel kabels, RAM en root.') }}</span>
                 </h1>
 
                 <p class="mt-6 max-w-xl text-cmp-muted text-base sm:text-lg leading-relaxed">
