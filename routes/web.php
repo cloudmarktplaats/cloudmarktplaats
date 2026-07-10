@@ -18,6 +18,7 @@ use App\Livewire\Auth\VerifyEmailNotice;
 use App\Livewire\Homelab\Feed as HomelabFeed;
 use App\Livewire\Listings\Browse as ListingsBrowse;
 use App\Livewire\Listings\Detail as ListingDetail;
+use App\Livewire\Listings\Mine as ListingsMine;
 use App\Livewire\Listings\Wizard as ListingWizard;
 use App\Livewire\Profile\Deals as ProfileDeals;
 use App\Livewire\Profile\Invites as ProfileInvites;
@@ -161,6 +162,14 @@ Route::get('/listings/{listing:ulid}/edit', ListingWizard::class)
     ->middleware(['auth', 'verified', 'legal'])
     ->where('listing', '[0-9A-HJKMNP-TV-Z]{26}')
     ->name('listings.edit');
+
+// "Mijn advertenties" — owner-facing management overview. Only `auth`
+// (not `verified`/`legal`): seeing your own listings is harmless before
+// verification, and the edit links funnel into the wizard which enforces
+// the stricter gate itself.
+Route::get('/mijn-advertenties', ListingsMine::class)
+    ->middleware('auth')
+    ->name('listings.mine');
 
 // Public browse + detail. Anonymous browsing is enabled by feature flag
 // `anonymous_browse`. Category routing uses an ltree path so all

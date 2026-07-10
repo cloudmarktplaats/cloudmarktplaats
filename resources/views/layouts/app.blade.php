@@ -25,8 +25,7 @@
                     <a href="{{ route('locale.switch', 'en') }}" @class(['hover:text-cmp-ink', 'text-cmp-ink font-medium' => app()->getLocale() === 'en'])>EN</a>
                 </span>
                 @auth
-                    <span class="font-mono text-[12px] text-cmp-muted">{{ auth()->user()->display_name }}</span>
-                    <form method="POST" action="/logout" class="inline">@csrf <button class="cmp-btn-ghost text-sm">{{ __('Uitloggen') }}</button></form>
+                    <x-marketing.account-menu />
                 @else
                     <a href="/login" class="cmp-btn-ghost text-sm">{{ __('Inloggen') }}</a>
                     <a href="/register" class="text-sm font-medium text-cmp-ink hover:text-cmp-signal">{{ __('Account aanmaken') }}</a>

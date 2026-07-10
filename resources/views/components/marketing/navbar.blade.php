@@ -22,9 +22,7 @@
                     <span class="sm:hidden">{{ __('Plaatsen') }}</span>
                     <span class="hidden sm:inline">{{ __('Advertentie plaatsen') }}</span>
                 </a>
-                <form method="POST" action="{{ route('logout') }}" class="inline">@csrf
-                    <button type="submit" class="cmp-btn cmp-btn-ghost px-2 sm:px-5">{{ __('Uitloggen') }}</button>
-                </form>
+                <x-marketing.account-menu />
             @else
                 <a href="{{ route('login') }}" class="cmp-btn cmp-btn-ghost px-2 sm:px-5">{{ __('Inloggen') }}</a>
                 <a href="{{ route('register') }}" class="cmp-btn cmp-btn-primary px-3 sm:px-5">

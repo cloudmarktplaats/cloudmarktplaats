@@ -77,7 +77,7 @@ class Wizard extends Component
     public function mount(?Listing $listing = null): void
     {
         if ($listing !== null && $listing->exists) {
-            abort_unless($listing->user_id === auth()->id(), 403);
+            abort_unless(auth()->user()?->can('update', $listing) ?? false, 403);
             $this->editing = true;
             $this->listing = $listing;
             $this->title = (string) $listing->title;

@@ -11,6 +11,7 @@ use App\Models\Listing;
 use App\Services\Gamification\DealService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -39,7 +40,7 @@ class Detail extends Component
         abort_unless((bool) config('cloudmarktplaats.features.deals'), 403);
 
         $user = auth()->user();
-        abort_unless($user !== null && $user->id === $this->listing->user_id, 403);
+        abort_unless($user?->can('markSold', $this->listing) ?? false, 403);
 
         try {
             app(DealService::class)->markSold(
@@ -70,16 +71,11 @@ class Detail extends Component
         // archived) are hidden from the public, but the owner must be able
         // to preview their own submission — otherwise "plaats advertentie"
         // lands on a 404 while moderation is pending. Staff moderators can
-        // preview too (they approve from here). Everyone else gets 404, so
-        // the listing's existence isn't disclosed before it's published.
-        if ($listing->state !== 'published') {
-            $user = auth()->user();
-            $canPreview = $user !== null
-                && ($user->id === $listing->user_id || $user->hasRole('admin', 'moderator'));
-
-            if (! $canPreview) {
-                abort(404);
-            }
+        // preview too (they approve from here). The `view` ability encodes
+        // exactly that; a denied preview is a 404 (not 403) so the listing's
+        // existence isn't disclosed before it's published.
+        if (! Gate::allows('view', $listing)) {
+            abort(404);
         }
 
         // Canonicalize the URL. The ulid alone identifies the listing, so
