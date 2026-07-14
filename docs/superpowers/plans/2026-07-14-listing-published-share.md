@@ -388,16 +388,75 @@ layout-defaults zodat ze niet via meta-tags lekken."
 ### Task 3: Share-paneel
 
 **Files:**
+- Modify: `app/Policies/ListingPolicy.php` (nieuwe `share()` ability, naast `markSold()`)
 - Create: `resources/views/components/listings/share-panel.blade.php`
 - Modify: `resources/views/livewire/listings/detail.blade.php` (na het `<article>`-blok)
 - Modify: `resources/views/livewire/listings/mine.blade.php` (in de `@foreach` per listing)
+- Test: `tests/Feature/Listings/ListingPolicyTest.php` (uitbreiden)
 - Test: `tests/Feature/Listings/SharePanelTest.php`
 
 **Interfaces:**
-- Consumes: `ShareLinkBuilder` (Task 1) — `linkedIn()`, `mainDeckUrl()`, `shareText()`. `ListingPolicy` voor de eigenaar-check.
-- Produces: component `<x-listings.share-panel :listing="$listing" />`.
+- Consumes: `ShareLinkBuilder` (Task 1) — `linkedIn()`, `mainDeckUrl()`, `shareText()`.
+- Produces: `ListingPolicy::share(User $user, Listing $listing): bool`; component `<x-listings.share-panel :listing="$listing" />`.
 
-**Zichtbaarheid:** alleen de eigenaar, alleen bij `state === 'published'`. Een moderator hoeft me niet te helpen delen; `ListingPolicy` kent bewust geen admin-bypass.
+**Zichtbaarheid via een nieuwe policy-ability (besluit van Nick, wijkt af van het eerste planconcept).** De bestaande abilities passen geen van alle: `view` en `update` laten staff toe, `markSold` is semantisch iets anders. De policy-docblock stelt expliciet dat abilities per-method worden verleend "so a staff member does not silently inherit owner-only actions" — `share()` hoort in dat rijtje. Een moderator hoeft niet te helpen delen, dus **owner-only, geen staff-bypass**. De state-check zit in de ability, niet in de view.
+
+- [ ] **Step 0a: Write the failing policy test**
+
+Voeg toe aan `tests/Feature/Listings/ListingPolicyTest.php` (volg de bestaande stijl in dat bestand):
+
+```php
+it('allows the owner to share their own published listing', function () {
+    $listing = Listing::factory()->create(['state' => 'published']);
+
+    expect($listing->user->can('share', $listing))->toBeTrue();
+});
+
+it('denies sharing a listing that is not published yet', function () {
+    $listing = Listing::factory()->create(['state' => 'pending_review']);
+
+    expect($listing->user->can('share', $listing))->toBeFalse();
+});
+
+it('denies sharing someone else\'s listing, staff included', function () {
+    $listing = Listing::factory()->create(['state' => 'published']);
+    $stranger = User::factory()->create();
+    $moderator = User::factory()->create(['role' => 'moderator']);
+
+    // Deliberately no staff bypass: moderators moderate, they don't share
+    // someone else's listing.
+    expect($stranger->can('share', $listing))->toBeFalse()
+        ->and($moderator->can('share', $listing))->toBeFalse();
+});
+```
+
+- [ ] **Step 0b: Run it to verify it fails**
+
+Run: `docker compose exec -T -u www-data php-fpm php artisan test --filter=ListingPolicyTest`
+Expected: FAIL — de `share` ability bestaat nog niet.
+
+- [ ] **Step 0c: Add the ability**
+
+In `app/Policies/ListingPolicy.php`, direct ná `markSold()`:
+
+```php
+    /**
+     * Sharing is the seller's own action — owner only, and only once the
+     * listing is actually public. No staff bypass: moderators approve
+     * listings, they don't promote someone else's sale.
+     */
+    public function share(User $user, Listing $listing): bool
+    {
+        return $this->owns($user, $listing) && $listing->state === 'published';
+    }
+```
+
+Werk ook de klasse-docblock bij: de opsomming noemt `markSold` als de owner-only actie; `share` hoort daarbij.
+
+- [ ] **Step 0d: Run it to verify it passes**
+
+Run: `docker compose exec -T -u www-data php-fpm php artisan test --filter=ListingPolicyTest`
+Expected: PASS (bestaande tests + 3 nieuwe)
 
 - [ ] **Step 1: Write the failing test**
 
@@ -452,14 +511,9 @@ Expected: FAIL — "Deel je advertentie" niet gevonden
 ```blade
 @props(['listing'])
 
-@php
-    // Owner-only, published-only. Staff moderate; they don't share someone
-    // else's listing — which is why this checks ownership, not a policy that
-    // staff would pass too.
-    $isOwner = auth()->id() === $listing->user_id;
-@endphp
-
-@if ($isOwner && $listing->state === 'published')
+{{-- Owner-only and published-only, both encoded in the policy. A guest fails
+     the ability automatically: share() type-hints a non-nullable User. --}}
+@can('share', $listing)
     @php
         $share = app(App\Support\ShareLinkBuilder::class);
         $shareText = $share->shareText($listing);
@@ -525,7 +579,7 @@ Expected: FAIL — "Deel je advertentie" niet gevonden
             </button>
         </div>
     </section>
-@endif
+@endcan
 ```
 
 - [ ] **Step 4: Mount the component on the detail page**
@@ -559,11 +613,17 @@ Expected: knop wisselt 2 seconden naar "Gekopieerd"; geplakte tekst bevat titel,
 - [ ] **Step 8: Commit**
 
 ```bash
-git add resources/views/components/listings/share-panel.blade.php \
+git add app/Policies/ListingPolicy.php \
+        resources/views/components/listings/share-panel.blade.php \
         resources/views/livewire/listings/detail.blade.php \
         resources/views/livewire/listings/mine.blade.php \
+        tests/Feature/Listings/ListingPolicyTest.php \
         tests/Feature/Listings/SharePanelTest.php
-git commit -m "Share-paneel voor de eigenaar van een gepubliceerde advertentie"
+git commit -m "Share-paneel voor de eigenaar van een gepubliceerde advertentie
+
+Nieuwe owner-only share() ability in ListingPolicy — bewust geen staff-bypass,
+in lijn met de rest van de policy. De state-check zit in de ability, niet in
+de view."
 ```
 
 ---
