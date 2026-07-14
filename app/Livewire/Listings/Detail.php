@@ -12,6 +12,7 @@ use App\Services\Gamification\DealService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -102,6 +103,54 @@ class Detail extends Component
 
     public function render(): View
     {
-        return view('livewire.listings.detail');
+        $view = view('livewire.listings.detail');
+
+        // Only a published listing gets its own OG tags. For draft /
+        // pending_review / rejected the layout defaults stay, so a listing
+        // that isn't public yet cannot leak its title, photo or price through
+        // meta tags — the owner and staff can still preview the page itself.
+        if ($this->listing->state !== 'published') {
+            return $view;
+        }
+
+        return $view->layoutData([
+            'title' => $this->listing->title.' — Cloudmarktplaats',
+            'description' => $this->ogDescription(),
+            'ogImage' => $this->ogImageUrl(),
+            'canonical' => route('listings.detail', [
+                'ulid' => $this->listing->ulid,
+                'slug' => $this->listing->slug,
+            ]),
+        ]);
+    }
+
+    /**
+     * og:image must be the `original` variant: LinkedIn's crawler is unreliable
+     * with WebP and wants ~1.91:1, while `card` is a 600x600 WebP crop. Null
+     * lets the layout fall back to og-default.png.
+     */
+    private function ogImageUrl(): ?string
+    {
+        return $this->listing->photos->first()?->urlFor('original');
+    }
+
+    /**
+     * `description` is nullable. An empty og:description makes LinkedIn render
+     * a bare link, so fall back to the facts we always have.
+     */
+    private function ogDescription(): string
+    {
+        $description = trim((string) $this->listing->description);
+
+        if ($description !== '') {
+            return Str::limit($description, 155);
+        }
+
+        return sprintf(
+            '%s — %s — € %s',
+            (string) $this->listing->category?->name,
+            $this->listing->conditionLabel(),
+            number_format($this->listing->price_cents / 100, 2, ',', '.'),
+        );
     }
 }
