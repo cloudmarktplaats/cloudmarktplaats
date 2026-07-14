@@ -15,6 +15,7 @@
 - **Testen draait als www-data:** `docker compose exec -T -u www-data php-fpm php artisan test`. Artisan als root chownt `storage/logs` naar root en 500't daarna de web-worker.
 - **Pint/PHPStan draaien als uid 1000:** `docker compose exec -T -u 1000 -e TMPDIR=/tmp/pstan php-fpm sh -c 'mkdir -p /tmp/pstan && ./vendor/bin/phpstan analyse --no-progress'`.
 - **UI-strings Nederlands, code-comments Engels.** Alle user-facing tekst door `__()`.
+- **Elke nieuwe `__()`-string krijgt een EN-vertaling in `lang/en.json`**, gekeyd op de Nederlandse string. NL is de bron; zonder entry valt EN stilzwijgend terug op Nederlands. Verifieer met `artisan tinker` (`app()->setLocale('en'); echo __('…');`) — **niet met curl**, want de locale is session-based. Uitzondering: mail-templates zijn in deze codebase hardcoded Nederlands (zie `emails/seller-contact.blade.php`) en gebruiken geen `__()`.
 - **Huisstijl is LICHT** (datasheet): `cmp-bg #F5F6F6`, `cmp-surface #FFFFFF`, `cmp-ink #17191B`, één accent `cmp-signal #D9480F`. Bestaande classes hergebruiken: `cmp-btn`, `cmp-btn-primary`, `cmp-btn-secondary`, `cmp-btn-ghost`, `cmp-section-label`. Geen nieuwe kleuren.
 - **`declare(strict_types=1);`** in elk PHP-bestand.
 - **Prijsformat overal identiek:** `number_format($listing->price_cents / 100, 2, ',', '.')`.
