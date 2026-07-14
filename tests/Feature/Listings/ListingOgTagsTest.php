@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Category;
 use App\Models\Listing;
+use App\Models\ListingPhoto;
 
 it('renders listing-specific og tags on a published listing', function () {
     $listing = Listing::factory()->create([
@@ -46,4 +47,31 @@ it('keeps the layout defaults on a non-published listing so it cannot leak', fun
         ->assertOk()
         ->assertSee('<meta property="og:title" content="Cloudmarktplaats', false)
         ->assertDontSee('<meta property="og:title" content="Geheime Cisco', false);
+});
+
+it('uses the original photo for og:image when the source was a jpeg', function () {
+    $listing = Listing::factory()->create(['state' => 'published']);
+    ListingPhoto::factory()->for($listing)->create([
+        'mime' => 'image/jpeg',
+        'path' => 'listings/test/1/card.webp',
+    ]);
+
+    $this->get("/listings/{$listing->ulid}-{$listing->slug}")
+        ->assertOk()
+        ->assertSee('original.jpg', false);
+});
+
+it('falls back to the default og image when the original is webp', function () {
+    $listing = Listing::factory()->create(['state' => 'published']);
+    // The wizard accepts webp, and its original stays webp — LinkedIn's crawler
+    // is unreliable with it, so we must not hand it over as og:image.
+    ListingPhoto::factory()->for($listing)->create([
+        'mime' => 'image/webp',
+        'path' => 'listings/test/1/card.webp',
+    ]);
+
+    $this->get("/listings/{$listing->ulid}-{$listing->slug}")
+        ->assertOk()
+        ->assertSee('og-default.png', false)
+        ->assertDontSee('original.webp', false);
 });

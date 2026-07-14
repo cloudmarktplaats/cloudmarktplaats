@@ -126,12 +126,23 @@ class Detail extends Component
 
     /**
      * og:image must be the `original` variant: LinkedIn's crawler is unreliable
-     * with WebP and wants ~1.91:1, while `card` is a 600x600 WebP crop. Null
-     * lets the layout fall back to og-default.png.
+     * with WebP, and `card` is a 600x600 WebP crop.
+     *
+     * But the wizard accepts webp uploads too, and StoreListingPhotoJob encodes
+     * a webp source *as* webp — so `original` is only jpg/png when the source
+     * was. For a webp original we return null and let the layout fall back to
+     * og-default.png: a branded image beats the blank card LinkedIn renders
+     * when it can't decode ours.
      */
     private function ogImageUrl(): ?string
     {
-        return $this->listing->photos->first()?->urlFor('original');
+        $photo = $this->listing->photos->first();
+
+        if ($photo === null || ! in_array($photo->mime, ['image/jpeg', 'image/png'], true)) {
+            return null;
+        }
+
+        return $photo->urlFor('original');
     }
 
     /**
