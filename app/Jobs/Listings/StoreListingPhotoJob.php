@@ -211,11 +211,6 @@ class StoreListingPhotoJob implements ShouldQueue
 
     private function extFor(string $mime): string
     {
-        return match ($mime) {
-            'image/jpeg' => 'jpg',
-            'image/png' => 'png',
-            'image/webp' => 'webp',
-            default => 'bin',
-        };
+        return ListingPhoto::extForMime($mime);
     }
 }

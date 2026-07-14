@@ -79,3 +79,28 @@ it('lets only the owner mark a listing sold — not staff nor a stranger', funct
         ->and($this->policy->markSold($this->admin, $listing))->toBeFalse()
         ->and($this->policy->markSold($this->stranger, $listing))->toBeFalse();
 });
+
+// ---- share -----------------------------------------------------------------
+
+it('allows the owner to share their own published listing', function () {
+    $listing = Listing::factory()->create(['state' => 'published']);
+
+    expect($listing->user->can('share', $listing))->toBeTrue();
+});
+
+it('denies sharing a listing that is not published yet', function () {
+    $listing = Listing::factory()->create(['state' => 'pending_review']);
+
+    expect($listing->user->can('share', $listing))->toBeFalse();
+});
+
+it('denies sharing someone else\'s listing, staff included', function () {
+    $listing = Listing::factory()->create(['state' => 'published']);
+    $stranger = User::factory()->create();
+    $moderator = User::factory()->create(['role' => 'moderator']);
+
+    // Deliberately no staff bypass: moderators moderate, they don't share
+    // someone else's listing.
+    expect($stranger->can('share', $listing))->toBeFalse()
+        ->and($moderator->can('share', $listing))->toBeFalse();
+});

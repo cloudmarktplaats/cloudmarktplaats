@@ -44,11 +44,30 @@ class ListingPhoto extends Model
      */
     public function urlFor(string $variant = 'card'): string
     {
-        $sourceExt = pathinfo($this->path, PATHINFO_EXTENSION);
-        $ext = $variant === 'original' ? $sourceExt : 'webp';
+        // `path` always points at the card variant (webp), so the source
+        // extension cannot be read back from it — the original keeps its own
+        // mime. Derived variants (card/thumb) are always webp.
+        $ext = $variant === 'original' ? self::extForMime($this->mime) : 'webp';
 
         $variantPath = dirname($this->path).'/'.$variant.'.'.$ext;
 
         return app(StorageManager::class)->driver($this->disk)->url($variantPath);
+    }
+
+    /**
+     * Source extension for a stored mime.
+     *
+     * Kept here rather than in the job that writes the files, because reading
+     * a variant URL needs the same mapping as writing it — two copies would
+     * drift and the reader would 404.
+     */
+    public static function extForMime(?string $mime): string
+    {
+        return match ($mime) {
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            default => 'bin',
+        };
     }
 }

@@ -21,9 +21,9 @@ use App\Models\User;
  *
  * Deliberately there is NO `before()` admin bypass (mirroring
  * {@see UserPolicy}): abilities are granted per-method so a staff member does
- * not silently inherit owner-only actions. `markSold` in particular is the
- * seller's gamified action and stays owner-only — staff moderate, they don't
- * close someone else's sale.
+ * not silently inherit owner-only actions. `markSold` and `share` in
+ * particular are the seller's own actions and stay owner-only — staff
+ * moderate, they don't close or promote someone else's sale.
  *
  * Laravel 11 auto-discovers this policy (App\Models\Listing → this class), so
  * both the Livewire flows (via `Gate`/`->can`) and Filament's ListingResource
@@ -74,6 +74,16 @@ class ListingPolicy
     public function markSold(User $user, Listing $listing): bool
     {
         return $this->owns($user, $listing);
+    }
+
+    /**
+     * Sharing is the seller's own action — owner only, and only once the
+     * listing is actually public. No staff bypass: moderators approve
+     * listings, they don't promote someone else's sale.
+     */
+    public function share(User $user, Listing $listing): bool
+    {
+        return $this->owns($user, $listing) && $listing->state === 'published';
     }
 
     private function owns(User $user, Listing $listing): bool

@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Events\Listings\ListingPublished;
 use App\Listeners\Gamification\AwardInviteKarmaOnFirstListing;
+use App\Listeners\Listings\SendListingPublishedMail;
 use App\Models\HomelabPost;
 use App\Models\Listing;
 use App\Models\User;
@@ -65,6 +66,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             ListingPublished::class,
             AwardInviteKarmaOnFirstListing::class,
+        );
+
+        Event::listen(
+            ListingPublished::class,
+            SendListingPublishedMail::class,
         );
 
         // Morph map for polymorphic relations. Keeping aliases stable

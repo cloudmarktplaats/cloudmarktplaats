@@ -10,6 +10,16 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 
 return Application::configure(basePath: dirname(__DIR__))
+    // Laravel enables event auto-discovery by default, which scans
+    // app/Listeners for handle() methods type-hinted to an event and
+    // registers them *in addition* to any manual Event::listen() call.
+    // This app has no EventServiceProvider and registers every listener
+    // explicitly in AppServiceProvider::boot() — with discovery left on,
+    // every such listener silently fired twice per event (masked so far
+    // only by listeners' own idempotency checks, e.g.
+    // AwardInviteKarmaOnFirstListing). Disable it so one registration
+    // means one execution.
+    ->withEvents(discover: false)
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
