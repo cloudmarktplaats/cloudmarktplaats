@@ -595,15 +595,13 @@ In `resources/views/livewire/listings/detail.blade.php`, direct ná het sluitend
 Run: `docker compose exec -T -u www-data php-fpm php artisan test --filter=SharePanelTest`
 Expected: PASS (3 tests)
 
-- [ ] **Step 6: Mount the component on "Mijn advertenties"**
+- [ ] **Step 6: ~~Mount the component on "Mijn advertenties"~~ — vervallen**
 
-In `resources/views/livewire/listings/mine.blade.php`, binnen de `@foreach ($listings as $listing)`-lus, onderaan het `<li>`-blok:
+**Besluit van Nick tijdens de review van Task 3: het paneel komt NIET op "Mijn advertenties".** Dit wijkt af van de spec ("Plekken: detailpagina en Mijn advertenties").
 
-```blade
-                    <x-listings.share-panel :listing="$listing" />
-```
+Reden: het `<li>` in `mine.blade.php` is `sm:flex-row sm:items-center`, dus het paneel werd daar vanaf `sm` een vierde flex-kolom naast de knoppen — een volledig paneel met kop, uitleg en drie knoppen geperst naast een compacte rij. En bij tien advertenties krijg je tien panelen onder elkaar in wat een beheeroverzicht hoort te zijn.
 
-Het paneel verbergt zichzelf voor niet-published listings, dus de lus heeft geen extra conditie nodig.
+De mail linkt naar de detailpagina, en daar staat het paneel goed. `mine.blade.php` blijft ongewijzigd.
 
 - [ ] **Step 7: Verify the copy button in a browser**
 
