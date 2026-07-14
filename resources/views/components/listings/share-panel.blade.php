@@ -17,7 +17,39 @@
             {{ __('Je advertentie staat live. Delen levert meestal de eerste reacties op.') }}
         </p>
 
-        <div x-data="{ copied: false }" class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+        <div
+            x-data="{
+                copied: false,
+                failed: false,
+                async copy() {
+                    const input = $refs.shareText;
+
+                    try {
+                        // Clipboard API needs a secure context. Production is
+                        // https and localhost counts as secure, so this is the
+                        // normal path; the catch is the honest escape hatch.
+                        if (! navigator.clipboard) {
+                            throw new Error('clipboard api unavailable');
+                        }
+                        await navigator.clipboard.writeText(input.value);
+                    } catch (error) {
+                        // Never claim success we can't verify: reveal the text
+                        // and let the visitor copy it themselves.
+                        this.failed = true;
+                        input.classList.remove('sr-only');
+                        input.removeAttribute('aria-hidden');
+                        input.removeAttribute('tabindex');
+                        input.select();
+
+                        return;
+                    }
+
+                    this.copied = true;
+                    setTimeout(() => this.copied = false, 2000);
+                },
+            }"
+            class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
+        >
             <a
                 href="{{ $share->linkedIn($listing) }}"
                 target="_blank"
@@ -32,40 +64,26 @@
                 class="cmp-btn cmp-btn-secondary"
             >{{ __('Deel op MainDeck') }}</a>
 
-            {{-- Hidden input doubles as the execCommand fallback target: the
-                 Clipboard API is unavailable on plain http and older browsers,
-                 and there it silently rejects. --}}
+            <button type="button" class="cmp-btn cmp-btn-ghost" @click="copy()">
+                <span x-show="!copied">{{ __('Kopieer tekst + link') }}</span>
+                <span x-show="copied" x-cloak>{{ __('Gekopieerd') }}</span>
+            </button>
+
+            {{-- Starts hidden and is revealed only when the clipboard write
+                 fails, so the visitor always has a way to get the text. --}}
             <input
                 type="text"
                 x-ref="shareText"
                 value="{{ $shareText }}"
                 readonly
-                class="sr-only"
+                class="sr-only w-full font-mono text-xs sm:w-auto sm:flex-1"
                 tabindex="-1"
                 aria-hidden="true"
             >
 
-            <button
-                type="button"
-                class="cmp-btn cmp-btn-ghost"
-                @click="
-                    const copy = navigator.clipboard
-                        ? navigator.clipboard.writeText($refs.shareText.value)
-                        : Promise.reject();
-                    copy.catch(() => {
-                        $refs.shareText.classList.remove('sr-only');
-                        $refs.shareText.select();
-                        document.execCommand('copy');
-                        $refs.shareText.classList.add('sr-only');
-                    }).finally(() => {
-                        copied = true;
-                        setTimeout(() => copied = false, 2000);
-                    });
-                "
-            >
-                <span x-show="!copied">{{ __('Kopieer tekst + link') }}</span>
-                <span x-show="copied" x-cloak>{{ __('Gekopieerd') }}</span>
-            </button>
+            <p x-show="failed" x-cloak class="text-sm text-cmp-muted">
+                {{ __('Kopiëren lukte niet — selecteer de tekst hierboven en kopieer zelf.') }}
+            </p>
         </div>
     </section>
 @endcan
