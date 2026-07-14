@@ -64,6 +64,37 @@ it('writes original/card/thumb variants and strips EXIF from the original', func
         ->and($photo->position)->toBe(0);
 });
 
+it('processes a 12MP phone photo without exhausting the memory limit', function () {
+    $listing = Listing::factory()->create();
+
+    // 4000x3000 — what any phone produces. Only 255KB on disk, but GD holds an
+    // image uncompressed at w*h*4 bytes, so it decodes to ~48MB. The job used
+    // to read it (48MB) and immediately clone it (another 48MB), blowing the
+    // 128M limit before writing a single variant: in production every real
+    // photo upload died here and only small screenshots survived.
+    $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-12mp.jpg'));
+
+    expect(getimagesizefromstring($bytes))
+        ->toMatchArray([0 => 4000, 1 => 3000]);
+
+    (new StoreListingPhotoJob($listing->id, $bytes, 'image/jpeg', 0))->handle();
+
+    $photo = ListingPhoto::query()->where('listing_id', $listing->id)->firstOrFail();
+    $disk = Storage::disk('public');
+    $basePath = dirname($photo->path);
+
+    expect($disk->exists($basePath.'/original.jpg'))->toBeTrue()
+        ->and($disk->exists($basePath.'/card.webp'))->toBeTrue()
+        ->and($disk->exists($basePath.'/thumb.webp'))->toBeTrue();
+
+    // The stored original is capped at the long edge, so 4000x3000 -> 2000x1500.
+    $original = Image::read((string) $disk->get($basePath.'/original.jpg'));
+    expect($original->width())->toBe(2000)->and($original->height())->toBe(1500);
+
+    // The row records the source dimensions, not the stored ones.
+    expect($photo->width)->toBe(4000)->and($photo->height)->toBe(3000);
+});
+
 it('deletes any partial blobs and the photo row if a variant write fails', function () {
     $listing = Listing::factory()->create();
     $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));
