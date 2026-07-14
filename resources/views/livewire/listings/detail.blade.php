@@ -115,4 +115,6 @@
             />
         </div>
     </article>
+
+    <x-listings.share-panel :listing="$listing" />
 </div>

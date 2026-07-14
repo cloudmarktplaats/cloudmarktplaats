@@ -74,6 +74,8 @@
                             {{ __('Bewerken') }}
                         </a>
                     </div>
+
+                    <x-listings.share-panel :listing="$listing" />
                 </li>
             @endforeach
         </ul>
