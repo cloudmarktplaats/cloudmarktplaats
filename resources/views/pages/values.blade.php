@@ -2,7 +2,7 @@
     $values = [
         [__('Privacy is een ontwerpkeuze, geen marketing.'), __('Data die we niet hebben kan niet lekken, niet verkocht worden en niet opgevraagd worden. We bewaren het minimale.')],
         [__('Open source, AGPL.'), __('De code is publiek, de wijzigingen ook. Als je het beter kan, fork hem.')],
-        [__('De community bezit het platform.'), __('Geen aandeelhouders, geen exit, geen overname.')],
+        [__('De community bezit het platform.'), __('Geen aandeelhouders, geen exit, geen overname. De code is AGPL: je kunt hem forken en zonder ons verder. Keuzes leggen we openbaar voor en we vertellen wat we ermee deden — maar we stemmen er niet over. Eigenaarschap is hier het recht om weg te lopen met alles, niet het recht om ons te overstemmen.')],
         [__('Eerlijk verdienmodel.'), __('Donaties, sponsoring, optionele premium listings. Geen verborgen kosten, geen datavers, geen affiliate links.')],
         [__('Geen algoritmische manipulatie.'), __('Sorteren op datum, op prijs, op afstand. Punt. Geen "voor jou aanbevolen" dat eigenlijk "voor onze CPM aanbevolen" is.')],
         [__('Tweedehands eerst.'), __('Het platform bestaat omdat hardware langer mee moet gaan. Doorverhuizen is duurzamer dan recyclen.')],
@@ -46,6 +46,9 @@
         <div class="mt-14 pt-6 border-t border-cmp-border font-mono text-[11px] text-cmp-muted flex flex-wrap gap-x-6 gap-y-2">
             <a href="{{ route('about') }}" class="hover:text-cmp-blue">{{ __('→ Over ons') }}</a>
             <a href="{{ route('faq') }}" class="hover:text-cmp-blue">{{ __('→ Veelgestelde vragen') }}</a>
+            {{-- De uitleg hierboven belooft dat keuzes openbaar voorgelegd worden;
+                 dit is waar dat staat. Lezen kan zonder GitHub-account. --}}
+            <a href="https://github.com/cloudmarktplaats/cloudmarktplaats/blob/main/docs/GOVERNANCE.md" class="hover:text-cmp-blue" rel="noopener external">{{ __('→ Hoe we beslissen') }}</a>
             <a href="https://github.com/cloudmarktplaats/cloudmarktplaats" class="hover:text-cmp-blue" rel="noopener external">{{ __('→ Code op GitHub') }}</a>
         </div>
 

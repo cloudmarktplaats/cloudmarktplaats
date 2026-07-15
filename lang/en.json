@@ -222,7 +222,6 @@
     "Open source, AGPL.": "Open source, AGPL.",
     "De code is publiek, de wijzigingen ook. Als je het beter kan, fork hem.": "The code is public, and so are the changes. If you can do better, fork it.",
     "De community bezit het platform.": "The community owns the platform.",
-    "Geen aandeelhouders, geen exit, geen overname.": "No shareholders, no exit, no acquisition.",
     "Eerlijk verdienmodel.": "Honest business model.",
     "Donaties, sponsoring, optionele premium listings. Geen verborgen kosten, geen datavers, geen affiliate links.": "Donations, sponsorship, optional premium listings. No hidden costs, no data trading, no affiliate links.",
     "Geen algoritmische manipulatie.": "No algorithmic manipulation.",
@@ -494,5 +493,7 @@
     "Alleen JPG, PNG of WebP.": "JPG, PNG or WebP only.",
     "Je koos :n foto's. Er passen er maximaal :max in één advertentie.": "You picked :n photos. A listing holds :max at most.",
     "Te groot: :namen. Maximaal :max MB per foto — verklein ze en probeer het opnieuw.": "Too large: :namen. :max MB per photo at most — shrink them and try again.",
-    "Het uploaden is misgegaan. Vaak zijn de foto's samen te groot, of viel de verbinding weg. Probeer het opnieuw met minder of kleinere foto's.": "The upload failed. Usually the photos are too large together, or the connection dropped. Try again with fewer or smaller photos."
+    "Het uploaden is misgegaan. Vaak zijn de foto's samen te groot, of viel de verbinding weg. Probeer het opnieuw met minder of kleinere foto's.": "The upload failed. Usually the photos are too large together, or the connection dropped. Try again with fewer or smaller photos.",
+    "Geen aandeelhouders, geen exit, geen overname. De code is AGPL: je kunt hem forken en zonder ons verder. Keuzes leggen we openbaar voor en we vertellen wat we ermee deden — maar we stemmen er niet over. Eigenaarschap is hier het recht om weg te lopen met alles, niet het recht om ons te overstemmen.": "No shareholders, no exit, no acquisition. The code is AGPL: you can fork it and carry on without us. We put choices out in the open and tell you what we did with your input — but we don't put them to a vote. Ownership here is the right to walk away with everything, not the right to outvote us.",
+    "→ Hoe we beslissen": "→ How we decide"
 }
