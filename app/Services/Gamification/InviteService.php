@@ -8,6 +8,7 @@ use App\Exceptions\InviteException;
 use App\Models\InviteCode;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class InviteService
 {
@@ -39,6 +40,12 @@ class InviteService
 
     public function redeem(string $code, User $invitee): InviteCode
     {
+        // Codes are generated uppercase (see InviteCode::booted) and Postgres
+        // compares case-sensitively, so a hand-typed lowercase code found no
+        // row and came back as "ongeldig of al gebruikt" for a valid invite.
+        // The invite link carries the right casing; retyping it does not.
+        $code = Str::upper(trim($code));
+
         return DB::transaction(function () use ($code, $invitee): InviteCode {
             /** @var InviteCode|null $row */
             $row = InviteCode::query()->where('code', $code)->lockForUpdate()->first();
