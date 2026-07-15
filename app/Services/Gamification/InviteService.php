@@ -38,6 +38,33 @@ class InviteService
         });
     }
 
+    /**
+     * Could this code plausibly be redeemed right now? Read-only, no lock.
+     *
+     * Used by the registration screen to decide whether to show the form at all
+     * when the founding cohort is full: an invite opens the door, no invite
+     * means the waitlist. Deliberately NOT the authority on redemption — that
+     * stays in redeem(), inside a transaction with lockForUpdate, which also
+     * catches the races this cannot (two people, same code, same second).
+     *
+     * So a "true" here is a hint, not a promise: redeem() may still refuse.
+     */
+    public function isRedeemable(string $code): bool
+    {
+        $code = Str::upper(trim($code));
+        if ($code === '') {
+            return false;
+        }
+
+        /** @var InviteCode|null $row */
+        $row = InviteCode::query()->where('code', $code)->first();
+
+        return $row !== null
+            && $row->used_at === null
+            && $row->revoked_at === null
+            && ($row->expires_at === null || $row->expires_at->isFuture());
+    }
+
     public function redeem(string $code, User $invitee): InviteCode
     {
         // Codes are generated uppercase (see InviteCode::booted) and Postgres

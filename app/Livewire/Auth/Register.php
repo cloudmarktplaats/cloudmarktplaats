@@ -58,9 +58,19 @@ class Register extends Component
 
     public function submit(): void
     {
-        // Hard gate: once the founding cohort is full and the waitlist is on,
-        // no new accounts are created — the form shows the waitlist instead.
-        abort_unless(app(FoundingCohort::class)->isRegistrationOpen(), 403);
+        // Gate: once the founding cohort is full and the waitlist is on, no new
+        // accounts are created — EXCEPT for someone holding a valid invite. An
+        // invite is a member vouching for you, which is exactly what should
+        // open a closed door; without that exception the whole invite system
+        // dies the moment the cap is hit (on 2026-07-15: 100/100, 305 unused
+        // credits, 2 codes handed out, 0 ever redeemed).
+        //
+        // The badge stays capped at the first 100 (hasFoundingSpot below) — the
+        // door opens, the badge does not, so "de eerste 100" stays true.
+        abort_unless(
+            app(FoundingCohort::class)->isRegistrationOpen() || $this->hasUsableInvite(),
+            403
+        );
 
         // Normalise before validating, not after: `unique:users,email` compares
         // case-sensitively on Postgres, so "TAKEN@..." would pass validation
@@ -129,12 +139,33 @@ class Register extends Component
         $this->redirect('/email/verify-notice');
     }
 
+    /**
+     * Does this visitor hold an invite that could get them in?
+     *
+     * A hint, not a promise: InviteService::redeem() is the authority and runs
+     * inside a transaction with a lock, so it still refuses a code that was
+     * claimed a second ago. This only decides whether we show the form or the
+     * waitlist — and letting an invited person reach a form that then rejects
+     * their code is far better than showing them a waitlist they don't need.
+     */
+    private function hasUsableInvite(): bool
+    {
+        if (! (bool) config('cloudmarktplaats.features.invites')) {
+            return false;
+        }
+
+        return app(InviteService::class)->isRedeemable($this->invite_code);
+    }
+
     public function render(): View
     {
         $cohort = app(FoundingCohort::class);
 
         return view('livewire.auth.register', [
-            'registrationOpen' => $cohort->isRegistrationOpen(),
+            // With the cohort full, an invited visitor must still see the form:
+            // mount() picks the code out of /register?invite=CODE, so arriving
+            // through an invite link is enough.
+            'registrationOpen' => $cohort->isRegistrationOpen() || $this->hasUsableInvite(),
             'spotsLeft' => $cohort->spotsLeft(),
         ]);
     }
