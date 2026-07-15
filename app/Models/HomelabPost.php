@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 /**
  * Pseudonieme homelab-showcase-post.
@@ -64,11 +65,41 @@ class HomelabPost extends Model
         return $this->hasMany(HomelabPostUpvote::class);
     }
 
+    /** Variants we can actually address. See photoUrl(). */
+    private const ADDRESSABLE_VARIANTS = ['card', 'thumb'];
+
+    /**
+     * URL for a derived variant of this post's photo.
+     *
+     * Only the webp variants are addressable. `original` is deliberately NOT:
+     * StoreHomelabPhotoJob writes it as `original.{source-ext}` (jpg/png/webp),
+     * but the source mime is nowhere in the database — `photo_path` always
+     * holds the *card* path, so there is nothing to recover the real extension
+     * from. The old code derived the extension via pathinfo($this->photo_path),
+     * which therefore always yielded "webp" and produced `original.webp` for a
+     * file stored as `original.jpg`: a URL that 404s.
+     *
+     * That is exactly the bug ListingPhoto carried (fixed 2026-07-14) — it sat
+     * latent for months because nothing requested the original, and then broke
+     * the moment something did. So rather than leave a guess in place, this
+     * throws: a dead URL is worse than a clear error.
+     *
+     * The original file stays on disk as an archive; it is simply not
+     * addressable. If posts ever need a shareable og:image, add a `mime` column
+     * (as listing_photos has) — then the original becomes buildable.
+     *
+     * @throws InvalidArgumentException for a variant we cannot build a URL for
+     */
     public function photoUrl(string $variant = 'card'): string
     {
-        $sourceExt = pathinfo($this->photo_path, PATHINFO_EXTENSION);
-        $ext = $variant === 'original' ? $sourceExt : 'webp';
-        $variantPath = dirname($this->photo_path).'/'.$variant.'.'.$ext;
+        if (! in_array($variant, self::ADDRESSABLE_VARIANTS, true)) {
+            throw new InvalidArgumentException(
+                "Cannot build a URL for homelab photo variant '{$variant}': only "
+                .implode('/', self::ADDRESSABLE_VARIANTS).' are addressable (the source mime is not stored).'
+            );
+        }
+
+        $variantPath = dirname($this->photo_path).'/'.$variant.'.webp';
 
         return app(StorageManager::class)->driver($this->photo_disk)->url($variantPath);
     }
