@@ -59,12 +59,11 @@ class NotifyRepairedOAuthAccounts extends Command
 
         $rows = [];
         foreach ($repaired as $user) {
-            $stuckDays = $user->created_at?->diffInDays($user->email_verified_at) ?? 0;
             $rows[] = [
                 $user->id,
                 $user->email,
                 $user->created_at?->format('d-m H:i'),
-                $stuckDays.' dag(en)',
+                $this->stuckFor($user),
                 $dryRun ? 'zou mailen' : 'gemaild',
             ];
 
@@ -81,5 +80,25 @@ class NotifyRepairedOAuthAccounts extends Command
         ));
 
         return self::SUCCESS;
+    }
+
+    /**
+     * How long this account was unusable, in something a human can scan.
+     *
+     * diffInDays() returns a float, so the raw value reads as
+     * "0.24071759259259 dag(en)" — useless in a table you check before mailing
+     * 14 people.
+     */
+    private function stuckFor(User $user): string
+    {
+        if ($user->created_at === null || $user->email_verified_at === null) {
+            return '?';
+        }
+
+        $hours = (int) round($user->created_at->diffInHours($user->email_verified_at));
+
+        return $hours < 24
+            ? $hours.' uur'
+            : (int) round($hours / 24).' dagen';
     }
 }
