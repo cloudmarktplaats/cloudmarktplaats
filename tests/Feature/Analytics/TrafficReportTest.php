@@ -3,9 +3,11 @@
 declare(strict_types=1);
 
 beforeEach(function () {
-    $this->logPath = storage_path('nginx/access.log');
-    @mkdir(dirname($this->logPath), 0775, true);
-    file_put_contents($this->logPath, '');
+    // A temp file, not storage/nginx/access.log: that one is written by the
+    // real nginx master (root), and a test must never fight the live process
+    // for it.
+    $this->logPath = tempnam(sys_get_temp_dir(), 'traffic-test-').'.log';
+    config(['cloudmarktplaats.traffic.access_log' => $this->logPath]);
 });
 
 afterEach(function () {
@@ -62,7 +64,7 @@ it('ignores assets, livewire and healthz', function () {
 
     // Only /listings is a page view; a photo is not a visit.
     $this->artisan('traffic:report')
-        ->expectsOutputToContain('1 paginabezoek')
+        ->expectsOutputToContain('1 paginabezoeken in de laatste')
         ->assertSuccessful();
 });
 
@@ -74,7 +76,7 @@ it('ignores bots', function () {
     ]));
 
     $this->artisan('traffic:report')
-        ->expectsOutputToContain('1 paginabezoek')
+        ->expectsOutputToContain('1 paginabezoeken in de laatste')
         ->assertSuccessful();
 });
 
@@ -85,7 +87,7 @@ it('honours --days', function () {
     ]));
 
     $this->artisan('traffic:report', ['--days' => 7])
-        ->expectsOutputToContain('1 paginabezoek')
+        ->expectsOutputToContain('1 paginabezoeken in de laatste')
         ->assertSuccessful();
 });
 
@@ -94,5 +96,37 @@ it('says so plainly when there is no log yet', function () {
 
     $this->artisan('traffic:report')
         ->expectsOutputToContain('Geen logbestand')
+        ->assertSuccessful();
+});
+
+it('skips a line with an unparseable timestamp instead of crashing', function () {
+    file_put_contents($this->logPath, implode('', [
+        '{"t":"not-a-date","m":"GET","u":"/kapot","s":200,"ref":"","ua":"Mozilla/5.0"}'."\n",
+        logLine(['u' => '/goed']),
+    ]));
+
+    // One malformed line (a truncated write, say) must not take the report down.
+    $this->artisan('traffic:report')
+        ->expectsOutputToContain('1 paginabezoeken in de laatste')
+        ->assertSuccessful();
+});
+
+it('does not mistake a host that merely contains a known name', function () {
+    file_put_contents($this->logPath, implode('', [
+        logLine(['ref' => 'https://notlinkedin.example.com/x']),
+        logLine(['ref' => 'https://www.linkedin.com/feed/']),
+    ]));
+
+    // "notlinkedin.example.com" contains "linkedin" but is not LinkedIn;
+    // misattributing traffic defeats the point of the report.
+    //
+    // Assertion order matters here: Laravel's expectsOutputToContain() mocks
+    // doWrite() per line and lets the first-registered matching expectation
+    // claim a line, so the superstring assertion must come first — otherwise
+    // "linkedin" claims the "notlinkedin.example.com" row and the second
+    // assertion is starved even though the output is correct.
+    $this->artisan('traffic:report')
+        ->expectsOutputToContain('notlinkedin.example.com')
+        ->expectsOutputToContain('linkedin')
         ->assertSuccessful();
 });

@@ -27,6 +27,13 @@ return [
         // collect emails on a waitlist instead. Set false to keep signups open.
         'waitlist' => env('FEATURE_WAITLIST', true),
     ],
+    'traffic' => [
+        // Where nginx writes its access log (see docker/nginx/default.conf).
+        // Configurable so tests never touch the file the live nginx master
+        // owns — it runs as root and its stale log otherwise blocks the
+        // www-data test fixture.
+        'access_log' => env('TRAFFIC_ACCESS_LOG', storage_path('nginx/access.log')),
+    ],
     'gamification' => [
         'starting_invite_credits' => 3,
         'karma_invite_activation' => 10,

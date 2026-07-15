@@ -6,6 +6,7 @@ namespace App\Console\Commands;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Throwable;
 
 /**
  * Reads nginx's access log and answers three questions: where does traffic come
@@ -23,13 +24,28 @@ class TrafficReport extends Command
     protected $description = 'Verkeer per referrer, UTM-bron en pagina (uit de nginx-log)';
 
     /** Paths that are not page views. */
-    private const IGNORED_PREFIXES = ['/storage/', '/build/', '/fonts/', '/livewire/', '/healthz', '/up', '/favicon'];
+    private const IGNORED_PREFIXES = ['/storage/', '/build/', '/fonts/', '/livewire/', '/healthz', '/favicon'];
 
     private const BOT_MARKERS = ['bot', 'crawler', 'spider', 'curl', 'wget', 'headless', 'python-requests', 'go-http'];
 
+    /**
+     * Known sources, matched on domain boundary — never as a substring:
+     * "notlinkedin.example.com" contains "linkedin" but is not LinkedIn, and
+     * misattributing traffic defeats the point of this report.
+     *
+     * @var array<string, list<string>>
+     */
+    private const KNOWN_SOURCES = [
+        'linkedin' => ['linkedin.com', 'lnkd.in'],
+        'tweakers' => ['tweakers.net'],
+        'reddit' => ['reddit.com', 'redd.it'],
+        'google' => ['google.com', 'google.nl'],
+        'maindeck' => ['maindeck.eu'],
+    ];
+
     public function handle(): int
     {
-        $path = storage_path('nginx/access.log');
+        $path = (string) config('cloudmarktplaats.traffic.access_log');
 
         if (! is_readable($path)) {
             $this->warn("Geen logbestand op {$path} — draait nginx met het cmp_privacy log_format?");
@@ -57,7 +73,14 @@ class TrafficReport extends Command
             if (! is_array($row) || ! isset($row['u'], $row['t'])) {
                 continue;
             }
-            if (CarbonImmutable::parse((string) $row['t'])->lt($since)) {
+            try {
+                $when = CarbonImmutable::parse((string) $row['t']);
+            } catch (Throwable) {
+                // A truncated or malformed line must not take the whole report
+                // down — skip it like we skip non-JSON above.
+                continue;
+            }
+            if ($when->lt($since)) {
                 continue;
             }
             if ($this->isBot((string) ($row['ua'] ?? ''))) {
@@ -167,15 +190,22 @@ class TrafficReport extends Command
             return 'overig';
         }
 
+        $host = preg_replace('/^www\./', '', $host) ?? $host;
+
         $appHost = (string) (parse_url((string) config('app.url'), PHP_URL_HOST) ?? '');
-        if ($host === $appHost) {
+        $appHost = preg_replace('/^www\./', '', $appHost) ?? $appHost;
+
+        // Our own host is reported separately: an internal click-through is not
+        // an inbound visit.
+        if ($host !== '' && $host === $appHost) {
             return 'intern';
         }
 
-        $host = preg_replace('/^www\./', '', $host) ?? $host;
-        foreach (['linkedin', 'tweakers', 'reddit', 'google', 'maindeck'] as $known) {
-            if (str_contains($host, $known)) {
-                return $known;
+        foreach (self::KNOWN_SOURCES as $label => $domains) {
+            foreach ($domains as $domain) {
+                if ($host === $domain || str_ends_with($host, '.'.$domain)) {
+                    return $label;
+                }
             }
         }
 
