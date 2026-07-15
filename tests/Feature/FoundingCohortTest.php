@@ -27,8 +27,8 @@ it('stamps early registrations as founding members', function () {
 });
 
 it('does not stamp founders once the cohort is full', function () {
-    // Fill the cohort exactly.
-    User::factory()->count(Stats::FOUNDING_COHORT)->create();
+    // "Vol" betekent: 100 badges gestempeld. Niet: 100 leden.
+    User::factory()->count(Stats::FOUNDING_COHORT)->create(['is_founding_member' => true]);
 
     $cohort = app(FoundingCohort::class);
     expect($cohort->hasFoundingSpot())->toBeFalse()
@@ -93,4 +93,25 @@ it('keeps registration open when the waitlist feature is off', function () {
     User::factory()->count(Stats::FOUNDING_COHORT + 5)->create();
 
     expect(app(FoundingCohort::class)->isRegistrationOpen())->toBeTrue();
+});
+
+it('keeps the cohort closed when a founder deletes their account', function () {
+    $founders = User::factory()->count(Stats::FOUNDING_COHORT)->create(['is_founding_member' => true]);
+
+    // Dit is de exacte productie-situatie van 15-07: User gebruikt SoftDeletes,
+    // dus de rij blijft bestaan mét badge, maar valt uit members().
+    $founders->first()->delete();
+
+    $cohort = app(FoundingCohort::class);
+    expect($cohort->members())->toBe(Stats::FOUNDING_COHORT - 1)
+        ->and($cohort->hasFoundingSpot())->toBeFalse();
+});
+
+it('keeps the cohort closed when a founder is banned', function () {
+    User::factory()->count(Stats::FOUNDING_COHORT - 1)->create(['is_founding_member' => true]);
+    User::factory()->create(['is_founding_member' => true, 'is_banned' => true]);
+
+    $cohort = app(FoundingCohort::class);
+    expect($cohort->members())->toBe(Stats::FOUNDING_COHORT - 1)
+        ->and($cohort->hasFoundingSpot())->toBeFalse();
 });
