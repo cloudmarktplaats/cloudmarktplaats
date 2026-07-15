@@ -15,6 +15,33 @@ jobs:
       - run: composer install --no-progress --no-interaction
       - run: ./vendor/bin/pint --test
 
+  # Does nginx actually start with this config?
+  #
+  # The Pest tests around default.conf are string assertions — they check that
+  # no IP variable appears and that access_log points at a file. They cannot
+  # catch an invalid *context*: `log_format` inside `server{}` passes every
+  # substring check and then refuses to boot ([emerg] "log_format" directive is
+  # not allowed here), taking the site down with it. That exact mistake reached
+  # a restart once; only a manual `nginx -t` caught it.
+  #
+  # --add-host: nginx resolves `fastcgi_pass php-fpm:9000` at parse time, so
+  # without a resolvable name the test dies on "host not found in upstream"
+  # instead of telling us about the config.
+  # The storage/nginx dir must exist: a missing access_log directory is itself
+  # an [emerg], which is the other way this config takes the site down.
+  nginx:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: nginx -t
+        run: |
+          mkdir -p storage/nginx
+          docker run --rm \
+            --add-host php-fpm:127.0.0.1 \
+            -v "$PWD/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro" \
+            -v "$PWD:/app" \
+            nginx:1.27-alpine nginx -t
+
   # Dependency CVE gate. `composer audit` honours the advisories listed in
   # composer.json config.audit.ignore (the 3 Laravel-11 email/URL CVEs with
   # no backport). Any NEW advisory outside that list fails the build, so we
