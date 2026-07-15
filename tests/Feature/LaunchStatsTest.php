@@ -3,8 +3,10 @@
 declare(strict_types=1);
 
 use App\Livewire\LaunchStats;
+use App\Models\InviteCode;
 use App\Models\Listing;
 use App\Models\User;
+use App\Services\Gamification\StatsService as Stats;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
 
@@ -28,4 +30,32 @@ it('excludes banned users from the founding-member count', function () {
 
     // 4 counted, banned one excluded → 96 spots left.
     Livewire::test(LaunchStats::class)->assertSee('96');
+});
+
+it('drops the scarcity anchor and shows invites once the cohort is closed', function () {
+    Cache::flush();
+    $founders = User::factory()->count(Stats::FOUNDING_COHORT)->create(['is_founding_member' => true]);
+    InviteCode::factory()->count(2)->create(['inviter_user_id' => $founders->first()->id]);
+
+    Livewire::test(LaunchStats::class)
+        ->assertViewHas('full', true)
+        ->assertViewHas('invitesOpen', 2)
+        ->assertSee('uitnodigingen open')
+        ->assertSee('Nieuwe leden zijn nog steeds welkom')
+        ->assertDontSee('plekken vrij')
+        ->assertDontSee('/ 100')
+        ->assertDontSee('wachtlijst');
+});
+
+it('does not flip back to scarcity when a founder leaves', function () {
+    Cache::flush();
+    $founders = User::factory()->count(Stats::FOUNDING_COHORT)->create(['is_founding_member' => true]);
+
+    // 99 leden, maar 100 badges gestempeld: de cohort blijft dicht.
+    $founders->first()->delete();
+
+    Livewire::test(LaunchStats::class)
+        ->assertViewHas('full', true)
+        ->assertDontSee('plekken vrij')
+        ->assertDontSee('/ 100');
 });

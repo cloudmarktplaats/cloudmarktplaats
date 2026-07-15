@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire;
 
+use App\Services\FoundingCohort;
 use App\Services\Gamification\StatsService;
 use Illuminate\View\View;
 use Livewire\Component;
@@ -27,7 +28,11 @@ class LaunchStats extends Component
             'members' => $members,
             'spotsLeft' => max(0, $cohort - $members),
             'pct' => min(100, (int) round($members / $cohort * 100)),
-            'full' => $members >= $cohort,
+            // Volgt de badge-toestand, niet het ledental: anders klapt de
+            // weergave terug naar "plekken vrij" zodra iemand vertrekt,
+            // terwijl er geen badge meer te vergeven is.
+            'full' => ! app(FoundingCohort::class)->hasFoundingSpot(),
+            'invitesOpen' => $stats['invites_open'],
         ]);
     }
 }
