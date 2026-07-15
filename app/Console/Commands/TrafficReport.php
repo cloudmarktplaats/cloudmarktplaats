@@ -54,6 +54,13 @@ class TrafficReport extends Command
         }
 
         $days = max(1, (int) $this->option('days'));
+
+        // The log is truncated weekly (traffic:truncate-log, Sunday 04:00), so a
+        // window longer than that silently reports on data that cannot exist.
+        if ($days > 7) {
+            $this->warn("Let op: de log wordt wekelijks geleegd (zondag 04:00), dus er is hooguit 7 dagen aan data — --days={$days} toont niet meer dan dat.");
+        }
+
         $since = CarbonImmutable::now()->subDays($days);
 
         $referrers = [];
@@ -99,11 +106,12 @@ class TrafficReport extends Command
             $origin = $this->referrerOrigin((string) ($row['ref'] ?? ''));
             $referrers[$origin] = ($referrers[$origin] ?? 0) + 1;
 
-            $query = (string) (parse_url($uri, PHP_URL_QUERY) ?? '');
-            parse_str($query, $params);
-            $source = isset($params['utm_source']) && is_string($params['utm_source']) ? $params['utm_source'] : null;
+            // UTMs arrive as their own fields: the log carries no query string
+            // at all (see docker/nginx/default.conf — it is an allowlist, so a
+            // reset token or email can never end up here).
+            $source = isset($row['us']) && is_string($row['us']) && $row['us'] !== '' ? $row['us'] : null;
             if ($source !== null) {
-                $campaign = isset($params['utm_campaign']) && is_string($params['utm_campaign']) ? $params['utm_campaign'] : '—';
+                $campaign = isset($row['uc']) && is_string($row['uc']) && $row['uc'] !== '' ? $row['uc'] : '—';
                 $key = $source.' / '.$campaign;
                 $utms[$key] = ($utms[$key] ?? 0) + 1;
             }

@@ -22,6 +22,9 @@ function logLine(array $overrides = []): string
         'u' => '/',
         's' => 200,
         'ref' => '',
+        'us' => '',
+        'um' => '',
+        'uc' => '',
         'ua' => 'Mozilla/5.0 (Linux; Android 10; K) Chrome/150.0.0.0 Mobile Safari/537.36',
     ], $overrides), JSON_UNESCAPED_SLASHES)."\n";
 }
@@ -40,10 +43,10 @@ it('groups visits by referrer origin', function () {
         ->assertSuccessful();
 });
 
-it('counts utm sources from the query string', function () {
+it('counts utm sources from their own log fields', function () {
     file_put_contents($this->logPath, implode('', [
-        logLine(['u' => '/listings/01ABC-x?utm_source=linkedin&utm_medium=social&utm_campaign=seller_share']),
-        logLine(['u' => '/listings/01ABC-x?utm_source=copy&utm_medium=social&utm_campaign=seller_share']),
+        logLine(['u' => '/listings/01ABC-x', 'us' => 'linkedin', 'um' => 'social', 'uc' => 'seller_share']),
+        logLine(['u' => '/listings/01ABC-x', 'us' => 'copy', 'um' => 'social', 'uc' => 'seller_share']),
         logLine(['u' => '/']),
     ]));
 
@@ -88,6 +91,14 @@ it('honours --days', function () {
 
     $this->artisan('traffic:report', ['--days' => 7])
         ->expectsOutputToContain('1 paginabezoeken in de laatste')
+        ->assertSuccessful();
+});
+
+it('warns that a window beyond a week cannot be backed by data', function () {
+    file_put_contents($this->logPath, logLine());
+
+    $this->artisan('traffic:report', ['--days' => 30])
+        ->expectsOutputToContain('wekelijks geleegd')
         ->assertSuccessful();
 });
 

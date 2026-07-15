@@ -41,6 +41,30 @@ jobs:
             -v "$PWD/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro" \
             -v "$PWD:/app" \
             nginx:1.27-alpine nginx -t
+      - name: Log mag geen PII of credentials bevatten
+        run: |
+          mkdir -p storage/nginx
+          docker run -d --name nginx-pii-check \
+            --add-host php-fpm:127.0.0.1 \
+            -p 8099:80 \
+            -v "$PWD/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro" \
+            -v "$PWD:/app" \
+            nginx:1.27-alpine
+          sleep 2
+          # A reset link carries a live token and an email address; an invite
+          # link carries a single-use code. Neither may reach the log.
+          curl -s -o /dev/null "http://localhost:8099/reset-password/SECRETTOKEN123?email=leak%40example.com" || true
+          curl -s -o /dev/null "http://localhost:8099/register?invite=SECRETINVITE" || true
+          curl -s -o /dev/null -H "Referer: https://x.test/reset-password/SECRETTOKEN123?email=leak%40example.com" "http://localhost:8099/listings" || true
+          sleep 1
+          echo "--- access.log:"; cat storage/nginx/access.log || true
+          for secret in SECRETTOKEN123 leak%40example.com leak@example.com SECRETINVITE; do
+            if grep -q "$secret" storage/nginx/access.log; then
+              echo "LEK: '$secret' staat in de access log"; docker rm -f nginx-pii-check; exit 1
+            fi
+          done
+          echo "OK: geen token, e-mailadres of invite-code in de log"
+          docker rm -f nginx-pii-check
 
   # Dependency CVE gate. `composer audit` honours the advisories listed in
   # composer.json config.audit.ignore (the 3 Laravel-11 email/URL CVEs with
