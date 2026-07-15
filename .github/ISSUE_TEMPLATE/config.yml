@@ -1,0 +1,12 @@
+# Blank issues stay enabled: a rigid form should never be the reason someone
+# gives up on reporting. Every serious bug so far arrived as a plain message,
+# not a filled-in form.
+blank_issues_enabled: true
+
+contact_links:
+  - name: Vraag over de site (geen bug)
+    url: https://cloudmarktplaats.nl/faq
+    about: Hoe iets werkt, privacy, founding members — waarschijnlijk staat het in de FAQ.
+  - name: Beveiligingsprobleem
+    url: https://cloudmarktplaats.nl/faq
+    about: Meld dit NIET als openbaar issue. Mail privacy@cloudmarktplaats.nl, dan lossen we het eerst op.

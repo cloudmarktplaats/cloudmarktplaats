@@ -1,0 +1,69 @@
+name: Bug melden
+description: Iets werkt niet zoals je verwachtte
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Dank voor het melden. Je hoeft geen developer te zijn en het hoeft niet netjes:
+        **"dit werkte niet zoals ik verwachtte" is al een goede melding.**
+
+        De twee ernstigste bugs van deze week — foto's uploaden werkte helemaal niet,
+        en inloggen brak op een hoofdletter in je e-mailadres — vonden we allebei
+        doordat iemand een berichtje stuurde. Niet uit onze eigen tests.
+
+  - type: textarea
+    id: wat-gebeurde-er
+    attributes:
+      label: Wat gebeurde er?
+      description: Beschrijf wat je zag. Een screenshot of de letterlijke foutmelding helpt enorm.
+      placeholder: |
+        Bijv.: ik wilde een foto toevoegen aan mijn advertentie en kreeg
+        "The photos.0 failed to upload".
+    validations:
+      required: true
+
+  - type: textarea
+    id: wat-verwachtte-je
+    attributes:
+      label: Wat verwachtte je?
+      placeholder: "Bijv.: dat mijn foto erbij kwam en ik de advertentie kon publiceren."
+    validations:
+      required: true
+
+  - type: textarea
+    id: stappen
+    attributes:
+      label: Hoe kunnen we het nadoen?
+      description: Zo precies als je kunt. Weet je het niet meer? Vul in wat je nog weet — dat is beter dan niets.
+      placeholder: |
+        1. Ingelogd op cloudmarktplaats.nl
+        2. Advertentie plaatsen → stap 3 (foto's)
+        3. Foto gekozen uit m'n galerij (Android, ± 4 MB)
+        4. Op Publiceren geklikt → foutmelding
+    validations:
+      required: false
+
+  - type: input
+    id: waar
+    attributes:
+      label: Waar gebeurde het?
+      description: Een URL, of gewoon "op de advertentiepagina".
+      placeholder: https://cloudmarktplaats.nl/listings/...
+    validations:
+      required: false
+
+  - type: input
+    id: apparaat
+    attributes:
+      label: Apparaat en browser
+      description: Vaak precies waar het aan ligt — bij de fotobug was het telefoons.
+      placeholder: Android, Chrome / iPhone, Safari / Windows, Firefox
+    validations:
+      required: false
+
+  - type: markdown
+    attributes:
+      value: |
+        **Geen wachtwoorden, reset-links of persoonsgegevens plakken, alsjeblieft.**
+        Issues zijn openbaar. Een reset-link bevat een werkende sleutel naar je account.

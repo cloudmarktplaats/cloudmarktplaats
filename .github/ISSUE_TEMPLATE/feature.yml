@@ -1,0 +1,58 @@
+name: Idee of feature-request
+description: Iets dat er niet is, maar wel zou moeten
+labels: ["feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Ideeën zijn welkom, ook half uitgewerkte. Je hoeft niet te weten hoe het gebouwd
+        moet worden — daar komen we samen wel uit.
+
+        Eén ding vragen we wel: **begin bij het probleem, niet bij de oplossing.**
+        Het waarom bepaalt hier wat er gebouwd wordt (zie `docs/superpowers/specs/`).
+
+  - type: textarea
+    id: probleem
+    attributes:
+      label: Welk probleem los je hiermee op?
+      description: Waar liep je tegenaan? Wat wilde je doen dat niet kon?
+      placeholder: |
+        Bijv.: ik heb een doos vol kabels die ik per stuk niet ga fotograferen,
+        maar als bundel wil weggeven. Nu moet ik per advertentie één ding kwijt.
+    validations:
+      required: true
+
+  - type: textarea
+    id: idee
+    attributes:
+      label: Wat zou er volgens jou moeten gebeuren?
+      description: Je eerste ingeving is prima. Weet je het niet? Laat leeg — het probleem is het belangrijkste.
+      placeholder: Bijv.- een "bundel" of "mystery box"-optie waarin meerdere spullen in één advertentie passen.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: homelab
+    attributes:
+      label: Valt dit binnen homelab-spul?
+      description: |
+        Nog een open vraag op deze site: waar ligt de grens? Enterprise switches en servers: duidelijk ja.
+        Een losse processor: minder duidelijk. Jouw mening telt mee.
+      options:
+        - Ja, duidelijk homelab
+        - Randgeval, maar wel relevant
+        - Weet ik niet
+      default: 0
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: meehelpen
+    attributes:
+      label: Wil je meehelpen?
+      description: Volstrekt vrijblijvend — een idee zonder code is óók waardevol.
+      options:
+        - label: Ik zou hier zelf aan willen bouwen (hulp bij de eerste PR is er)
+          required: false
+        - label: Ik kan meedenken of testen
+          required: false
