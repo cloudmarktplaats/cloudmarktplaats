@@ -8,6 +8,7 @@ use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -35,7 +36,11 @@ class Login extends Component
             throw ValidationException::withMessages(['email' => 'Te veel pogingen. Probeer over een minuut opnieuw.']);
         }
 
-        $user = User::where('email', $this->email)->first();
+        // Lowercase the lookup, not just the rate-limit key above: emails are
+        // stored lowercase (see User::email()), and Postgres compares
+        // case-sensitively — so "Bram@..." would find nobody and read to the
+        // user as a wrong password.
+        $user = User::where('email', Str::lower(trim($this->email)))->first();
         if ($user === null || ! Hash::check($this->password, $user->password_hash ?? '')) {
             RateLimiter::hit($key, 60);
             throw ValidationException::withMessages(['email' => 'Inloggegevens onjuist.']);

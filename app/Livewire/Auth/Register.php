@@ -13,6 +13,7 @@ use App\Services\Gamification\InviteService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -60,6 +61,13 @@ class Register extends Component
         // Hard gate: once the founding cohort is full and the waitlist is on,
         // no new accounts are created — the form shows the waitlist instead.
         abort_unless(app(FoundingCohort::class)->isRegistrationOpen(), 403);
+
+        // Normalise before validating, not after: `unique:users,email` compares
+        // case-sensitively on Postgres, so "TAKEN@..." would pass validation
+        // against a stored "taken@..." and only blow up on the insert — the
+        // User::email() mutator lowercases it into a duplicate key. Validating
+        // the normalised value turns that 500 into the field error it should be.
+        $this->email = Str::lower(trim($this->email));
 
         $this->validate([
             'email' => ['required', 'email', 'unique:users,email'],

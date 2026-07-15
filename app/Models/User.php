@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Livewire\Auth\ForgotPassword;
+use App\Livewire\Auth\Login;
 use App\Services\Gamification\KarmaService;
 use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
@@ -10,6 +12,7 @@ use Filament\Panel;
 use Illuminate\Auth\Passwords\CanResetPassword as CanResetPasswordTrait;
 use Illuminate\Contracts\Auth\CanResetPassword;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -49,6 +52,29 @@ class User extends Authenticatable implements CanResetPassword, FilamentUser, Ha
         'two_factor_secret',
         'two_factor_recovery_codes',
     ];
+
+    /**
+     * Email is stored lowercase, always.
+     *
+     * Postgres compares strings case-sensitively (MySQL does not), so an
+     * address saved as `B.vaneijk@outlook.com` silently fails to match a login
+     * or password-reset request for `b.vaneijk@outlook.com`: the lookup finds
+     * no user, so no reset token is created and no mail is ever sent. A real
+     * user hit exactly that on 2026-07-15 and reasonably concluded our mail was
+     * broken.
+     *
+     * Normalising on write is only half of it — a query still compares whatever
+     * string it is handed, so callers must lowercase their input too. See
+     * {@see Login} and {@see ForgotPassword}.
+     *
+     * @return Attribute<string, string>
+     */
+    protected function email(): Attribute
+    {
+        return Attribute::make(
+            set: fn (string $value): string => Str::lower(trim($value)),
+        );
+    }
 
     /**
      * @return array<string, string>
