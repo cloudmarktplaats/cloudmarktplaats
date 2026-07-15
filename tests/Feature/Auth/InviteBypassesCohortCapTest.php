@@ -20,9 +20,16 @@ use Livewire\Livewire;
  * The founding badge stays capped at the first 100: the door opens, the badge
  * does not.
  */
+// "De cohort is vol" betekent sinds 2026-07-15: 100 gestempelde badges, niet
+// 100 leden. Zonder het vlaggetje staat de badge-teller op 0 en is de cohort
+// dus juist leeg — dan krijgt de laatkomer hieronder alsnog een badge.
+//
+// De andere tests in dit bestand leunen op isRegistrationOpen(), en dat blijft
+// op members() draaien: honderd badged users zijn ook honderd levende leden,
+// dus die blijven onveranderd werken.
 function fillCohort(): void
 {
-    User::factory()->count(StatsService::FOUNDING_COHORT)->create();
+    User::factory()->count(StatsService::FOUNDING_COHORT)->create(['is_founding_member' => true]);
 }
 
 function validCodeFrom(User $inviter): string
