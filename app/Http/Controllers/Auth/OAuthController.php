@@ -120,12 +120,31 @@ class OAuthController extends Controller
                 'username' => $this->uniqueUsername($nickname),
                 'display_name' => $displayName,
                 'password_hash' => null,
-                'email_verified_at' => $oauthUser->getEmail() ? now() : null,
                 'invite_credits' => (bool) config('cloudmarktplaats.features.invites')
                     ? (int) config('cloudmarktplaats.gamification.starting_invite_credits')
                     : 0,
                 'is_founding_member' => $foundingMember,
             ]);
+
+            // The provider hands back a primary, already-verified address
+            // (Socialite's GithubProvider requests the user:email scope and
+            // reads /user/emails), so re-verifying it by mail would be theatre.
+            //
+            // markEmailAsVerified() rather than passing 'email_verified_at' to
+            // create(): that column is not in User::$fillable, so mass
+            // assignment dropped it *silently* — every OAuth account landed
+            // unverified, and since this flow fires no Registered event, no
+            // verification mail went out either. Fourteen of seventeen GitHub
+            // accounts sat unable to place a listing or invite anyone until
+            // 2026-07-15. markEmailAsVerified() uses forceFill, so $fillable
+            // cannot swallow it again.
+            //
+            // No address means the uid@provider.local placeholder above: mail
+            // there goes nowhere, so leave it unverified — claiming otherwise
+            // would be a lie.
+            if ($oauthUser->getEmail()) {
+                $u->markEmailAsVerified();
+            }
 
             UserIdentity::firstOrCreate(
                 ['user_id' => $u->id, 'provider' => $providerKey],
