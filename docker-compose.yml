@@ -1,3 +1,14 @@
+# Docker's json-file driver has no size limit by default. nginx's access log
+# went to stdout and sat here unrotated for 11 days — 2.9MB of real IPs, while
+# we publish that IPs are stripped within 24h. Access logging now goes to a file
+# without IPs (docker/nginx/default.conf); this cap is the backstop for
+# error_log and for every other container.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "2"
+
 services:
   nginx:
     image: nginx:1.27-alpine
@@ -6,6 +17,7 @@ services:
       - ./:/app
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
     depends_on: [php-fpm]
+    logging: *default-logging
 
   php-fpm:
     build: ./docker/php-fpm
@@ -15,6 +27,7 @@ services:
       REDIS_HOST: redis
       MAIL_HOST: mailpit
     depends_on: [postgres, redis, mailpit]
+    logging: *default-logging
 
   postgres:
     image: postgres:16-alpine
@@ -24,14 +37,17 @@ services:
       POSTGRES_PASSWORD: app
     volumes: ["pgdata:/var/lib/postgresql/data"]
     ports: ["5432:5432"]
+    logging: *default-logging
 
   redis:
     image: redis:7-alpine
     ports: ["6379:6379"]
+    logging: *default-logging
 
   mailpit:
     image: axllent/mailpit:latest
     ports: ["8025:8025", "1025:1025"]
+    logging: *default-logging
 
   minio:
     image: minio/minio:latest
@@ -41,6 +57,7 @@ services:
       MINIO_ROOT_PASSWORD: miniosecret
     ports: ["9000:9000", "9001:9001"]
     volumes: ["miniodata:/data"]
+    logging: *default-logging
 
   queue-worker:
     build: ./docker/php-fpm
@@ -48,6 +65,7 @@ services:
     volumes: ["./:/app"]
     depends_on: [postgres, redis]
     restart: unless-stopped
+    logging: *default-logging
 
   scheduler:
     build: ./docker/php-fpm
@@ -55,6 +73,7 @@ services:
     volumes: ["./:/app"]
     depends_on: [postgres, redis]
     restart: unless-stopped
+    logging: *default-logging
 
 volumes:
   pgdata:

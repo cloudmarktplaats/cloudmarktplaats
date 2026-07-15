@@ -56,6 +56,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // 24h is the window we publish in the privacy statement; this
         // job is what makes that promise enforceable.
         $schedule->job(new IpStripperJob)->hourly();
+
+        // Weekly truncate of the nginx access log. Not a retention measure —
+        // that log holds no IP (see docker/nginx/default.conf) — purely so it
+        // doesn't grow unbounded. Sunday 04:00, when nobody is reading reports.
+        $schedule->command('traffic:truncate-log')->weeklyOn(0, '04:00');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
