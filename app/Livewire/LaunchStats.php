@@ -10,9 +10,20 @@ use Illuminate\View\View;
 use Livewire\Component;
 
 /**
- * Public homepage "beta cohort" strip: real, live platform numbers plus a
- * founding-members progress bar toward the first {@see StatsService::FOUNDING_COHORT}.
- * The numbers are never inflated — early scarcity ("be #7 of 100") is the hook.
+ * Public homepage "beta cohort" strip: real, live platform numbers, plus one
+ * of two views depending on whether the founding-member cohort is still open.
+ *
+ * While open ({@see FoundingCohort::hasFoundingSpot()} is true):
+ * a founding-members progress bar toward the first {@see StatsService::FOUNDING_COHORT},
+ * with early scarcity ("be #7 of 100") as the hook.
+ *
+ * Once closed: no progress bar and no scarcity copy — the badge is no longer
+ * up for grabs, so pretending otherwise would just be a frozen "100/100"
+ * monument to a door that's shut. Instead it shows the live member count and
+ * how many invites are still open, since registration itself stays open even
+ * after the badge stops.
+ *
+ * The numbers are never inflated either way.
  */
 class LaunchStats extends Component
 {
