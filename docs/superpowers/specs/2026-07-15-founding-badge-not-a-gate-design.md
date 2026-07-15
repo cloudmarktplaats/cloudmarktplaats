@@ -76,18 +76,41 @@ Twee dingen op de homepage gaan stuk zodra het ledental over de 100 loopt.
 
 **De zin.** Regel 12 zegt bij een volle cohort: *"De eerste 100 zijn binnen. Nieuwe leden komen op de wachtlijst."* Met `FEATURE_WAITLIST=false` is dat onwaar — er is geen wachtlijst meer. Deze zin staat er nú al, want `$full` is al `true`.
 
-Voorstel: zodra de cohort vol is, verdwijnt de schaarste-ankering en toont de sectie een groeicijfer.
+Zodra de cohort dicht is verdwijnt de schaarste-ankering en toont de sectie groeicijfers.
+
+**`$full` wordt anders bepaald.** Nu geldt `$full = $members >= $cohort` — opnieuw een momentopname van het ledental. Verwijderen twee leden zich, dan zakt `$members` naar 99 en klapt de homepage terug naar *"1 plek vrij"*, terwijl er geen badge meer te vergeven is (de badge-teller staat op 101). Dat is dezelfde verwarring tussen ledental en geschiedenis als in Beslissing 2, één laag hoger. `$full` volgt daarom de badge-toestand:
+
+```php
+'full' => ! app(FoundingCohort::class)->hasFoundingSpot(),
+```
+
+Daarmee kan de weergave nooit terugklappen naar een schaarste die niet meer bestaat, en zijn "is de cohort dicht?" en "krijgt de volgende aanmelder een badge?" per definitie hetzelfde antwoord.
 
 - **Niet vol** (`$full === false`): ongewijzigd — `X / 100`, "plekken vrij", voortgangsbalk. Deze tak is op productie dood maar blijft correct voor verse installaties en tests.
-- **Vol** (`$full === true`): het `X / 100`-blok en de voortgangsbalk verdwijnen. In plaats daarvan het totale ledental als levend getal, met een zin die klopt: *"De eerste 100 zijn binnen — zij vormen de cultuur. Nieuwe leden zijn nog steeds welkom."*
+- **Vol** (`$full === true`): het `X / 100`-blok en de voortgangsbalk verdwijnen. In plaats daarvan twee levende getallen — het ledental en het aantal openstaande uitnodigingen — met een zin die klopt: *"De eerste 100 zijn binnen — zij vormen de cultuur. Nieuwe leden zijn nog steeds welkom."*
 
-De reden: 100/100 bevroren tonen is een monument voor een deur die dicht zit. Het ledental dat groeit is een eerlijk signaal dat de club leeft, en dat dient het doel — meer aanbod, meer mensen — beter dan een schaarste die niet meer bestaat.
+```
+BETA · DE COMMUNITY
 
-Dit vraagt een ledental-cijfer in `StatsService::homepageStats()`. Let op de bestaande duplicatie: `homepageStats()['founding_members']` draait dezelfde query als `FoundingCohort::members()` (`where('is_banned', false)->count()`, 60s cache). Die twee moeten consistent blijven; de nieuwe waarde hergebruikt `founding_members` in plaats van er een derde teller naast te zetten.
+  101  leden
+   19  uitnodigingen open
+
+De eerste 100 zijn binnen — zij vormen de
+cultuur. Nieuwe leden zijn nog steeds welkom.
+```
+
+De reden: 100/100 bevroren tonen is een monument voor een deur die dicht zit. Het ledental dat groeit is een eerlijk signaal dat de club leeft, en dat dient het doel — meer aanbod, meer mensen — beter dan een schaarste die niet meer bestaat. De uitnodigingen-teller laat zien dat leden elkáár binnenhalen; dat is precies het gedrag dat we willen belonen.
+
+Beide cijfers komen uit `StatsService::homepageStats()` (60s cache), zodat de publieke homepage goedkoop blijft:
+
+- **Leden:** hergebruikt de bestaande `founding_members`-sleutel. Let op de bekende duplicatie — die draait dezelfde query als `FoundingCohort::members()` (`where('is_banned', false)->count()`). Die twee moeten consistent blijven; er komt geen derde teller naast.
+- **Uitnodigingen open:** `InviteCode::redeemable()->count()`. Die scope bestaat al (`InviteCode.php:59`) en dekt precies de bedoeling: ongebruikt, niet ingetrokken, niet verlopen. Niet met de hand herbouwen — dan lopen de definities uiteen.
 
 ### Beslissing 4 — vertalingen
 
-`lang/en.json` bevat de wachtlijst-strings; NL is de bron en de sleutel. Te vervangen bij de nieuwe zin op regel 14. De strings op regel 6 en 10 (wachtlijst-formulier, "beta zit vol") horen bij de nu-onbereikbare tak en blijven staan — de flag kan terug.
+`lang/en.json` bevat de wachtlijst-strings; NL is de bron én de sleutel. De onwaar geworden zin op regel 14 vervalt. Nieuw te vertalen: de vervangende zin, `Beta · de community`, `leden` en `uitnodigingen open`.
+
+De strings op regel 6 en 10 (wachtlijst-formulier, "beta zit vol") horen bij de nu-onbereikbare tak en blijven staan — de flag kan terug, en een ontbrekende vertaling zou dan stilletjes Nederlands tonen aan Engelse bezoekers.
 
 Verificatie van EN gaat via `artisan tinker`, niet via curl: de locale is sessie-gebonden (`/taal/{locale}`), er is geen `/en`-URL.
 
@@ -103,6 +126,10 @@ Verificatie van EN gaat via `artisan tinker`, niet via curl: de locale is sessie
 
 **De schaarste is weg als wervingsargument.** Bewust. Hij had zijn werk gedaan en kostte inmiddels aanbod. Terugdraaien is één env-var — daarom blijft de wachtlijst-code staan.
 
+**"19 uitnodigingen open" kan gelezen worden als een poort.** Het risico van deze teller: een bezoeker die net gelezen heeft dat iedereen welkom is, ziet een getal dat op restplekken lijkt en concludeert dat hij een code nodig heeft — precies de drempel die we weghalen. Daarom staat het cijfer expliciet naast het ledental en onder een zin die zegt dat nieuwe leden welkom zijn, en heet het label "uitnodigingen open" en nadrukkelijk niet "plekken vrij". Bij de implementatie is dit een copy-beslissing, geen detail. Blijkt het toch als drempel te werken, dan is het cijfer weghalen één regel.
+
+**De uitnodigingen-teller kan naar 0 lopen.** `redeemable()` sluit verlopen codes uit, dus het getal daalt vanzelf — door inwisseling én door verval. Dat is eerlijk (het is een levend cijfer), maar "0 uitnodigingen open" is een dode indruk naast een levend ledental. Als het structureel 0 wordt, hoort de teller weg; hij verdient geen mechanisme om hem kunstmatig te vullen.
+
 **Meer aanmeldingen betekent meer moderatie.** Registratie open zetten haalt het kennissenfilter weg dat nu de facto de rem is. Wie er binnenkomt is daarna een moderatievraag, geen registratievraag. Dit is een houding, geen mechanisme: er is geen extra spamdrempel voorzien in deze wijziging. Als dat een probleem wordt, is dat een volgende spec.
 
 **Het gedrag "vertrek maakt een badge-plek vrij" verdwijnt.** Dat is precies het doel (Beslissing 2), maar het is een bewuste gedragswijziging: onder een teruggezette `FEATURE_WAITLIST=true` maakte een vertrekkend of geband lid vroeger ook een badge-plek vrij. Dat gebeurt niet meer. Voor *registratie* (`isRegistrationOpen()` → `members()`) blijft vertrek wél een plek vrijmaken, en dat is juist: een vertrokken lid neemt geen ledenplek in. De twee begrippen worden hier bewust uit elkaar getrokken — ledental is een momentopname, de badge is geschiedenis.
@@ -115,6 +142,8 @@ Verificatie van EN gaat via `artisan tinker`, niet via curl: de locale is sessie
 - `isRegistrationOpen()` is `true` met `waitlist=false` bij een volle cohort — bestaat al (`FoundingCohortTest.php:92`).
 - Registratie slaagt bij 100+ leden met `waitlist=false`, en lid 101 krijgt géén badge.
 - De homepage rendert geen `117 / 100`: met >100 leden toont `launch-stats` het ledental en niet de cohort-breuk.
+- De uitnodigingen-teller telt alleen inwisselbare codes: maak een gebruikte, een ingetrokken, een verlopen en twee open codes, verwacht `2`.
+- De weergave klapt niet terug: met 100 gestempelde badges en daarna een verwijderd lid (99 leden) toont de homepage géén "plek vrij" — `$full` blijft `true`.
 - EN-vertaling van de nieuwe zin bestaat en resolvet (via tinker).
 
 ## Volgorde van uitrol
