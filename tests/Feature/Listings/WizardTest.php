@@ -17,6 +17,34 @@ beforeEach(function () {
     $this->user = User::factory()->create(['email_verified_at' => now()]);
 });
 
+/*
+ * `photos` ends up empty for two very different reasons: the seller picked
+ * nothing, or their upload failed and Livewire silently left the property
+ * empty. Laravel's default message ("The photos field is required") only
+ * describes the first, so a seller whose upload died was told they had
+ * forgotten photos they had just picked. Yvan reported exactly that.
+ */
+it('blames the upload, not the seller, when photos never arrived', function () {
+    $this->actingAs($this->user);
+
+    $component = Livewire::test(Wizard::class)
+        ->set('title', 'Cisco Catalyst 2960')
+        ->set('category_id', $this->category->id)
+        ->set('condition', 'used')
+        ->set('price_cents', 5000)
+        ->call('next')
+        ->set('description', 'Fully working 24-port switch with all original modules.')
+        ->set('region_postcode', '3500')
+        ->call('next')
+        ->set('photos', [])
+        ->call('submit')
+        ->assertHasErrors(['photos' => 'required']);
+
+    // The seller must be able to tell the two cases apart from the message.
+    $component->assertSee('uploaden misgegaan')
+        ->assertDontSee('The photos field is required');
+});
+
 it('walks step 1 → 2 → 3 and persists a draft listing per step', function () {
     $this->actingAs($this->user);
 

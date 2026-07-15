@@ -87,7 +87,38 @@
             </div>
         </form>
     @else
-        <form wire:submit="submit" class="space-y-3" enctype="multipart/form-data">
+        @php
+            $maxBytes = \App\Livewire\Listings\Wizard::maxPhotoBytes();
+            $maxCount = \App\Livewire\Listings\Wizard::maxPhotoCount();
+            $maxMb = (int) ($maxBytes / 1024 / 1024);
+        @endphp
+        {{-- An upload that fails is invisible: Livewire leaves $photos empty and
+             says nothing, so the first sign was "photos is required" at submit —
+             blaming the seller for photos they had picked. These handlers turn
+             every failure mode into something you can read on screen. --}}
+        <form wire:submit="submit" class="space-y-3" enctype="multipart/form-data"
+              x-data="{
+                  bezig: false,
+                  voortgang: 0,
+                  probleem: '',
+                  maxPerFoto: {{ $maxBytes }},
+                  maxAantal: {{ $maxCount }},
+                  keuze($event) {
+                      this.probleem = '';
+                      const fotos = [...$event.target.files];
+                      const teGroot = fotos.filter(f => f.size > this.maxPerFoto);
+                      if (fotos.length > this.maxAantal) {
+                          this.probleem = @js(__('Je koos :n foto\'s. Er passen er maximaal :max in één advertentie.', ['max' => $maxCount])).replace(':n', fotos.length);
+                      } else if (teGroot.length) {
+                          this.probleem = @js(__('Te groot: :namen. Maximaal :max MB per foto — verklein ze en probeer het opnieuw.', ['max' => $maxMb])).replace(':namen', teGroot.map(f => f.name).join(', '));
+                      }
+                  },
+              }"
+              x-on:livewire-upload-start="bezig = true; voortgang = 0"
+              x-on:livewire-upload-progress="voortgang = $event.detail.progress"
+              x-on:livewire-upload-finish="bezig = false; voortgang = 100"
+              x-on:livewire-upload-cancel="bezig = false"
+              x-on:livewire-upload-error="bezig = false; probleem = @js(__('Het uploaden is misgegaan. Vaak zijn de foto\'s samen te groot, of viel de verbinding weg. Probeer het opnieuw met minder of kleinere foto\'s.'))">
             @php($existingPhotoCount = $editing && $listing ? $listing->photos()->count() : 0)
             @if ($existingPhotoCount > 0)
                 <p class="rounded-sm bg-cmp-bg2 p-3 text-sm text-cmp-muted">
@@ -96,10 +127,29 @@
             @endif
             <label class="block text-sm">
                 <span class="mb-1 block font-medium">
-                    {{ $existingPhotoCount > 0 ? __('Foto\'s toevoegen (optioneel, max 10)') : __('Foto\'s (1–10, max 8MB elk)') }}
+                    {{ $existingPhotoCount > 0
+                        ? __('Foto\'s toevoegen (optioneel, max :max)', ['max' => $maxCount])
+                        : __('Foto\'s (1–:max, max :mb MB elk)', ['max' => $maxCount, 'mb' => $maxMb]) }}
                 </span>
-                <input type="file" wire:model="photos" multiple accept="image/jpeg,image/png,image/webp" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
+                <input type="file" wire:model="photos" multiple accept="image/jpeg,image/png,image/webp"
+                       x-on:change="keuze($event)"
+                       class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
             </label>
+
+            {{-- Uploading used to be silent: on a phone the only signal was the
+                 page sitting there. --}}
+            <div x-show="bezig" x-cloak class="space-y-1" role="status" aria-live="polite">
+                <div class="flex justify-between text-xs text-cmp-muted">
+                    <span>{{ __('Foto\'s uploaden…') }}</span>
+                    <span class="font-mono" x-text="voortgang + '%'"></span>
+                </div>
+                <div class="h-2 w-full overflow-hidden rounded-full bg-cmp-bg2">
+                    <div class="h-full rounded-full bg-cmp-signal transition-all" x-bind:style="'width: ' + Math.max(2, voortgang) + '%'"></div>
+                </div>
+            </div>
+
+            <p x-show="probleem" x-cloak x-text="probleem" class="text-sm text-red-600" role="alert"></p>
+
             @error('photos') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
             @error('photos.*') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
@@ -107,7 +157,13 @@
 
             <div class="flex justify-between">
                 <button type="button" wire:click="back" class="rounded border px-4 py-2">{{ __('Terug') }}</button>
-                <button class="rounded bg-green-600 px-4 py-2 text-white">{{ __('Indienen voor moderatie') }}</button>
+                {{-- Livewire queues the submit until the upload finishes, so this
+                     is about telling the seller why nothing happens yet. --}}
+                <button x-bind:disabled="bezig"
+                        class="rounded bg-green-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50">
+                    <span x-show="! bezig">{{ __('Indienen voor moderatie') }}</span>
+                    <span x-show="bezig" x-cloak>{{ __('Bezig met uploaden…') }}</span>
+                </button>
             </div>
         </form>
     @endif

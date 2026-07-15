@@ -74,6 +74,18 @@ class Wizard extends Component
     /** @var array<int, UploadedFile> */
     public array $photos = [];
 
+    /** Max bytes per photo. Must stay <= PHP's upload_max_filesize. */
+    public static function maxPhotoBytes(): int
+    {
+        return (int) config('cloudmarktplaats.photos.max_bytes');
+    }
+
+    /** Max photos per listing. */
+    public static function maxPhotoCount(): int
+    {
+        return (int) config('cloudmarktplaats.photos.max_count');
+    }
+
     public function mount(?Listing $listing = null): void
     {
         if ($listing !== null && $listing->exists) {
@@ -134,9 +146,26 @@ class Wizard extends Component
         // new listing still requires at least one photo.
         $alreadyHasPhotos = $this->listing !== null && $this->listing->photos()->exists();
 
+        $maxKb = (int) (self::maxPhotoBytes() / 1024);
+
         $this->validate([
-            'photos' => [$alreadyHasPhotos ? 'nullable' : 'required', 'array', 'max:10'],
-            'photos.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
+            'photos' => [$alreadyHasPhotos ? 'nullable' : 'required', 'array', 'max:'.self::maxPhotoCount()],
+            'photos.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:'.$maxKb],
+        ], [
+            /*
+             * `photos` is empty for two very different reasons, and the default
+             * message ("The photos field is required") only describes one of
+             * them. When a Livewire upload fails — nginx rejecting the request,
+             * a phone dropping the connection — the property silently stays
+             * empty, so this message was the first and only sign anything had
+             * gone wrong, and it told the user they had forgotten the photos
+             * they had just picked. Cover both cases honestly.
+             */
+            'photos.required' => __('We hebben geen foto\'s ontvangen. Koos je ze wél? Dan is het uploaden misgegaan — probeer het opnieuw, eventueel met minder of kleinere foto\'s.'),
+            'photos.max' => __('Maximaal :max foto\'s per advertentie.'),
+            'photos.*.uploaded' => __('Deze foto is niet aangekomen. Meestal is hij te groot: maximaal :max MB per foto.', ['max' => (int) (self::maxPhotoBytes() / 1024 / 1024)]),
+            'photos.*.max' => __('Deze foto is te groot. Maximaal :max MB per foto.', ['max' => (int) (self::maxPhotoBytes() / 1024 / 1024)]),
+            'photos.*.mimes' => __('Alleen JPG, PNG of WebP.'),
         ]);
 
         if ($this->listing === null) {

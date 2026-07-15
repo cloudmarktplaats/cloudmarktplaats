@@ -27,6 +27,24 @@ return [
         // collect emails on a waitlist instead. Set false to keep signups open.
         'waitlist' => env('FEATURE_WAITLIST', true),
     ],
+    'photos' => [
+        /*
+         * The listing-photo limits, in one place because they are enforced in
+         * several and the strictest wins silently.
+         *
+         * `max_bytes` MUST stay <= PHP's upload_max_filesize (8M, set in
+         * docker/php-fpm/Dockerfile) — PHP discards a bigger file before
+         * Laravel ever sees it, and the user gets "failed to upload" with no
+         * clue why. nginx's client_max_body_size (88m) caps the whole request:
+         * Livewire posts every selected photo in ONE request, so the browser
+         * checks `max_count * max_bytes` against it before starting an upload
+         * that nginx would reject after minutes on a phone.
+         *
+         * Changing these means changing the Dockerfile and nginx too.
+         */
+        'max_bytes' => 8 * 1024 * 1024,
+        'max_count' => 10,
+    ],
     'traffic' => [
         // Where nginx writes its access log (see docker/nginx/default.conf).
         // Configurable so tests never touch the file the live nginx master
