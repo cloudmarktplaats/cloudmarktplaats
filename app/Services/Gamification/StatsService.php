@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Gamification;
 
 use App\Models\HomelabPost;
+use App\Models\InviteCode;
 use App\Models\KarmaEvent;
 use App\Models\Listing;
 use App\Models\User;
@@ -49,19 +50,26 @@ class StatsService
 
     /**
      * Live platform-wide numbers for the public homepage. Real counts, no
-     * inflation — the "founding members" figure drives the beta-cohort FOMO.
-     * Cached briefly so the landing page stays cheap under load.
+     * inflation. Cached briefly so the landing page stays cheap under load.
      *
-     * @return array{founding_members: int, listings_live: int, rescued: int, homelabs: int}
+     * `founding_members` is the live member count, not the badge count — the
+     * two diverged the moment the cohort closed. {@see FoundingCohort} for
+     * why those are different questions.
+     *
+     * `invites_open` leans on InviteCode's `redeemable` scope rather than
+     * rebuilding the condition here; one definition of "open" is enough.
+     *
+     * @return array{founding_members: int, listings_live: int, rescued: int, homelabs: int, invites_open: int}
      */
     public function homepageStats(): array
     {
-        /** @var array{founding_members: int, listings_live: int, rescued: int, homelabs: int} */
+        /** @var array{founding_members: int, listings_live: int, rescued: int, homelabs: int, invites_open: int} */
         return Cache::remember('stats:homepage', 60, fn (): array => [
             'founding_members' => User::query()->where('is_banned', false)->count(),
             'listings_live' => Listing::query()->where('state', 'published')->count(),
             'rescued' => Listing::query()->where('state', 'sold')->count(),
             'homelabs' => HomelabPost::query()->published()->count(),
+            'invites_open' => InviteCode::query()->redeemable()->count(),
         ]);
     }
 
