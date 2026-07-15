@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Artisan;
 
 beforeEach(function () {
     // A temp file, not storage/nginx/access.log: that one is written by the
@@ -17,13 +17,23 @@ afterEach(function () {
 });
 
 it('schedules a weekly truncate of the nginx access log', function () {
-    $events = collect(app(Schedule::class)->events());
+    // Asserted through `schedule:list`, not app(Schedule::class)->events(): the
+    // schedule is registered by an Artisan::starting() bootstrapper that only
+    // fires once a Console\Application is constructed, so reading the Schedule
+    // directly only works when this happens to be the first test in the run —
+    // it passed under --filter and failed in the full suite. A test that is
+    // green only in a lucky order is worse than no test.
+    //
+    // Output is captured via Artisan::output() rather than chained
+    // expectsOutputToContain() calls: both strings live on the SAME line
+    // ("0 4 * * 0  php artisan traffic:truncate-log ..."), and the first
+    // expectation consumes that line, starving the second.
+    Artisan::call('schedule:list');
+    $output = Artisan::output();
 
-    $truncate = $events->first(fn ($e): bool => str_contains((string) $e->description, 'traffic:truncate-log')
-        || str_contains((string) $e->command, 'traffic:truncate-log'));
-
-    expect($truncate)->not->toBeNull()
-        ->and($truncate->expression)->toBe('0 4 * * 0'); // zondag 04:00
+    expect($output)
+        ->toContain('traffic:truncate-log')
+        ->toContain('0 4 * * 0'); // zondag 04:00
 });
 
 it('truncates the log without deleting it', function () {
