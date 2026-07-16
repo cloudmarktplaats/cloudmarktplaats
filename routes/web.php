@@ -15,6 +15,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\SiweOnboarding;
 use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Homelab\Detail;
 use App\Livewire\Homelab\Feed as HomelabFeed;
 use App\Livewire\Listings\Browse as ListingsBrowse;
 use App\Livewire\Listings\Detail as ListingDetail;
@@ -55,6 +56,14 @@ Route::view('/roadmap', 'pages.roadmap')->name('roadmap');
 
 // Homelab-showcase: publieke feed, posten vereist login (flag-gated in mount()).
 Route::get('/homelabs', HomelabFeed::class)->name('homelabs');
+
+// Homelab-detailpagina: eigen, deelbare url per post. Homelab-ulids worden
+// lowercase opgeslagen (HomelabPost::booted()), anders dan de uppercase
+// Crockford-ulids van listings — vandaar de eigen constraint hieronder.
+Route::get('/homelabs/{ulid}-{slug}', Detail::class)
+    ->where('ulid', '[0-9a-z]{26}')
+    ->where('slug', '[a-z0-9-]+')
+    ->name('homelab.detail');
 
 Route::get('/healthz', HealthController::class);
 
