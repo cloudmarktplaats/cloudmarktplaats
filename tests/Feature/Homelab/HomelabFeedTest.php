@@ -7,6 +7,7 @@ use App\Models\HomelabPhoto;
 use App\Models\HomelabPost;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Livewire\Livewire;
 
@@ -147,4 +148,32 @@ it('links each feed card to its own page', function () {
 
     Livewire::test(Feed::class)
         ->assertSee("/homelabs/{$post->ulid}-{$post->slug}", escape: false);
+});
+
+it('eager-loads photos so the feed is not N+1', function () {
+    $author = User::factory()->create();
+    // Drie posts, elk met een eigen foto-rij.
+    collect(range(0, 2))->each(function () use ($author) {
+        $post = HomelabPost::factory()->for($author)->create();
+        HomelabPhoto::factory()->for($post, 'post')->create([
+            'path' => 'homelabs/'.$post->ulid.'/0/card.webp',
+            'position' => 0,
+        ]);
+    });
+
+    $component = Livewire::test(Feed::class);
+
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $posts = $component->instance()->posts();
+    // De render leest photoUrl('card') op elke post — dat mag GEEN extra
+    // query per post doen als photos eager geladen is.
+    $posts->each(fn ($p) => $p->photoUrl('card'));
+    $photoQueries = collect(DB::getQueryLog())
+        ->filter(fn ($q) => str_contains($q['query'], 'homelab_photos'))
+        ->count();
+    DB::disableQueryLog();
+
+    // Eén eager-load query voor alle drie, niet één per post.
+    expect($photoQueries)->toBe(1);
 });

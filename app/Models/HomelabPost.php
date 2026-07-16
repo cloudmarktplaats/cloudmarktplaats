@@ -94,7 +94,7 @@ class HomelabPost extends Model
      */
     public function photoUrl(string $variant = 'card'): string
     {
-        $photo = $this->photos()->first();
+        $photo = $this->photos->first();
 
         if ($photo === null) {
             throw new RuntimeException("Homelab post {$this->ulid} heeft geen foto.");
@@ -125,7 +125,7 @@ class HomelabPost extends Model
      */
     public function getOgImageUrl(): ?string
     {
-        $photo = $this->photos()->first();
+        $photo = $this->photos->first();
 
         if ($photo === null || ! in_array($photo->mime, ['image/jpeg', 'image/png'], true)) {
             return null;
