@@ -44,6 +44,11 @@ return [
          */
         'max_bytes' => 8 * 1024 * 1024,
         'max_count' => 10,
+        // Homelabs verwerken hun foto's synchroon binnen de transactie (de
+        // post bestaat pas als de foto's er zijn). Tien decodes in één request
+        // tikt tegen de gateway-timeout; vier blijft ruim daaronder en een rack
+        // heeft niet meer nodig. Advertenties gaan via de queue en houden 10.
+        'homelab_max_count' => 4,
     ],
     'traffic' => [
         // Where nginx writes its access log (see docker/nginx/default.conf).
