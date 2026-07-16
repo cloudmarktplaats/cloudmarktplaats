@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Livewire\Homelab\Feed;
+use App\Models\HomelabPhoto;
 use App\Models\HomelabPost;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
@@ -135,4 +136,15 @@ it('still posts without a title', function () {
         ->assertHasNoErrors();
 
     expect(HomelabPost::query()->firstOrFail()->title)->toBeNull();
+});
+
+it('links each feed card to its own page', function () {
+    $post = HomelabPost::factory()->create(['title' => 'Rack', 'body' => 'x']);
+    HomelabPhoto::factory()->for($post, 'post')->create([
+        'path' => 'homelabs/'.$post->ulid.'/0/card.webp',
+        'position' => 0,
+    ]);
+
+    Livewire::test(Feed::class)
+        ->assertSee("/homelabs/{$post->ulid}-{$post->slug}", escape: false);
 });

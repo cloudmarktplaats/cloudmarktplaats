@@ -110,10 +110,11 @@
             @foreach ($posts as $post)
                 <article wire:key="homelab-{{ $post->ulid }}"
                          class="flex flex-col overflow-hidden rounded-sm border border-cmp-border bg-cmp-surface">
-                    <div class="aspect-[4/3] overflow-hidden bg-cmp-bg2">
+                    <a href="{{ route('homelab.detail', ['ulid' => $post->ulid, 'slug' => $post->slug]) }}"
+                       wire:navigate class="block aspect-[4/3] overflow-hidden bg-cmp-bg2">
                         <img src="{{ $post->photoUrl('card') }}" alt="{{ __('Homelab-foto') }}" loading="lazy"
-                             class="h-full w-full object-cover">
-                    </div>
+                             class="h-full w-full object-cover transition-transform duration-200 hover:scale-105">
+                    </a>
                     <div class="flex flex-1 flex-col gap-2 p-4">
                         <p class="text-sm text-cmp-text">{{ $post->body }}</p>
                         <div class="mt-auto flex items-center justify-between pt-1">
