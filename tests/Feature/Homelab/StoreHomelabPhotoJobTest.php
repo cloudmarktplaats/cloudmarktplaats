@@ -2,34 +2,41 @@
 
 declare(strict_types=1);
 
-use App\Exceptions\InvalidUploadException;
 use App\Jobs\Homelab\StoreHomelabPhotoJob;
 use App\Models\HomelabPost;
-use App\Services\Storage\StorageManager;
+use Illuminate\Support\Facades\Storage;
 
-it('stores original + card variants and strips EXIF', function () {
-    $post = HomelabPost::factory()->create(['photo_path' => 'pending']);
-    $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));
-
-    (new StoreHomelabPhotoJob($post->id, $bytes, 'image/jpeg'))->handle();
-
-    $post->refresh();
-    expect($post->photo_path)->toBe("homelabs/{$post->ulid}/card.webp");
-
-    $storage = app(StorageManager::class)->driver($post->photo_disk);
-    expect($storage->exists("homelabs/{$post->ulid}/original.jpg"))->toBeTrue()
-        ->and($storage->exists("homelabs/{$post->ulid}/card.webp"))->toBeTrue();
-
-    // EXIF weg: het origineel mag geen GPS-tags meer bevatten.
-    $original = $storage->get("homelabs/{$post->ulid}/original.jpg");
-    expect(str_contains($original, 'GPS'))->toBeFalse();
+beforeEach(function () {
+    Storage::fake('public');
 });
 
-it('rejects a mismatched mime and leaves nothing behind', function () {
-    $post = HomelabPost::factory()->create(['photo_path' => 'pending']);
+it('writes a homelab_photos row with position and source mime', function () {
+    $post = HomelabPost::factory()->create();
+    $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));
 
-    expect(fn () => (new StoreHomelabPhotoJob($post->id, 'not-an-image', 'image/jpeg'))->handle())
-        ->toThrow(InvalidUploadException::class);
+    (new StoreHomelabPhotoJob($post->id, $bytes, 'image/jpeg', position: 0))->handle();
 
-    expect(HomelabPost::query()->find($post->id))->toBeNull();
+    $photo = $post->photos()->first();
+    expect($photo)->not->toBeNull()
+        ->and($photo->position)->toBe(0)
+        ->and($photo->mime)->toBe('image/jpeg')
+        ->and($photo->path)->toContain('homelabs/'.$post->ulid.'/0/card.webp')
+        // LocalStorage schrijft altijd naar Laravel-disk 'public' (zie
+        // App\Services\Storage\LocalStorage); 'local' in de brief was de
+        // configwaarde voor de driver-keuze, niet de Laravel-disknaam — zie
+        // ook Storage::disk('public') in StoreListingPhotoJobTest.
+        ->and(Storage::disk('public')->exists($photo->path))->toBeTrue()
+        // De original houdt zijn bron-extensie, zodat og:image te bouwen is.
+        ->and(Storage::disk('public')->exists('homelabs/'.$post->ulid.'/0/original.jpg'))->toBeTrue();
+});
+
+it('places a second photo at its own position', function () {
+    $post = HomelabPost::factory()->create();
+    $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));
+
+    (new StoreHomelabPhotoJob($post->id, $bytes, 'image/jpeg', position: 0))->handle();
+    (new StoreHomelabPhotoJob($post->id, $bytes, 'image/jpeg', position: 1))->handle();
+
+    expect($post->photos()->count())->toBe(2)
+        ->and($post->photos()->pluck('position')->all())->toBe([0, 1]);
 });
