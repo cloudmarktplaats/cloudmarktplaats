@@ -8,27 +8,89 @@
     @error('upvote') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
 
     @auth
-        <form wire:submit="submit" class="mt-8 max-w-xl space-y-3 rounded-sm border border-cmp-border bg-cmp-surface p-5">
+        @php
+            $maxBytes = config('cloudmarktplaats.photos.max_bytes');
+            $maxCount = config('cloudmarktplaats.photos.homelab_max_count');
+            $maxMb = (int) ($maxBytes / 1024 / 1024);
+        @endphp
+        <form wire:submit="submit" class="space-y-3"
+              x-data="{
+                  bezig: false,
+                  voortgang: 0,
+                  probleem: '',
+                  maxPerFoto: {{ $maxBytes }},
+                  maxAantal: {{ $maxCount }},
+                  keuze($event) {
+                      this.probleem = '';
+                      const fotos = [...$event.target.files];
+                      const teGroot = fotos.filter(f => f.size > this.maxPerFoto);
+                      if (fotos.length > this.maxAantal) {
+                          this.probleem = @js(__('Je koos :n foto\'s. Er passen er maximaal :max in één homelab.', ['max' => $maxCount])).replace(':n', fotos.length);
+                      } else if (teGroot.length) {
+                          this.probleem = @js(__('Te groot: :namen. Maximaal :max MB per foto — verklein ze en probeer het opnieuw.', ['max' => $maxMb])).replace(':namen', teGroot.map(f => f.name).join(', '));
+                      }
+                  },
+              }"
+              x-on:livewire-upload-start="bezig = true; voortgang = 0"
+              x-on:livewire-upload-progress="voortgang = $event.detail.progress"
+              x-on:livewire-upload-finish="bezig = false; voortgang = 100"
+              x-on:livewire-upload-cancel="bezig = false"
+              x-on:livewire-upload-error="bezig = false; probleem = @js(__('Het uploaden is misgegaan. Vaak zijn de foto\'s samen te groot, of viel de verbinding weg. Probeer het opnieuw met minder of kleinere foto\'s.'))">
+
             @if (session('homelab-status'))
                 <p class="font-mono text-sm text-cmp-signal">{{ session('homelab-status') }}</p>
             @endif
 
-            <input type="file" wire:model="photo" accept=".jpg,.jpeg,.png,.webp"
-                   class="w-full text-sm file:mr-3 file:cmp-btn file:cmp-btn-secondary file:cursor-pointer">
-            @error('photo') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+            <label class="block text-sm">
+                <span class="mb-1 block font-medium">{{ __('Titel (optioneel)') }}</span>
+                <input type="text" wire:model="title" maxlength="120"
+                       class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
+            </label>
+            @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-            <textarea wire:model="body" rows="3" maxlength="500"
-                      placeholder="{{ __('Wat draait er, en waarom?') }}"
-                      class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal"></textarea>
+            <label class="block text-sm">
+                <span class="mb-1 block font-medium">{{ __('Vertel over je lab') }}</span>
+                <textarea wire:model="body" rows="4" maxlength="500"
+                          class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal"></textarea>
+            </label>
             @error('body') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-            <div class="flex items-center justify-between">
-                <span class="font-mono text-[11px] text-cmp-faint">{{ __('max 500 tekens · 1 post per dag · anoniem') }}</span>
-                <button class="cmp-btn cmp-btn-primary" wire:loading.attr="disabled">
-                    <span wire:loading.remove>{{ __('Post je lab') }}</span>
-                    <span wire:loading>{{ __('Uploaden…') }}</span>
-                </button>
+            <label class="block text-sm">
+                <span class="mb-1 block font-medium">{{ __('Waar wil je feedback op? (optioneel)') }}</span>
+                <input type="text" wire:model="feedbackPrompt" maxlength="280"
+                       placeholder="{{ __('Bijv. idle-verbruik, kabelwerk, of je backup-strategie') }}"
+                       class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
+            </label>
+            @error('feedbackPrompt') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+            <label class="block text-sm">
+                <span class="mb-1 block font-medium">{{ __('Foto\'s (1–:max, max :mb MB elk)', ['max' => $maxCount, 'mb' => $maxMb]) }}</span>
+                <input type="file" wire:model="photos" multiple accept="image/jpeg,image/png,image/webp"
+                       x-on:change="keuze($event)"
+                       class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
+            </label>
+
+            <div x-show="bezig" x-cloak class="space-y-1" role="status" aria-live="polite">
+                <div class="flex justify-between text-xs text-cmp-muted">
+                    <span>{{ __('Foto\'s uploaden…') }}</span>
+                    <span class="font-mono" x-text="voortgang + '%'"></span>
+                </div>
+                <div class="h-2 w-full overflow-hidden rounded-full bg-cmp-bg2">
+                    <div class="h-full rounded-full bg-cmp-signal transition-all" x-bind:style="'width: ' + Math.max(2, voortgang) + '%'"></div>
+                </div>
             </div>
+
+            <p x-show="probleem" x-cloak x-text="probleem" class="text-sm text-red-600" role="alert"></p>
+            @error('photos') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+            @error('photos.*') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+
+            <p class="text-xs text-cmp-muted">{{ __('EXIF (waaronder GPS) wordt automatisch verwijderd na uploaden.') }}</p>
+
+            <button x-bind:disabled="bezig"
+                    class="cmp-btn cmp-btn-primary disabled:cursor-not-allowed disabled:opacity-50">
+                <span x-show="! bezig">{{ __('Plaatsen') }}</span>
+                <span x-show="bezig" x-cloak>{{ __('Bezig met uploaden…') }}</span>
+            </button>
         </form>
     @else
         <div class="mt-8 max-w-xl rounded-sm border border-dashed border-cmp-border bg-cmp-surface p-5">
