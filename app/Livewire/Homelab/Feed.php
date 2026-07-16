@@ -97,6 +97,7 @@ class Feed extends Component
                     $post->id,
                     (string) file_get_contents((string) $photo->getRealPath()),
                     (string) $photo->getMimeType(),
+                    position: 0,
                 ))->handle();
 
                 return $post;
