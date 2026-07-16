@@ -41,7 +41,7 @@ it('throttles repeated failed upload attempts', function () {
         ->set('photos', [UploadedFile::fake()->createWithContent('tiny-6.png', $bytes)])
         ->set('body', 'te klein plaatje')
         ->call('submit')
-        ->assertHasErrors(['photo']);
+        ->assertHasErrors(['photos']);
 
     $test = Livewire::actingAs($user)
         ->test(Feed::class)
@@ -49,7 +49,7 @@ it('throttles repeated failed upload attempts', function () {
         ->set('body', 'te klein plaatje')
         ->call('submit');
 
-    expect($test->errors()->first('photo'))->toContain('Te veel uploadpogingen');
+    expect($test->errors()->first('photos'))->toContain('Te veel uploadpogingen');
     expect(HomelabPost::query()->count())->toBe(0);
 });
 

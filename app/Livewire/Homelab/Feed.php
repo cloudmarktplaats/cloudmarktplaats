@@ -80,7 +80,7 @@ class Feed extends Component
         // below, which only fires once a post is actually persisted.
         $attemptsKey = "homelab-post-attempts:user:{$userId}";
         if (RateLimiter::tooManyAttempts($attemptsKey, maxAttempts: 5)) {
-            $this->addError('photo', 'Te veel uploadpogingen. Probeer het over een uur opnieuw.');
+            $this->addError('photos', 'Te veel uploadpogingen. Probeer het over een uur opnieuw.');
 
             return;
         }
