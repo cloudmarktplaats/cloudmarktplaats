@@ -6,7 +6,7 @@ use App\Models\HomelabPost;
 use App\Models\User;
 
 it('shows the latest homelab posts on the homepage', function () {
-    HomelabPost::factory()->create(['body' => 'thuisserver hoekje']);
+    HomelabPost::factory()->withPhoto()->create(['body' => 'thuisserver hoekje']);
 
     $this->get('/')
         ->assertOk()
@@ -20,14 +20,14 @@ it('hides the section entirely when there are no posts', function () {
 
 it('hides the section when the flag is off', function () {
     config()->set('cloudmarktplaats.features.homelab_feed', false);
-    HomelabPost::factory()->create();
+    HomelabPost::factory()->withPhoto()->create();
 
     $this->get('/')->assertOk()->assertDontSee('Uit de homelabs');
 });
 
 it('does not leak identity on the homepage either', function () {
     $user = User::factory()->create(['username' => 'rackmaster9000']);
-    HomelabPost::factory()->for($user)->create();
+    HomelabPost::factory()->for($user)->withPhoto()->create();
 
     $this->get('/')->assertOk()->assertDontSee('rackmaster9000');
 });

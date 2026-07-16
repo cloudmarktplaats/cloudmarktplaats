@@ -15,7 +15,7 @@ beforeEach(function () {
 
 it('lists posts with the poster visible to admins', function () {
     $poster = User::factory()->create(['username' => 'rackmaster9000']);
-    HomelabPost::factory()->for($poster)->create();
+    HomelabPost::factory()->for($poster)->withPhoto()->create();
 
     Livewire::test(ListHomelabPosts::class)
         ->assertOk()
@@ -23,7 +23,7 @@ it('lists posts with the poster visible to admins', function () {
 });
 
 it('removes a post and writes an audit row', function () {
-    $post = HomelabPost::factory()->create();
+    $post = HomelabPost::factory()->withPhoto()->create();
 
     Livewire::test(ListHomelabPosts::class)
         ->callTableAction('remove', $post);
