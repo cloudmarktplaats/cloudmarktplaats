@@ -107,7 +107,7 @@
                 class="h-fit md:justify-self-end w-full md:w-[260px]"
                 :rows="array_filter([
                     __('Conditie')  => $listing->conditionLabel(),
-                    __('Regio')     => $listing->region_postcode ?: null,
+                    __('Postcode')  => $listing->region_postcode ?: null,
                     __('Geplaatst') => $listing->published_at?->format('Y-m-d') ?? $listing->created_at->format('Y-m-d'),
                     __('Ref')       => strtoupper(substr($listing->ulid, -8)),
                 ])"
