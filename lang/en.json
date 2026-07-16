@@ -501,6 +501,5 @@
     "Waar wil je feedback op? (optioneel)": "What would you like feedback on? (optional)",
     "Bijv. idle-verbruik, kabelwerk, of je backup-strategie": "E.g. idle power draw, cable management, or your backup strategy",
     "Je koos :n foto's. Er passen er maximaal :max in één homelab.": "You picked :n photos. A homelab holds :max at most.",
-    "Maximaal :max foto's per homelab.": "At most :max photos per homelab.",
-    "Plaatsen": "Post"
+    "Maximaal :max foto's per homelab.": "At most :max photos per homelab."
 }

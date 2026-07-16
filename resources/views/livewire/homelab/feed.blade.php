@@ -13,7 +13,7 @@
             $maxCount = config('cloudmarktplaats.photos.homelab_max_count');
             $maxMb = (int) ($maxBytes / 1024 / 1024);
         @endphp
-        <form wire:submit="submit" class="space-y-3"
+        <form wire:submit="submit" class="mt-8 max-w-xl space-y-3 rounded-sm border border-cmp-border bg-cmp-surface p-5"
               x-data="{
                   bezig: false,
                   voortgang: 0,
