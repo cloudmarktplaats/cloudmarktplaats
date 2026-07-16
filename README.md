@@ -119,7 +119,7 @@ Gegevensverzoeken (export / wissen) gaan via GitHub Issues; een geautomatiseerd 
 
 ## 7. Bijdragen
 
-Cloudmarktplaats wordt door de community gebouwd. We werken via [GitHub Issues](https://github.com/cloudmarktplaats/cloudmarktplaats/issues):
+Cloudmarktplaats wordt door de community gebouwd. Volledige wegwijzer: **[CONTRIBUTING.md](CONTRIBUTING.md)** (waarden, workflow, de drie kwaliteitspoorten, je eerste PR). Kort samengevat werken we via [GitHub Issues](https://github.com/cloudmarktplaats/cloudmarktplaats/issues):
 
 - **Bugs:** open een issue met reproductie-stappen.
 - **Features:** open een issue met de waarom-vraag; we discussiëren intentie voordat er code wordt gevormd. Specs leven in `docs/superpowers/specs/`.

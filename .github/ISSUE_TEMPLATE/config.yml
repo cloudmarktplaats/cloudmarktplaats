@@ -8,5 +8,8 @@ contact_links:
     url: https://cloudmarktplaats.nl/faq
     about: Hoe iets werkt, privacy, founding members — waarschijnlijk staat het in de FAQ.
   - name: Beveiligingsprobleem
-    url: https://cloudmarktplaats.nl/faq
-    about: Meld dit NIET als openbaar issue. Mail privacy@cloudmarktplaats.nl, dan lossen we het eerst op.
+    url: https://github.com/cloudmarktplaats/cloudmarktplaats/blob/main/SECURITY.md
+    about: Meld dit NIET als openbaar issue. Zie SECURITY.md — mail privacy@cloudmarktplaats.nl, dan lossen we het eerst op.
+  - name: Meehelpen bouwen
+    url: https://github.com/cloudmarktplaats/cloudmarktplaats/blob/main/CONTRIBUTING.md
+    about: Code, tests of meedenken? Zo werkt bijdragen — inclusief de eerste PR.
