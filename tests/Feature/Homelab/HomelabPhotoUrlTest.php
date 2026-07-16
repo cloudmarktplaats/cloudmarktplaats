@@ -2,56 +2,61 @@
 
 declare(strict_types=1);
 
+use App\Models\HomelabPhoto;
 use App\Models\HomelabPost;
 use Illuminate\Support\Facades\Storage;
 
 /**
- * photoUrl() may only hand out URLs it can actually build.
- *
- * The old version derived the extension from `photo_path` — but that column
- * always holds the *card* path (`…/card.webp`, see StoreHomelabPhotoJob), so
- * pathinfo() always returned "webp" and `photoUrl('original')` produced
- * `original.webp` for a file stored as `original.jpg`: a 404. Unlike
- * ListingPhoto, there is no `mime` column to recover the source extension
- * from, so an 'original' URL cannot be built at all — and pretending
- * otherwise is what made the identical ListingPhoto bug sit latent until
- * something finally used it.
- *
- * The original file stays on disk as an archive; it is simply not addressable.
+ * Foto-URLs voor homelabs lopen nu via HomelabPhoto, een spiegel van
+ * ListingPhoto. Met de mime-kolom is `original` wél bouwbaar — dat was de hele
+ * reden voor deze feature. Het oude contract (photoUrl('original') gooit) is
+ * daarmee vervallen; wat blijft is: card/thumb zijn webp, original volgt de
+ * bron-mime, en een verzonnen variant is onbouwbaar.
  */
 beforeEach(function () {
     Storage::fake('public');
 });
 
-it('builds webp urls for the addressable variants', function () {
-    $post = HomelabPost::factory()->create([
-        'photo_disk' => 'local',
-        'photo_path' => 'homelabs/01KWWEFB83KTBMRAHX24BNTVFE/card.webp',
+it('builds a webp url for card and thumb', function () {
+    $photo = HomelabPhoto::factory()->create([
+        'disk' => 'local',
+        'path' => 'homelabs/01KWWEFB83KTBMRAHX24BNTVFE/1/card.webp',
+        'mime' => 'image/jpeg',
     ]);
 
-    expect($post->photoUrl('card'))->toContain('homelabs/01KWWEFB83KTBMRAHX24BNTVFE/card.webp')
-        ->and($post->photoUrl())->toContain('card.webp');
+    expect($photo->urlFor('card'))->toContain('/1/card.webp')
+        ->and($photo->urlFor('thumb'))->toContain('/1/thumb.webp');
 });
 
-it('refuses to invent an original url it cannot build', function () {
-    $post = HomelabPost::factory()->create([
-        'photo_disk' => 'local',
-        'photo_path' => 'homelabs/01KWWEFB83KTBMRAHX24BNTVFE/card.webp',
+it('builds an original url from the stored source mime', function () {
+    $photo = HomelabPhoto::factory()->create([
+        'disk' => 'local',
+        'path' => 'homelabs/01KWWEFB83KTBMRAHX24BNTVFE/1/card.webp',
+        'mime' => 'image/jpeg',
     ]);
 
-    // The source mime is not stored, so the real extension (.jpg/.png/.webp)
-    // is unknowable. Returning ".../original.webp" would be a guess that 404s
-    // most of the time — fail loudly instead of silently pointing at nothing.
-    expect(fn () => $post->photoUrl('original'))
-        ->toThrow(InvalidArgumentException::class);
+    // De card is webp, maar de original houdt zijn eigen extensie — dat is
+    // precies waarvoor de mime-kolom bestaat.
+    expect($photo->urlFor('original'))->toContain('/1/original.jpg');
 });
 
-it('refuses an unknown variant rather than building a dead url', function () {
-    $post = HomelabPost::factory()->create([
-        'photo_disk' => 'local',
-        'photo_path' => 'homelabs/01KWWEFB83KTBMRAHX24BNTVFE/card.webp',
+it('post photoUrl delegates to the first photo', function () {
+    $post = HomelabPost::factory()->create();
+    HomelabPhoto::factory()->for($post, 'post')->create([
+        'path' => 'homelabs/'.$post->ulid.'/1/card.webp',
+        'position' => 0,
+        'mime' => 'image/png',
     ]);
 
-    expect(fn () => $post->photoUrl('verzonnen'))
-        ->toThrow(InvalidArgumentException::class);
+    expect($post->photoUrl('card'))->toContain('/1/card.webp')
+        ->and($post->photoUrl('original'))->toContain('/1/original.png');
+});
+
+it('post photoUrl throws when there is no photo', function () {
+    $post = HomelabPost::factory()->create();
+
+    // Kan niet via het formulier, wel via een half mislukte migratie. Een dode
+    // URL is erger dan een duidelijke fout.
+    expect(fn () => $post->photoUrl('card'))
+        ->toThrow(RuntimeException::class);
 });

@@ -18,7 +18,10 @@ class HomelabPostFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
+            'title' => fake()->optional()->sentence(4),
             'body' => fake()->sentences(2, true),
+            'feedback_prompt' => null,
+            'comments_open' => true,
             'photo_disk' => 'local',
             'photo_path' => 'homelabs/fake/card.webp',
             'status' => 'published',
