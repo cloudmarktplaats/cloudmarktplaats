@@ -25,15 +25,13 @@ it('hides removed posts', function () {
 });
 
 it('lets a logged-in user post a photo with body', function () {
-    test()->markTestSkipped('Herschreven in Taak 4: submit() schrijft dan homelab_photos-rijen; deze test gaat mee met de photo→photos-hernoeming.');
-
     $user = User::factory()->create();
     $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));
     $upload = UploadedFile::fake()->createWithContent('lab.jpg', $bytes);
 
     Livewire::actingAs($user)
         ->test(Feed::class)
-        ->set('photo', $upload)
+        ->set('photos', [$upload])
         ->set('body', 'R730 + Unifi-switch, alles op 10G')
         ->call('submit')
         ->assertHasNoErrors();
@@ -49,25 +47,23 @@ it('validates photo required and body length', function () {
         ->test(Feed::class)
         ->set('body', str_repeat('a', 501))
         ->call('submit')
-        ->assertHasErrors(['photo', 'body']);
+        ->assertHasErrors(['photos', 'body']);
 });
 
 it('rate limits to one post per 24h per account', function () {
-    test()->markTestSkipped('Herschreven in Taak 4: submit() schrijft dan homelab_photos-rijen; deze test gaat mee met de photo→photos-hernoeming.');
-
     $user = User::factory()->create();
     $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));
 
     Livewire::actingAs($user)
         ->test(Feed::class)
-        ->set('photo', UploadedFile::fake()->createWithContent('a.jpg', $bytes))
+        ->set('photos', [UploadedFile::fake()->createWithContent('a.jpg', $bytes)])
         ->set('body', 'eerste post')
         ->call('submit')
         ->assertHasNoErrors();
 
     Livewire::actingAs($user)
         ->test(Feed::class)
-        ->set('photo', UploadedFile::fake()->createWithContent('b.jpg', $bytes))
+        ->set('photos', [UploadedFile::fake()->createWithContent('b.jpg', $bytes)])
         ->set('body', 'tweede post te snel')
         ->call('submit')
         ->assertHasErrors(['body']);
@@ -86,4 +82,57 @@ it('404s when the feature flag is off', function () {
     config()->set('cloudmarktplaats.features.homelab_feed', false);
 
     $this->get('/homelabs')->assertNotFound();
+});
+
+it('accepts a title, a feedback prompt and multiple photos', function () {
+    $user = User::factory()->create();
+    $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));
+    $a = UploadedFile::fake()->createWithContent('a.jpg', $bytes);
+    $b = UploadedFile::fake()->createWithContent('b.jpg', $bytes);
+
+    Livewire::actingAs($user)
+        ->test(Feed::class)
+        ->set('title', 'Proxmox-cluster op drie EliteDesks')
+        ->set('feedbackPrompt', 'Idle-verbruik is 38W. Kan dat lager?')
+        ->set('body', 'Drie nodes, Ceph, TrueNAS in een VM. Draait al maanden stabiel.')
+        ->set('photos', [$a, $b])
+        ->call('submit')
+        ->assertHasNoErrors();
+
+    $post = HomelabPost::query()->firstOrFail();
+    expect($post->title)->toBe('Proxmox-cluster op drie EliteDesks')
+        ->and($post->feedback_prompt)->toBe('Idle-verbruik is 38W. Kan dat lager?')
+        ->and($post->photos()->count())->toBe(2);
+});
+
+it('rejects more than the homelab photo maximum', function () {
+    $user = User::factory()->create();
+    $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));
+    $five = collect(range(1, 5))
+        ->map(fn (int $i) => UploadedFile::fake()->createWithContent("p{$i}.jpg", $bytes))
+        ->all();
+
+    Livewire::actingAs($user)
+        ->test(Feed::class)
+        ->set('body', 'Vijf foto’s, één te veel.')
+        ->set('photos', $five)
+        ->call('submit')
+        ->assertHasErrors(['photos']);
+
+    expect(HomelabPost::query()->count())->toBe(0);
+});
+
+it('still posts without a title', function () {
+    $user = User::factory()->create();
+    $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));
+    $photo = UploadedFile::fake()->createWithContent('lab.jpg', $bytes);
+
+    Livewire::actingAs($user)
+        ->test(Feed::class)
+        ->set('body', 'Geen titel, wel een rack.')
+        ->set('photos', [$photo])
+        ->call('submit')
+        ->assertHasNoErrors();
+
+    expect(HomelabPost::query()->firstOrFail()->title)->toBeNull();
 });

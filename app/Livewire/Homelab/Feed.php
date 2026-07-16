@@ -4,20 +4,19 @@ declare(strict_types=1);
 
 namespace App\Livewire\Homelab;
 
-use App\Exceptions\InvalidUploadException;
 use App\Exceptions\UpvoteException;
 use App\Jobs\Homelab\StoreHomelabPhotoJob;
 use App\Models\HomelabPost;
 use App\Models\HomelabPostUpvote;
 use App\Services\Gamification\UpvoteService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Attributes\Locked;
 use Livewire\Component;
-use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 use Livewire\WithFileUploads;
 
 /**
@@ -31,9 +30,14 @@ class Feed extends Component
 {
     use WithFileUploads;
 
-    public ?TemporaryUploadedFile $photo = null;
+    /** @var array<int, UploadedFile> */
+    public array $photos = [];
+
+    public ?string $title = null;
 
     public string $body = '';
+
+    public ?string $feedbackPrompt = null;
 
     #[Locked]
     public int $perPage = 12;
@@ -51,16 +55,22 @@ class Feed extends Component
         abort_unless((bool) config('cloudmarktplaats.features.homelab_feed'), 404);
         abort_unless(auth()->check(), 403);
 
-        $this->validate([
-            'photo' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:8192'],
-            'body' => ['required', 'string', 'max:500'],
-        ]);
+        $maxKb = (int) (config('cloudmarktplaats.photos.max_bytes') / 1024);
+        $maxCount = (int) config('cloudmarktplaats.photos.homelab_max_count');
 
-        // 'photo' => 'required' above guarantees a file at this point;
-        // narrow the type for PHPStan (public property stays nullable
-        // so the form starts empty and $this->reset() can clear it).
-        $photo = $this->photo;
-        abort_if($photo === null, 422);
+        $this->validate([
+            'photos' => ['required', 'array', 'max:'.$maxCount],
+            'photos.*' => ['file', 'mimes:jpg,jpeg,png,webp', 'max:'.$maxKb],
+            'title' => ['nullable', 'string', 'max:120'],
+            'body' => ['required', 'string', 'max:500'],
+            'feedbackPrompt' => ['nullable', 'string', 'max:280'],
+        ], [
+            'photos.required' => __('We hebben geen foto\'s ontvangen. Koos je ze wél? Dan is het uploaden misgegaan — probeer het opnieuw, eventueel met minder of kleinere foto\'s.'),
+            'photos.max' => __('Maximaal :max foto\'s per homelab.'),
+            'photos.*.uploaded' => __('Deze foto is niet aangekomen. Meestal is hij te groot: maximaal :max MB per foto.', ['max' => (int) (config('cloudmarktplaats.photos.max_bytes') / 1024 / 1024)]),
+            'photos.*.max' => __('Deze foto is te groot. Maximaal :max MB per foto.', ['max' => (int) (config('cloudmarktplaats.photos.max_bytes') / 1024 / 1024)]),
+            'photos.*.mimes' => __('Alleen JPG, PNG of WebP.'),
+        ]);
 
         $userId = (int) auth()->id();
 
@@ -84,33 +94,41 @@ class Feed extends Component
         }
 
         try {
-            $post = DB::transaction(function () use ($userId, $photo): HomelabPost {
+            $post = DB::transaction(function () use ($userId): HomelabPost {
                 $post = HomelabPost::query()->create([
                     'user_id' => $userId,
+                    'title' => $this->title,
                     'body' => $this->body,
+                    'feedback_prompt' => $this->feedbackPrompt,
+                    'comments_open' => true,
+                    'photo_disk' => (string) config('cloudmarktplaats.storage.driver', 'local'),
                     'photo_path' => 'pending',
                 ]);
 
-                // Synchroon binnen de transactie: de rij wordt pas zichtbaar
-                // (published mét echt foto-pad) zodra de pipeline slaagde.
-                (new StoreHomelabPhotoJob(
-                    $post->id,
-                    (string) file_get_contents((string) $photo->getRealPath()),
-                    (string) $photo->getMimeType(),
-                    position: 0,
-                ))->handle();
+                // Synchroon binnen de transactie: de post wordt pas zichtbaar als
+                // álle foto's geslaagd zijn. Faalt er één, dan rolt de hele
+                // transactie terug — geen homelab met een gat in de galerij.
+                foreach (array_values($this->photos) as $position => $photo) {
+                    (new StoreHomelabPhotoJob(
+                        $post->id,
+                        (string) file_get_contents((string) $photo->getRealPath()),
+                        (string) $photo->getMimeType(),
+                        $position,
+                    ))->handle();
+                }
 
                 return $post;
             });
-        } catch (InvalidUploadException) {
-            $this->addError('photo', 'Foto kon niet verwerkt worden: geen geldig beeldbestand of afmetingen buiten bereik.');
+        } catch (\Throwable $e) {
+            report($e);
+            $this->addError('photos', __('Het uploaden is misgegaan. Vaak zijn de foto\'s samen te groot, of viel de verbinding weg. Probeer het opnieuw met minder of kleinere foto\'s.'));
 
             return;
         }
 
         RateLimiter::hit($key, decaySeconds: 86400);
 
-        $this->reset('photo', 'body');
+        $this->reset('photos', 'title', 'body', 'feedbackPrompt');
         session()->flash('homelab-status', 'Je lab staat erop. Anoniem, zoals beloofd.');
     }
 
