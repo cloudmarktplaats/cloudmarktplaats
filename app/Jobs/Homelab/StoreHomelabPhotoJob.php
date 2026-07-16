@@ -68,6 +68,10 @@ class StoreHomelabPhotoJob implements ShouldQueue
                 );
             }
 
+            // Goedkope header-only afmetingscheck vóór de dure Image::read():
+            // een vijandige upload die de MIME-sniff passeert maar een
+            // decompression-bomb is (bijv. een piepkleine PNG die naar
+            // gigapixels expandeert) mag de decoder nooit bereiken.
             $info = getimagesizefromstring($this->bytes);
             if ($info === false) {
                 throw new InvalidUploadException('Not a readable image');
@@ -78,6 +82,9 @@ class StoreHomelabPhotoJob implements ShouldQueue
             }
 
             $image = Image::read($this->bytes);
+
+            // Privacy: EXIF/IPTC/XMP weg vóór her-encoderen — GPS-tags horen niet
+            // in een publiek getoonde foto.
             $stripped = clone $image;
 
             // De positie in het pad houdt de foto's van één post uit elkaar.
