@@ -1,5 +1,9 @@
 <div class="mx-auto max-w-md rounded-sm border border-cmp-border bg-cmp-surface p-6">
     <h1 class="mb-4 text-xl font-bold">{{ __('Inloggen') }}</h1>
+    {{-- Een mislukte OAuth-poging redirect hierheen met een oauth-fout in de
+         sessie-bag; zonder dit blok zou die melding onzichtbaar zijn en zou de
+         gebruiker opnieuw voor een raadsel staan. --}}
+    @error('oauth') <p class="mb-3 rounded-sm bg-red-50 p-3 text-sm text-red-700">{{ $message }}</p> @enderror
     <form wire:submit="submit" class="space-y-3">
         <input type="email" wire:model="email" placeholder="{{ __('email') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         <input type="password" wire:model="password" placeholder="{{ __('wachtwoord') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>

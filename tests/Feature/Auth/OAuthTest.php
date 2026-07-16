@@ -5,6 +5,10 @@ declare(strict_types=1);
 use App\Models\LegalDocument;
 use App\Models\User;
 use App\Models\UserIdentity;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Psr7\Request;
+use GuzzleHttp\Psr7\Response;
+use Laravel\Socialite\Two\InvalidStateException;
 
 beforeEach(function (): void {
     // Anonymous requests default to Dutch via SetLocale (no session cookie
@@ -118,4 +122,43 @@ it('lets a verified oauth user reach the listing wizard', function (): void {
     $user = User::where('email', 'wizard@example.nl')->firstOrFail();
 
     $this->actingAs($user)->get('/listings/new')->assertOk();
+});
+
+/*
+ * A GitHub sign-in that fails at the provider handoff must not 500.
+ *
+ * Socialite::driver()->user() is an external call: it throws
+ * InvalidStateException when the session cookie doesn't survive the round-trip
+ * (privacy browsers on mobile), and a Guzzle ClientException when GitHub
+ * rejects the token (a reused authorization code from a double-fired callback).
+ * Both are transient — a retry works — but the callback let them bubble to a
+ * bare 500. rkoster hit exactly this on iOS Brave (issue #5). Login must fail
+ * softly, back to /login with a message, so the retry is one tap away.
+ */
+it('redirects to login instead of 500 when the oauth state is invalid', function (): void {
+    $driver = Mockery::mock();
+    $driver->shouldReceive('user')->andThrow(new InvalidStateException);
+    Socialite::shouldReceive('driver')->with('github')->andReturn($driver);
+
+    $this->get('/oauth/github/callback?code=fake')
+        ->assertRedirect('/login')
+        ->assertSessionHasErrors('oauth');
+
+    expect(auth()->check())->toBeFalse();
+});
+
+it('redirects to login instead of 500 when github rejects the token', function (): void {
+    $driver = Mockery::mock();
+    $driver->shouldReceive('user')->andThrow(new ClientException(
+        '401 Unauthorized',
+        new Request('GET', 'https://api.github.com/user'),
+        new Response(401),
+    ));
+    Socialite::shouldReceive('driver')->with('github')->andReturn($driver);
+
+    $this->get('/oauth/github/callback?code=fake')
+        ->assertRedirect('/login')
+        ->assertSessionHasErrors('oauth');
+
+    expect(auth()->check())->toBeFalse();
 });

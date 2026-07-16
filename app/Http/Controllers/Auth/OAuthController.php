@@ -19,6 +19,7 @@ use Illuminate\Validation\ValidationException;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
+use Throwable;
 
 /**
  * Provider-agnostic OAuth controller.
@@ -51,8 +52,24 @@ class OAuthController extends Controller
     {
         abort_unless(OAuthProviderRegistry::isAllowed($provider), 404);
 
-        /** @var SocialiteUser $oauthUser */
-        $oauthUser = Socialite::driver($provider)->user();
+        // The handoff back from the provider is an external, flaky call. It
+        // throws InvalidStateException when the session cookie doesn't survive
+        // the round-trip (privacy browsers on mobile drop it), and a Guzzle
+        // ClientException when the provider rejects the token exchange (a
+        // reused authorization code from a double-fired callback — common on
+        // mobile). Both are transient: a fresh attempt works. Letting them
+        // bubble gave the user a bare 500 with no way forward (issue #5).
+        try {
+            /** @var SocialiteUser $oauthUser */
+            $oauthUser = Socialite::driver($provider)->user();
+        } catch (Throwable $e) {
+            report($e);
+
+            return redirect('/login')->withErrors([
+                'oauth' => "Inloggen met {$provider} lukte niet — probeer het opnieuw. Blijft het misgaan, dan kun je ook met e-mail en wachtwoord inloggen.",
+            ]);
+        }
+
         $providerKey = OAuthProviderRegistry::identityProvider($provider);
         $uid = (string) $oauthUser->getId();
 
