@@ -496,5 +496,14 @@
     "Het uploaden is misgegaan. Vaak zijn de foto's samen te groot, of viel de verbinding weg. Probeer het opnieuw met minder of kleinere foto's.": "The upload failed. Usually the photos are too large together, or the connection dropped. Try again with fewer or smaller photos.",
     "Geen aandeelhouders, geen exit, geen overname. De code is AGPL: je kunt hem forken en zonder ons verder. Keuzes leggen we openbaar voor en we vertellen wat we ermee deden — maar we stemmen er niet over. Eigenaarschap is hier het recht om weg te lopen met alles, niet het recht om ons te overstemmen.": "No shareholders, no exit, no acquisition. The code is AGPL: you can fork it and carry on without us. We put choices out in the open and tell you what we did with your input — but we don't put them to a vote. Ownership here is the right to walk away with everything, not the right to outvote us.",
     "→ Hoe we beslissen": "→ How we decide",
-    "Postcode": "Postcode"
+    "Postcode": "Postcode",
+    "Titel (optioneel)": "Title (optional)",
+    "Vertel over je lab": "Tell us about your lab",
+    "Waar wil je feedback op? (optioneel)": "What would you like feedback on? (optional)",
+    "Bijv. idle-verbruik, kabelwerk, of je backup-strategie": "E.g. idle power draw, cable management, or your backup strategy",
+    "Je koos :n foto's. Er passen er maximaal :max in één homelab.": "You picked :n photos. A homelab holds :max at most.",
+    "Maximaal :max foto's per homelab.": "At most :max photos per homelab.",
+    "De bouwer vraagt feedback op": "The builder wants feedback on",
+    "waarderingen": "appreciations",
+    "Melden": "Report"
 }

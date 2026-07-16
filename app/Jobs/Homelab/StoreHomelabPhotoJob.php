@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Jobs\Homelab;
 
 use App\Exceptions\InvalidUploadException;
+use App\Models\HomelabPhoto;
 use App\Models\HomelabPost;
 use App\Services\Storage\StorageInterface;
 use App\Services\Storage\StorageManager;
@@ -19,11 +20,15 @@ use Intervention\Image\Laravel\Facades\Image;
 use Throwable;
 
 /**
- * Foto-ingest voor homelab-posts. Kloon van StoreListingPhotoJob,
- * versimpeld tot één foto met twee varianten:
+ * Foto-ingest voor homelab-posts. Kloon van StoreListingPhotoJob, draait per
+ * foto (één job per position) en schrijft drie varianten:
  *   - original: max 2000px lange zijde, bron-mime, EXIF gestript
  *   - card:     cover 600x600 webp (feed-grid)
- * Pad: homelabs/{post_ulid}/{variant}.{ext}. De DB-rij wijst naar card.
+ *   - thumb:    cover 300x300 webp
+ * Pad: homelabs/{post_ulid}/{position}/{variant}.{ext}. De homelab_photos-rij
+ * wijst naar card en bewaart de position; de post zelf wordt niet bijgewerkt
+ * en bij een fout wordt alleen déze foto opgeruimd — de aanroeper beheert de
+ * transactie over alle foto's van de post samen.
  */
 class StoreHomelabPhotoJob implements ShouldQueue
 {
@@ -42,14 +47,15 @@ class StoreHomelabPhotoJob implements ShouldQueue
         public int $postId,
         public string $bytes,
         public string $declaredMime,
+        public int $position,
     ) {}
 
     public function handle(): void
     {
         $post = HomelabPost::query()->findOrFail($this->postId);
 
-        $post->photo_disk = (string) config('cloudmarktplaats.storage.driver', 'local');
-        $storage = app(StorageManager::class)->driver($post->photo_disk);
+        $disk = (string) config('cloudmarktplaats.storage.driver', 'local');
+        $storage = app(StorageManager::class)->driver($disk);
 
         $written = [];
         try {
@@ -62,10 +68,10 @@ class StoreHomelabPhotoJob implements ShouldQueue
                 );
             }
 
-            // Cheap header-only dimension check before the expensive decode:
-            // a hostile upload that passes MIME sniffing but is a decompression
-            // bomb (e.g. a tiny PNG that expands to gigapixels) should never
-            // reach Image::read().
+            // Goedkope header-only afmetingscheck vóór de dure Image::read():
+            // een vijandige upload die de MIME-sniff passeert maar een
+            // decompression-bomb is (bijv. een piepkleine PNG die naar
+            // gigapixels expandeert) mag de decoder nooit bereiken.
             $info = getimagesizefromstring($this->bytes);
             if ($info === false) {
                 throw new InvalidUploadException('Not a readable image');
@@ -77,26 +83,38 @@ class StoreHomelabPhotoJob implements ShouldQueue
 
             $image = Image::read($this->bytes);
 
-            // Privacy: EXIF/IPTC/XMP weg vóór her-encoderen.
+            // Privacy: EXIF/IPTC/XMP weg vóór her-encoderen — GPS-tags horen niet
+            // in een publiek getoonde foto.
             $stripped = clone $image;
 
-            $baseDir = 'homelabs/'.$post->ulid;
+            // De positie in het pad houdt de foto's van één post uit elkaar.
+            $baseDir = 'homelabs/'.$post->ulid.'/'.$this->position;
             $originalPath = $baseDir.'/original.'.$this->extFor($actual);
             $cardPath = $baseDir.'/card.webp';
+            $thumbPath = $baseDir.'/thumb.webp';
 
             $written[] = $this->writeOriginal($storage, $stripped, $originalPath, $actual);
             $written[] = $this->writeCard($storage, $stripped, $cardPath);
+            $written[] = $this->writeThumb($storage, $stripped, $thumbPath);
 
-            $post->forceFill(['photo_path' => $cardPath])->save();
+            HomelabPhoto::query()->create([
+                'homelab_post_id' => $post->id,
+                'disk' => $disk,
+                'path' => $cardPath,
+                'width' => $w,
+                'height' => $h,
+                'mime' => $actual,
+                'byte_size' => strlen($this->bytes),
+                'position' => $this->position,
+            ]);
         } catch (Throwable $e) {
             foreach ($written as $path) {
                 try {
                     $storage->delete($path);
                 } catch (Throwable) {
-                    // Best-effort cleanup.
+                    // Best-effort opruimen.
                 }
             }
-            $post->delete();
             throw $e;
         }
     }
@@ -123,6 +141,16 @@ class StoreHomelabPhotoJob implements ShouldQueue
         $copy = clone $image;
         $copy->cover(600, 600);
         $storage->put($path, (string) $copy->toWebp(quality: 82));
+
+        return $path;
+    }
+
+    private function writeThumb(StorageInterface $storage, object $image, string $path): string
+    {
+        /** @var ImageInterface $image */
+        $copy = clone $image;
+        $copy->cover(300, 300);
+        $storage->put($path, (string) $copy->toWebp(quality: 78));
 
         return $path;
     }

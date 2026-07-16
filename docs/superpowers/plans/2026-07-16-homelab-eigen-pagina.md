@@ -933,7 +933,7 @@ Let op: `photo_path => 'pending'` op de post blijft staan — die kolom is dood 
 - [ ] **Step 4: Draai de homelab-suite**
 
 Run: `docker compose exec -T php-fpm ./vendor/bin/pest tests/Feature/Homelab`
-Expected: groen, inclusief de drie nieuwe. Een bestaande test die `->set('photo', ...)` gebruikt faalt nu (de prop heet `photos` en is een array) — pas die aan naar `->set('photos', [$upload])`; dat is geen stille reparatie maar het volgen van de hernoemde interface. Meld welke tests je zo aanpaste.
+Expected: groen, inclusief de drie nieuwe. Twee bestaande tests in `HomelabFeedTest` zijn in Taak 2 tijdelijk geskipt ("lets a logged-in user post a photo with body" en "rate limits to one post per 24h per account") met een `markTestSkipped`/`->skip(...)` die naar Taak 4 verwijst — **verwijder die skip nu en herschrijf ze** naar de nieuwe interface: de prop heet `photos` en is een array, dus `->set('photo', $upload)` wordt `->set('photos', [$upload])`. Sinds submit() nu een `homelab_photos`-rij schrijft, renderen ze weer. Dat is geen stille reparatie maar het aanzetten van bewust geparkeerde tests; meld welke je aanzette en hoe je ze herschreef.
 
 - [ ] **Step 5: Commit**
 

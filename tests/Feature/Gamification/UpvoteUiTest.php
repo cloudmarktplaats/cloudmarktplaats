@@ -13,7 +13,7 @@ use Livewire\Livewire;
 it('lets a logged-in user upvote a post from the feed', function () {
     $owner = User::factory()->create();
     $voter = User::factory()->create();
-    $post = HomelabPost::factory()->for($owner)->create();
+    $post = HomelabPost::factory()->for($owner)->withPhoto()->create();
 
     Livewire::actingAs($voter)
         ->test(Feed::class)
@@ -24,7 +24,7 @@ it('lets a logged-in user upvote a post from the feed', function () {
 });
 
 it('forbids a guest from upvoting', function () {
-    $post = HomelabPost::factory()->create();
+    $post = HomelabPost::factory()->withPhoto()->create();
 
     Livewire::test(Feed::class)
         ->call('upvote', $post->ulid)
@@ -51,8 +51,8 @@ it('404s upvote on a removed post and leaves the owner karma untouched', functio
 });
 
 it('shows the upvote count on the feed', function () {
-    $post = HomelabPost::factory()->create(['body' => 'stealth lab']);
-    HomelabPost::factory()->create(); // noise
+    $post = HomelabPost::factory()->withPhoto()->create(['body' => 'stealth lab']);
+    HomelabPost::factory()->withPhoto()->create(); // noise
     app(UpvoteService::class); // ensure container ok
     HomelabPostUpvote::factory()->count(3)->create(['homelab_post_id' => $post->id]);
 

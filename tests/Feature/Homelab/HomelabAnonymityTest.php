@@ -12,7 +12,7 @@ it('never leaks the poster identity in the feed HTML', function () {
         'username' => 'rackmaster9000',
         'display_name' => 'Rack Master',
     ]);
-    HomelabPost::factory()->for($user)->create(['body' => 'stealth lab']);
+    HomelabPost::factory()->for($user)->withPhoto()->create(['body' => 'stealth lab']);
 
     $this->get('/homelabs')
         ->assertOk()
@@ -23,7 +23,7 @@ it('never leaks the poster identity in the feed HTML', function () {
 
 it('lets the owner remove their own post', function () {
     $user = User::factory()->create();
-    $post = HomelabPost::factory()->for($user)->create();
+    $post = HomelabPost::factory()->for($user)->withPhoto()->create();
 
     Livewire::actingAs($user)
         ->test(Feed::class)
@@ -33,7 +33,7 @@ it('lets the owner remove their own post', function () {
 });
 
 it('forbids removing someone elses post', function () {
-    $post = HomelabPost::factory()->create();
+    $post = HomelabPost::factory()->withPhoto()->create();
     $other = User::factory()->create();
 
     Livewire::actingAs($other)
