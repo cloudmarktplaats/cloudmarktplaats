@@ -1,7 +1,32 @@
+@php
+    $jsonLd = json_encode([
+        '@context' => 'https://schema.org',
+        '@graph' => [
+            [
+                '@type' => 'Organization',
+                '@id' => url('/').'#organization',
+                'name' => 'Cloudmarktplaats',
+                'url' => url('/'),
+                'logo' => asset('icon-512.png'),
+                'sameAs' => [
+                    'https://github.com/cloudmarktplaats/cloudmarktplaats',
+                ],
+            ],
+            [
+                '@type' => 'WebSite',
+                '@id' => url('/').'#website',
+                'name' => 'Cloudmarktplaats',
+                'url' => url('/'),
+                'publisher' => ['@id' => url('/').'#organization'],
+            ],
+        ],
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+@endphp
 <x-layouts.marketing
     title="Cloudmarktplaats — geen Marktplaats, geen Tweakers V&A, wel kabels en RAM"
     description="Peer-to-peer marktplaats voor servers, netwerkspul, dev boards en alles ertussenin. Open source, privacy by design, geen cookiebanner-theater."
     :canonical="url('/')"
+    :jsonLd="$jsonLd"
 >
 
     {{-- ========== HERO ========== --}}
