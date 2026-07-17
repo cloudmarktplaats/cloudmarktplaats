@@ -6,6 +6,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\Listings\ReportController;
 use App\Http\Controllers\Listings\SearchController;
+use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\SetLocale;
 use App\Livewire\Auth\ForgotPassword;
 use App\Livewire\Auth\LegalAccept;
@@ -66,6 +67,8 @@ Route::get('/homelabs/{ulid}-{slug}', Detail::class)
     ->name('homelab.detail');
 
 Route::get('/healthz', HealthController::class);
+
+Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::get('/register', Register::class)->middleware('guest')->name('register');
 
