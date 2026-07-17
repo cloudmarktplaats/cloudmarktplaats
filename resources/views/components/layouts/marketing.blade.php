@@ -77,6 +77,9 @@
 
     {{-- Inline favicon (same circuit-cloud mark) so we don't ship a separate request. --}}
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 44 44%27><path d=%27M10 28C6.7 28 4 25.3 4 22C4 19.1 6 16.7 8.7 16.1C8.3 15.1 8 14 8 13C8 9.1 11.1 6 15 6C16.8 6 18.4 6.7 19.6 7.8C21 6.7 22.8 6 24.8 6C29.2 6 32.8 9.2 33.4 13.4C33.6 13.3 33.8 13.3 34 13.3C37.3 13.3 40 16 40 19.3C40 22.3 37.8 24.8 34.9 25.3L34.9 28Z%27 fill=%27%23FFFFFF%27 stroke=%27%2317191B%27 stroke-width=%271.5%27/><circle cx=%2714%27 cy=%2728%27 r=%272.5%27 fill=%27%2317191B%27/><circle cx=%2726%27 cy=%2718%27 r=%272%27 fill=%27%23D9480F%27/><circle cx=%2730%27 cy=%2728%27 r=%272.5%27 fill=%27%2317191B%27/></svg>">
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
+    <link rel="manifest" href="{{ asset('site.webmanifest') }}">
+    <meta name="theme-color" content="#F5F6F6">
 
     @if($jsonLd)
         <script type="application/ld+json">{!! $jsonLd !!}</script>
