@@ -64,6 +64,34 @@ it('writes original/card/thumb variants and strips EXIF from the original', func
         ->and($photo->position)->toBe(0);
 });
 
+it('auto-orients the original from the EXIF Orientation tag before stripping EXIF', function () {
+    $listing = Listing::factory()->create();
+    $bytes = file_get_contents(base_path('tests/Fixtures/photo-with-orientation.jpg'));
+
+    expect($bytes)->not->toBeFalse();
+
+    // Sanity check: the fixture is 300x200 with Orientation=6 (rotate 90° CW).
+    $sourceInfo = getimagesizefromstring($bytes);
+    expect($sourceInfo)->toMatchArray([0 => 300, 1 => 200]);
+    expect(strpos($bytes, 'Exif'))->not->toBeFalse();
+
+    (new StoreListingPhotoJob($listing->id, $bytes, 'image/jpeg', 0))->handle();
+
+    $photo = ListingPhoto::query()->where('listing_id', $listing->id)->firstOrFail();
+    $basePath = dirname($photo->path);
+    $disk = Storage::disk('public');
+
+    // Width/height are swapped versus the source: proof the pixels were
+    // rotated before the GD re-encode dropped the Orientation tag for good.
+    $original = Image::read((string) $disk->get($basePath.'/original.jpg'));
+    expect($original->width())->toBe(200)->and($original->height())->toBe(300);
+
+    // The Orientation tag itself is gone from the written bytes (same EXIF
+    // strip as the GPS case), it just no longer needs to be there.
+    $written = (string) $disk->get($basePath.'/original.jpg');
+    expect(strpos($written, 'Exif'))->toBeFalse();
+});
+
 it('processes a 12MP phone photo without exhausting the memory limit', function () {
     $listing = Listing::factory()->create();
 
