@@ -9,6 +9,7 @@ use App\Jobs\Listings\IncrementViewJob;
 use App\Livewire\ContactSeller;
 use App\Models\Listing;
 use App\Services\Gamification\DealService;
+use App\Support\ListingJsonLd;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
@@ -121,6 +122,7 @@ class Detail extends Component
                 'ulid' => $this->listing->ulid,
                 'slug' => $this->listing->slug,
             ]),
+            'jsonLd' => app(ListingJsonLd::class)->toJson($this->listing),
         ]);
     }
 

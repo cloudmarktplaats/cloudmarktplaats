@@ -64,14 +64,23 @@ it('uses the original photo for og:image when the source was a jpeg', function (
 it('falls back to the default og image when the original is webp', function () {
     $listing = Listing::factory()->create(['state' => 'published']);
     // The wizard accepts webp, and its original stays webp — LinkedIn's crawler
-    // is unreliable with it, so we must not hand it over as og:image.
+    // is unreliable with it, so we must not hand it over as og:image. The
+    // schema.org Product JSON-LD is a separate concern: it may still list the
+    // webp original in its `image` array — Google's structured-data parser
+    // handles webp fine — so we assert on the og:image tag specifically
+    // rather than the whole page.
     ListingPhoto::factory()->for($listing)->create([
         'mime' => 'image/webp',
         'path' => 'listings/test/1/card.webp',
     ]);
 
-    $this->get("/listings/{$listing->ulid}-{$listing->slug}")
+    $html = $this->get("/listings/{$listing->ulid}-{$listing->slug}")
         ->assertOk()
         ->assertSee('og-default.png', false)
-        ->assertDontSee('original.webp', false);
+        ->getContent();
+
+    preg_match('/<meta property="og:image" content="([^"]+)">/', (string) $html, $matches);
+
+    expect($matches[1] ?? null)->not->toBeNull()
+        ->and($matches[1])->not->toContain('original.webp');
 });
