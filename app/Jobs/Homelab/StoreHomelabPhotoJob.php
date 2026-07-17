@@ -43,6 +43,13 @@ class StoreHomelabPhotoJob implements ShouldQueue
 
     private const ORIGINAL_MAX_LONG_EDGE = 2000;
 
+    // GD houdt een afbeelding ongecomprimeerd in het geheugen (b*h*4 bytes) en
+    // elke `clone` is een volledige kopie daarvan. Een 12MP-telefoonfoto is
+    // 48MB, dus lezen + één keer clonen overschrijdt de standaard 128M al —
+    // precies wat op productie gebeurde: elke echte foto sneuvelde hier en
+    // alleen kleine screenshots overleefden. Zelfde fix als StoreListingPhotoJob.
+    private const DECODE_MEMORY_LIMIT = '512M';
+
     public function __construct(
         public int $postId,
         public string $bytes,
@@ -52,6 +59,8 @@ class StoreHomelabPhotoJob implements ShouldQueue
 
     public function handle(): void
     {
+        ini_set('memory_limit', self::DECODE_MEMORY_LIMIT);
+
         $post = HomelabPost::query()->findOrFail($this->postId);
 
         $disk = (string) config('cloudmarktplaats.storage.driver', 'local');
@@ -83,9 +92,16 @@ class StoreHomelabPhotoJob implements ShouldQueue
 
             $image = Image::read($this->bytes);
 
-            // Privacy: EXIF/IPTC/XMP weg vóór her-encoderen — GPS-tags horen niet
-            // in een publiek getoonde foto.
-            $stripped = clone $image;
+            // Shrink naar het grootste formaat dat we bewaren, VÓÓR we varianten
+            // afleiden. Anders cloont elke variant-writer de foto op ware grootte
+            // en tikken drie kopieën van een 48MB-decode tegen de geheugenlimiet.
+            // Niets gaat verloren: de original wordt sowieso op deze lange zijde
+            // gekapt, en card/thumb zijn cover-crops die een 2000px-bron
+            // identiek bedienen.
+            //
+            // Privacy: EXIF/IPTC/XMP (incl. GPS) verdwijnt door de GD-her-encode
+            // hieronder — GD kan EXIF niet eens schrijven. Niet door een clone.
+            $image->scaleDown(self::ORIGINAL_MAX_LONG_EDGE, self::ORIGINAL_MAX_LONG_EDGE);
 
             // De positie in het pad houdt de foto's van één post uit elkaar.
             $baseDir = 'homelabs/'.$post->ulid.'/'.$this->position;
@@ -93,9 +109,9 @@ class StoreHomelabPhotoJob implements ShouldQueue
             $cardPath = $baseDir.'/card.webp';
             $thumbPath = $baseDir.'/thumb.webp';
 
-            $written[] = $this->writeOriginal($storage, $stripped, $originalPath, $actual);
-            $written[] = $this->writeCard($storage, $stripped, $cardPath);
-            $written[] = $this->writeThumb($storage, $stripped, $thumbPath);
+            $written[] = $this->writeOriginal($storage, $image, $originalPath, $actual);
+            $written[] = $this->writeCard($storage, $image, $cardPath);
+            $written[] = $this->writeThumb($storage, $image, $thumbPath);
 
             HomelabPhoto::query()->create([
                 'homelab_post_id' => $post->id,
