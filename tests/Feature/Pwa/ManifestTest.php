@@ -28,3 +28,13 @@ it('links the manifest and apple-touch-icon from the marketing layout head', fun
         ->and($html)->toContain('apple-touch-icon.png')
         ->and($html)->toContain('name="theme-color"');
 });
+
+it('declares standalone-capable so the FAQ claim holds on iOS too', function () {
+    // Android leest display:standalone uit het manifest; iOS Safari heeft deze
+    // meta nodig, anders opent "toevoegen aan beginscherm" in Safari i.p.v. als
+    // app — en dan is de FAQ-claim "opent als een zelfstandige app" op iOS onwaar.
+    $html = (string) $this->get('/')->getContent();
+
+    expect($html)->toContain('name="apple-mobile-web-app-capable" content="yes"')
+        ->and($html)->toContain('name="mobile-web-app-capable" content="yes"');
+});

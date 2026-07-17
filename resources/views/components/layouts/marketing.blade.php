@@ -80,6 +80,12 @@
     <link rel="apple-touch-icon" sizes="180x180" href="{{ asset('apple-touch-icon.png') }}">
     <link rel="manifest" href="{{ asset('site.webmanifest') }}">
     <meta name="theme-color" content="#F5F6F6">
+    {{-- Standalone-opening op het beginscherm. Android leest display:standalone
+         uit het manifest; iOS Safari negeert dat en heeft deze meta nodig,
+         anders opent "toevoegen aan beginscherm" in Safari i.p.v. als app. --}}
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Cloudmarktplaats">
 
     @if($jsonLd)
         <script type="application/ld+json">{!! $jsonLd !!}</script>
