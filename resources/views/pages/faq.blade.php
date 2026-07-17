@@ -44,7 +44,7 @@
         ],
         [
             'q' => __('Waarom geen app?'),
-            'a' => __('<p>Cloudmarktplaats werkt als progressive web app: je kan hem aan je beginscherm vastpinnen en hij draait offline waar het kan. Geen native iOS- of Android-app om drie redenen: (1) we hebben er geen capaciteit voor; (2) we willen geen 15% omzet aan Apple of Google afdragen voor een app die niets bijzonders doet; (3) we willen niet dat Apple of Google bepaalt welke advertenties bij ons online mogen. Als de community een eigen app wil bouwen op onze open API: graag.</p>'),
+            'a' => __('<p>Cloudmarktplaats werkt als progressive web app: je kan hem aan je beginscherm vastpinnen; hij opent dan als een zelfstandige app. Geen native iOS- of Android-app om drie redenen: (1) we hebben er geen capaciteit voor; (2) we willen geen 15% omzet aan Apple of Google afdragen voor een app die niets bijzonders doet; (3) we willen niet dat Apple of Google bepaalt welke advertenties bij ons online mogen. Als de community een eigen app wil bouwen op onze open API: graag.</p>'),
         ],
         [
             'q' => __('Hoe kan ik de community steunen?'),
