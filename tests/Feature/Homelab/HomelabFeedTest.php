@@ -68,7 +68,10 @@ it('rate limits to one post per 24h per account', function () {
         ->set('photos', [UploadedFile::fake()->createWithContent('b.jpg', $bytes)])
         ->set('body', 'tweede post te snel')
         ->call('submit')
-        ->assertHasErrors(['body']);
+        ->assertHasErrors(['body'])
+        // Eerlijke melding: voortschrijdende 24 uur, geen misleidend "morgen".
+        ->assertSee('per 24 uur')
+        ->assertDontSee('morgen');
 
     expect(HomelabPost::query()->count())->toBe(1);
 
@@ -176,4 +179,28 @@ it('eager-loads photos so the feed is not N+1', function () {
 
     // Eén eager-load query voor alle drie, niet één per post.
     expect($photoQueries)->toBe(1);
+});
+
+it('hints on the feed card when a homelab has more than one photo', function () {
+    $user = User::factory()->create();
+    $multi = HomelabPost::factory()->for($user)->create(['body' => 'drie fotos']);
+    foreach (range(0, 2) as $p) {
+        HomelabPhoto::factory()->for($multi, 'post')->create([
+            'position' => $p,
+            'path' => 'homelabs/'.$multi->ulid.'/'.$p.'/card.webp',
+        ]);
+    }
+
+    Livewire::test(Feed::class)->assertSee('klik voor alle');
+});
+
+it('shows no photo-count hint for a single-photo homelab', function () {
+    $user = User::factory()->create();
+    $one = HomelabPost::factory()->for($user)->create(['body' => 'een foto']);
+    HomelabPhoto::factory()->for($one, 'post')->create([
+        'position' => 0,
+        'path' => 'homelabs/'.$one->ulid.'/0/card.webp',
+    ]);
+
+    Livewire::test(Feed::class)->assertDontSee('klik voor alle');
 });

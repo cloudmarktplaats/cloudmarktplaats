@@ -88,7 +88,10 @@ class Feed extends Component
 
         $key = "homelab-post:user:{$userId}";
         if (RateLimiter::tooManyAttempts($key, maxAttempts: 1)) {
-            $this->addError('body', 'Eén post per dag — probeer het morgen weer.');
+            // Het is een voortschrijdende 24 uur vanaf je laatste post, geen
+            // kalenderdag — dus geef het echte aantal uren, niet "morgen".
+            $hours = max(1, (int) ceil(RateLimiter::availableIn($key) / 3600));
+            $this->addError('body', __('Eén homelab per 24 uur. Je kunt over :hours uur weer plaatsen.', ['hours' => $hours]));
 
             return;
         }

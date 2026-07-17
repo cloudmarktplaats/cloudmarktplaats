@@ -111,9 +111,17 @@
                 <article wire:key="homelab-{{ $post->ulid }}"
                          class="flex flex-col overflow-hidden rounded-sm border border-cmp-border bg-cmp-surface">
                     <a href="{{ route('homelab.detail', ['ulid' => $post->ulid, 'slug' => $post->slug]) }}"
-                       wire:navigate class="block aspect-[4/3] overflow-hidden bg-cmp-bg2">
+                       wire:navigate class="relative block aspect-[4/3] overflow-hidden bg-cmp-bg2">
                         <img src="{{ $post->photoUrl('card') }}" alt="{{ __('Homelab-foto') }}" loading="lazy"
                              class="h-full w-full object-cover transition-transform duration-200 hover:scale-105">
+                        {{-- Hint dat er meer foto's zijn: de tegel toont er één, de eigen pagina alle. --}}
+                        @if ($post->photos->count() > 1)
+                            <span class="absolute right-2 top-2 inline-flex items-center gap-1 rounded-sm bg-cmp-ink/85 px-1.5 py-0.5 font-mono text-[10px] font-medium text-white"
+                                  title="{{ __(':count foto\'s — klik voor alle', ['count' => $post->photos->count()]) }}">
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M7 21h12a2 2 0 0 0 2-2V9"/></svg>
+                                {{ $post->photos->count() }}
+                            </span>
+                        @endif
                     </a>
                     <div class="flex flex-1 flex-col gap-2 p-4">
                         <p class="text-sm text-cmp-text">{{ $post->body }}</p>

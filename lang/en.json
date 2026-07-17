@@ -505,5 +505,7 @@
     "Maximaal :max foto's per homelab.": "At most :max photos per homelab.",
     "De bouwer vraagt feedback op": "The builder wants feedback on",
     "waarderingen": "appreciations",
-    "Melden": "Report"
+    "Melden": "Report",
+    "Eén homelab per 24 uur. Je kunt over :hours uur weer plaatsen.": "One homelab per 24 hours. You can post again in :hours h.",
+    ":count foto's — klik voor alle": ":count photos — click to see all"
 }
