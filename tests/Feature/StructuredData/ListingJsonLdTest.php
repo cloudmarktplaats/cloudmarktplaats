@@ -81,3 +81,17 @@ it('omits description when empty and includes it otherwise', function () {
     expect(listingJsonLd($without))->not->toHaveKey('description')
         ->and(listingJsonLd($with)['description'])->toBe('Compleet met rails.');
 });
+
+it('escapes angle brackets so a hostile title cannot break out of the script tag', function () {
+    $listing = Listing::factory()->published()->create([
+        'title' => 'Pwn</script><script>alert(1)</script>',
+    ]);
+
+    $json = app(ListingJsonLd::class)->toJson($listing);
+
+    // The raw closing tag must not appear literally; it must be hex-escaped
+    // (json_encode's JSON_HEX_TAG renders "<" as the literal 6-char sequence
+    // backslash-u-0-0-3-C in the JSON text).
+    expect($json)->not->toContain('</script>')
+        ->and($json)->toContain('\\u003C');
+});

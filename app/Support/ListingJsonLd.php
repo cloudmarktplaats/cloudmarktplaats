@@ -50,7 +50,7 @@ class ListingJsonLd
             $data['image'] = array_values($images);
         }
 
-        return (string) json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+        return (string) json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
     }
 
     /**
