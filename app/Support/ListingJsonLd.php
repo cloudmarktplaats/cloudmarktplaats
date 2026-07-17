@@ -47,7 +47,7 @@ class ListingJsonLd
             ->all();
 
         if ($images !== []) {
-            $data['image'] = array_values($images);
+            $data['image'] = $images;
         }
 
         return (string) json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);

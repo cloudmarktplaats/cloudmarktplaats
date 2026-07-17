@@ -20,7 +20,7 @@
                 'publisher' => ['@id' => url('/').'#organization'],
             ],
         ],
-    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
+    ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG);
 @endphp
 <x-layouts.marketing
     title="Cloudmarktplaats — geen Marktplaats, geen Tweakers V&A, wel kabels en RAM"
