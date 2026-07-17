@@ -16,7 +16,7 @@ Je krijgt binnen een paar dagen antwoord. We lossen het op, en pas als het gedic
 
 Handig om vooraf te weten, zodat je geen tijd verliest:
 
-- **De IBAN op de doneerpagina is openbaar met opzet.** Zo ontvangen we donaties via bankoverschrijving. Met alleen een IBAN kan niemand geld van een rekening halen — een IBAN dient om geld te *sturen*. Dit is geen kwetsbaarheid.
+- **De IBAN op de doneerpagina is openbaar met opzet.** Zo ontvangen we donaties via bankoverschrijving. Met alleen een IBAN kan niemand geld van een rekening *halen* — een IBAN dient om geld te *sturen*. Het enige theoretische misbruik is een ongeoorloofde SEPA-incasso, en die is (a) geblokkeerd via een incassoblokkade op de rekening en (b) sowieso omkeerbaar binnen de wettelijke terugboektermijn. Dit is geen kwetsbaarheid. Wie een primaire betaalroute zonder rekeningnummer wil: gebruik de "Doneer nu"-knop (gehoste checkout).
 - **Wél melden:** alles waarmee je toegang krijgt tot een account dat niet van jou is, gegevens van een ander kunt inzien of wijzigen, de anonimiteit van een homelab-plaatser kunt doorbreken, of code kunt draaien die er niet hoort.
 
 ## Wat we zelf al doen
