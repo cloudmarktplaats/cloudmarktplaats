@@ -61,13 +61,20 @@ it('is keyboard-reachable and announces the dialog for accessibility', function 
 
 it('shows the lightbox with original URLs and the title as alt on a listing detail page', function () {
     $listing = Listing::factory()->published()->create(['title' => 'Cisco 6509']);
-    ListingPhoto::factory()->for($listing)->create(['path' => 'listings/x/1/card.webp', 'mime' => 'image/jpeg', 'position' => 1]);
+    $photo = ListingPhoto::factory()->for($listing)->create(['path' => 'listings/x/1/card.webp', 'mime' => 'image/jpeg', 'position' => 1]);
 
     $html = (string) $this->get("/listings/{$listing->ulid}-{$listing->slug}")->assertOk()->getContent();
 
+    // De og:image meta tag bevat ook de original-URL, dus een kale
+    // toContain('/1/original.jpg') zou ook slagen zonder de lightbox-payload.
+    // Payload eruit halen (zelfde aanpak als de sibling-test hierboven) zodat
+    // de assertie alleen slaagt op basis van de Alpine-payload.
+    preg_match("/JSON\.parse\('(.*?)'\)/", $html, $matches);
+    $payload = json_decode(json_decode('"'.$matches[1].'"'), true);
+
     expect($html)->toContain('photoLightbox(')
-        ->and($html)->toContain('/1/original.jpg')       // original in de payload
-        ->and($html)->toContain('Cisco 6509');           // alt = titel
+        ->and($payload[0]['original'])->toBe($photo->urlFor('original'))
+        ->and($payload[0]['alt'])->toBe('Cisco 6509');
 });
 
 it('uses an anonymous alt for homelab photos — never anything identifying', function () {
