@@ -20,6 +20,7 @@ it('forbids regular users from accessing the admin panel', function () {
 
 it('allows moderators to access the admin panel', function () {
     $moderator = User::factory()->moderator()->create();
+    $moderator->forceFill(['two_factor_confirmed_at' => now()])->save();
 
     $this->actingAs($moderator)
         ->get('/admin')
@@ -28,6 +29,7 @@ it('allows moderators to access the admin panel', function () {
 
 it('allows admins to access the admin panel', function () {
     $admin = User::factory()->admin()->create();
+    $admin->forceFill(['two_factor_confirmed_at' => now()])->save();
 
     $this->actingAs($admin)
         ->get('/admin')
