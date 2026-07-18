@@ -32,7 +32,10 @@ use Throwable;
  *      not useful as a listing image; anything larger is almost
  *      certainly a malicious payload.
  *   3. EXIF strip — privacy default. We do NOT want phones to leak
- *      GPS coordinates of the seller's home in listing photos.
+ *      GPS coordinates of the seller's home in listing photos. Before
+ *      the strip, Intervention auto-orients the image from the EXIF
+ *      `Orientation` tag (requires ext-exif) so portrait phone photos
+ *      still come out right-side-up once the tag itself is gone.
  *   4. Three variants:
  *        - `original`: scaled to max 2000px long edge, source mime
  *        - `card`:     cover-cropped 600x600 webp (browse grid)
@@ -123,7 +126,10 @@ class StoreListingPhotoJob implements ShouldQueue
         //
         // Privacy note: EXIF/GPS is dropped by the GD re-encode below, not by
         // any copy — GD cannot write EXIF at all. (The `photo-with-gps.jpg`
-        // fixture test pins this.)
+        // fixture test pins this.) Orientation survives the strip because
+        // Image::read() above already auto-rotated the pixels from the EXIF
+        // `Orientation` tag (Intervention's default, needs ext-exif) — by
+        // the time we get here the tag is redundant, not yet-lost.
         $image->scaleDown(self::ORIGINAL_MAX_LONG_EDGE, self::ORIGINAL_MAX_LONG_EDGE);
 
         // Allocate the photo row first to mint an id we can use in the path.

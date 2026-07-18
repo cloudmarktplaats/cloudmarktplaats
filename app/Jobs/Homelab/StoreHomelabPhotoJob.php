@@ -22,7 +22,8 @@ use Throwable;
 /**
  * Foto-ingest voor homelab-posts. Kloon van StoreListingPhotoJob, draait per
  * foto (één job per position) en schrijft drie varianten:
- *   - original: max 2000px lange zijde, bron-mime, EXIF gestript
+ *   - original: max 2000px lange zijde, bron-mime, EXIF gestript (oriëntatie
+ *     wordt vóór het strippen al toegepast, zie `handle()`)
  *   - card:     cover 600x600 webp (feed-grid)
  *   - thumb:    cover 300x300 webp
  * Pad: homelabs/{post_ulid}/{position}/{variant}.{ext}. De homelab_photos-rij
@@ -101,6 +102,10 @@ class StoreHomelabPhotoJob implements ShouldQueue
             //
             // Privacy: EXIF/IPTC/XMP (incl. GPS) verdwijnt door de GD-her-encode
             // hieronder — GD kan EXIF niet eens schrijven. Niet door een clone.
+            // Oriëntatie blijft wel behouden: Image::read() hierboven heeft de
+            // pixels al gedraaid op basis van de EXIF `Orientation`-tag
+            // (Intervention's standaardgedrag, vereist ext-exif) — de tag zelf
+            // is op dit punt overbodig geworden, niet nog te verliezen.
             $image->scaleDown(self::ORIGINAL_MAX_LONG_EDGE, self::ORIGINAL_MAX_LONG_EDGE);
 
             // De positie in het pad houdt de foto's van één post uit elkaar.
