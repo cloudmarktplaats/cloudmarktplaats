@@ -6,14 +6,16 @@
             <span class="shrink-0 text-sm text-cmp-muted">{{ $post->created_at->diffForHumans() }}</span>
         </div>
 
-        @if ($post->photos->isNotEmpty())
-            <div class="mb-6 grid grid-cols-1 gap-1 bg-cmp-bg2 sm:grid-cols-2">
-                @foreach ($post->photos as $photo)
-                    <img src="{{ $photo->urlFor('card') }}" alt="{{ __('Homelab-foto') }}" loading="lazy"
-                         class="aspect-[4/3] w-full object-cover">
-                @endforeach
-            </div>
-        @endif
+        @php
+            $lightboxPhotos = $post->photos->map(fn ($photo) => [
+                'card' => $photo->urlFor('card'),
+                'original' => $photo->urlFor('original'),
+                'alt' => __('Homelab-foto'),
+            ])->all();
+        @endphp
+        <div class="mb-6">
+            <x-photo-lightbox :photos="$lightboxPhotos" :columns="2" />
+        </div>
 
         <div class="prose prose-sm max-w-none whitespace-pre-line text-cmp-text">{{ $post->body }}</div>
 
