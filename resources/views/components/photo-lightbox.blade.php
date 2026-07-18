@@ -41,6 +41,7 @@
             >
                 <div
                     x-ref="dialog"
+                    x-trap.noscroll="open"
                     tabindex="-1"
                     role="dialog"
                     aria-modal="true"
@@ -54,7 +55,7 @@
                     {{-- De foto: original, lui geladen (src pas gezet als open). --}}
                     <img
                         x-show="open"
-                        :src="open ? current?.original : ''"
+                        :src="open ? current?.original : null"
                         :alt="current?.alt"
                         @wheel.prevent="onWheel($event)"
                         @dblclick="toggleZoom()"

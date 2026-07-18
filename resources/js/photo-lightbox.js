@@ -22,13 +22,11 @@ document.addEventListener('alpine:init', () => {
             this.index = i;
             this.resetZoom();
             this.open = true;
-            document.body.style.overflow = 'hidden';
             this.$nextTick(() => this.$refs.dialog?.focus());
         },
 
         close() {
             this.open = false;
-            document.body.style.overflow = '';
             this.trigger?.focus();
         },
 
