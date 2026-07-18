@@ -5,9 +5,9 @@ declare(strict_types=1);
 use App\Models\User;
 use Filament\Facades\Filament;
 
-it('redirects anonymous visitors to the Filament login page', function () {
+it('redirects anonymous visitors to the app login', function () {
     $this->get('/admin')
-        ->assertRedirect('/admin/login');
+        ->assertRedirect(route('login'));
 });
 
 it('forbids regular users from accessing the admin panel', function () {
