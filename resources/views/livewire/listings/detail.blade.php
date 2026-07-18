@@ -45,18 +45,14 @@
     @endauth
 
     <article class="mt-6 overflow-hidden rounded-sm border border-cmp-border bg-cmp-surface">
-        @if ($listing->photos->isNotEmpty())
-            <div class="grid grid-cols-1 gap-1 bg-cmp-bg2 sm:grid-cols-3">
-                @foreach ($listing->photos as $photo)
-                    <img
-                        src="{{ $photo->urlFor('card') }}"
-                        alt="{{ $listing->title }}"
-                        loading="lazy"
-                        class="aspect-[4/3] w-full object-cover"
-                    >
-                @endforeach
-            </div>
-        @endif
+        @php
+            $lightboxPhotos = $listing->photos->map(fn ($photo) => [
+                'card' => $photo->urlFor('card'),
+                'original' => $photo->urlFor('original'),
+                'alt' => $listing->title,
+            ])->all();
+        @endphp
+        <x-photo-lightbox :photos="$lightboxPhotos" :columns="3" />
 
         <div class="grid grid-cols-1 gap-8 p-6 sm:p-8 md:grid-cols-[1fr,260px]">
             <div>
