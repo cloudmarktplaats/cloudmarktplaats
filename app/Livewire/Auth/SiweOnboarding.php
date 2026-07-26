@@ -98,10 +98,7 @@ class SiweOnboarding extends Component
         });
 
         auth()->login($user);
-        $user->forceFill([
-            'last_login_at' => now(),
-            'last_login_ip' => request()->ip(),
-        ])->save();
+        $user->recordLogin(request()->ip());
 
         $this->redirect('/');
     }
