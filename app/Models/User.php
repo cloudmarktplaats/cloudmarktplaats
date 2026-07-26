@@ -45,6 +45,16 @@ class User extends Authenticatable implements CanResetPassword, FilamentUser, Ha
         'banned_reason',
     ];
 
+    /**
+     * Mirror the DB default so a freshly built model reports 0 logins before
+     * it is reloaded from the database.
+     *
+     * @var array<string, mixed>
+     */
+    protected $attributes = [
+        'login_count' => 0,
+    ];
+
     /** @var list<string> */
     protected $hidden = [
         'password_hash',
@@ -90,7 +100,28 @@ class User extends Authenticatable implements CanResetPassword, FilamentUser, Ha
             'is_banned' => 'boolean',
             'is_founding_member' => 'boolean',
             'invite_credits' => 'integer',
+            'login_count' => 'integer',
         ];
+    }
+
+    /**
+     * Record a successful login: bump the counter and stamp the timestamp/IP.
+     *
+     * The five auth flows (password, 2FA challenge, OAuth, SIWE onboarding,
+     * Web3) all funnel through here so the increment lives in exactly one
+     * place. {@see increment()} issues a single atomic
+     * `UPDATE ... SET login_count = login_count + 1, ...`, so two concurrent
+     * logins each count rather than racing to the same value.
+     *
+     * `login_count` is deliberately absent from {@see $fillable}: it is only
+     * ever written here, never via mass assignment.
+     */
+    public function recordLogin(?string $ip): void
+    {
+        $this->increment('login_count', 1, [
+            'last_login_at' => now(),
+            'last_login_ip' => $ip,
+        ]);
     }
 
     public function getAuthPassword(): string

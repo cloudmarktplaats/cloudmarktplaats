@@ -61,10 +61,7 @@ class Login extends Component
         if (request()->hasSession()) {
             request()->session()->regenerate();
         }
-        $user->forceFill([
-            'last_login_at' => now(),
-            'last_login_ip' => request()->ip(),
-        ])->save();
+        $user->recordLogin(request()->ip());
 
         return redirect()->intended('/');
     }
