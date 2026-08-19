@@ -28,9 +28,9 @@ use Throwable;
  *   1. MIME validation (jpeg/png/webp only — the wizard never accepts
  *      anything else, but we re-check via finfo against the raw bytes
  *      so a forged Content-Type can't slip past).
- *   2. Dimension sanity (200x200 .. 8000x8000) — anything smaller is
- *      not useful as a listing image; anything larger is almost
- *      certainly a malicious payload.
+ *   2. Dimension sanity (minstens 200px per zijde, hoogstens 64 megapixel
+ *      in totaal) — kleiner is niet bruikbaar als advertentiefoto, groter
+ *      is vrijwel zeker een decompressiebom.
  *   3. EXIF strip — privacy default. We do NOT want phones to leak
  *      GPS coordinates of the seller's home in listing photos. Before
  *      the strip, Intervention auto-orients the image from the EXIF
@@ -55,12 +55,24 @@ class StoreListingPhotoJob implements ShouldQueue
 
     private const MIN_DIM = 200;
 
-    private const MAX_DIM = 8000;
+    /**
+     * Budget voor de decode, uitgedrukt in pixels — niet per zijde.
+     *
+     * Dit stond op 8000 per zijde, maar de kosten van een decode zijn w*h*4
+     * bytes: de vorm van de foto doet er niet toe, alleen het oppervlak. Die
+     * grens liet dus 8000x8000 (64MP) door en weigerde 8160x3768 (30,7MP),
+     * terwijl de tweede minder dan de helft van het geheugen van de eerste
+     * kost. Een panoramafoto van een rack is breed, niet zwaar.
+     *
+     * 64MP = precies het worstcase dat de oude grens toestond, dus de
+     * geheugenredenering bij DECODE_MEMORY_LIMIT blijft ongewijzigd gelden.
+     */
+    private const MAX_PIXELS = 64_000_000;
 
     private const ORIGINAL_MAX_LONG_EDGE = 2000;
 
     /**
-     * Ceiling for this job only. Must cover decoding a MAX_DIM image
+     * Ceiling for this job only. Must cover decoding a MAX_PIXELS image
      * (8000x8000 = 244MB in GD) plus the shrunk copy; measured peak 318MB.
      */
     private const DECODE_MEMORY_LIMIT = '512M';
@@ -85,7 +97,7 @@ class StoreListingPhotoJob implements ShouldQueue
         // = 2.5GB worst case, on a 4GB host):
         //   12MP (4000x3000, the common case) -> 106MB
         //   48MP (8000x6000, high-end phone)  -> 248MB
-        //   64MP (8000x8000, MAX_DIM ceiling) -> 318MB
+        //   64MP (8000x8000, MAX_PIXELS ceiling) -> 318MB
         ini_set('memory_limit', self::DECODE_MEMORY_LIMIT);
 
         $listing = Listing::query()->findOrFail($this->listingId);
@@ -108,8 +120,11 @@ class StoreListingPhotoJob implements ShouldQueue
             throw new InvalidUploadException('Not a readable image');
         }
         [$w, $h] = $info;
-        if ($w < self::MIN_DIM || $h < self::MIN_DIM || $w > self::MAX_DIM || $h > self::MAX_DIM) {
-            throw new InvalidUploadException("Image dimensions out of bounds ({$w}x{$h})");
+        if ($w < self::MIN_DIM || $h < self::MIN_DIM) {
+            throw new InvalidUploadException("Image too small ({$w}x{$h}, minimum ".self::MIN_DIM.'px per side)');
+        }
+        if ($w * $h > self::MAX_PIXELS) {
+            throw new InvalidUploadException("Image too large ({$w}x{$h} = ".round($w * $h / 1_000_000, 1).'MP, maximum '.(self::MAX_PIXELS / 1_000_000).'MP)');
         }
 
         $image = Image::read($this->bytes);

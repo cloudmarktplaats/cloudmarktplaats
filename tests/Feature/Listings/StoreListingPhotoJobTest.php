@@ -123,6 +123,54 @@ it('processes a 12MP phone photo without exhausting the memory limit', function 
     expect($photo->width)->toBe(4000)->and($photo->height)->toBe(3000);
 });
 
+/*
+ * Verkoper 296 uploadde op 16-08 zes keer een 8160x3768 panorama van zijn rack
+ * en kreeg zes keer een crash. De grens stond per zijde op 8000, terwijl de
+ * geheugenredenering erachter over totale pixels gaat: 8000x8000 (64MP) mocht
+ * wel, deze 30,7MP niet. Een panorama is breed, niet zwaar.
+ */
+it('accepts a wide panorama that fits the pixel budget but exceeds the old per-side limit', function () {
+    $listing = Listing::factory()->create();
+
+    $gd = imagecreatetruecolor(8160, 400);
+    ob_start();
+    imagejpeg($gd, null, 60);
+    $bytes = (string) ob_get_clean();
+    imagedestroy($gd);
+
+    (new StoreListingPhotoJob($listing->id, $bytes, 'image/jpeg', 0))->handle();
+
+    $photo = ListingPhoto::query()->where('listing_id', $listing->id)->firstOrFail();
+    expect($photo->width)->toBe(8160)->and($photo->height)->toBe(400);
+});
+
+it('still rejects an image over the pixel budget', function () {
+    $listing = Listing::factory()->create();
+
+    // 9000x9000 = 81MP, boven de 64MP die de geheugengrens van deze job dekt.
+    $gd = imagecreatetruecolor(9000, 9000);
+    ob_start();
+    imagejpeg($gd, null, 20);
+    $bytes = (string) ob_get_clean();
+    imagedestroy($gd);
+
+    expect(fn () => (new StoreListingPhotoJob($listing->id, $bytes, 'image/jpeg', 0))->handle())
+        ->toThrow(InvalidUploadException::class);
+});
+
+it('still rejects a thumbnail-sized image', function () {
+    $listing = Listing::factory()->create();
+
+    $gd = imagecreatetruecolor(100, 100);
+    ob_start();
+    imagejpeg($gd);
+    $bytes = (string) ob_get_clean();
+    imagedestroy($gd);
+
+    expect(fn () => (new StoreListingPhotoJob($listing->id, $bytes, 'image/jpeg', 0))->handle())
+        ->toThrow(InvalidUploadException::class);
+});
+
 it('deletes any partial blobs and the photo row if a variant write fails', function () {
     $listing = Listing::factory()->create();
     $bytes = (string) file_get_contents(base_path('tests/Fixtures/photo-with-gps.jpg'));

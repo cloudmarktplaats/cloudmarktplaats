@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Livewire\Listings;
 
+use App\Exceptions\InvalidUploadException;
 use App\Jobs\Listings\StoreListingPhotoJob;
 use App\Models\Category;
 use App\Models\Listing;
@@ -182,12 +183,23 @@ class Wizard extends Component
             // dispatchSync still goes through the queue serializer, which
             // refuses raw binary payloads (JSON requires UTF-8). The job
             // is idempotent so running it inline gives identical semantics.
-            (new StoreListingPhotoJob(
-                $listing->id,
-                (string) file_get_contents($upload->getRealPath()),
-                (string) $upload->getMimeType(),
-                $position,
-            ))->handle();
+            try {
+                (new StoreListingPhotoJob(
+                    $listing->id,
+                    (string) file_get_contents($upload->getRealPath()),
+                    (string) $upload->getMimeType(),
+                    $position,
+                ))->handle();
+            } catch (InvalidUploadException $e) {
+                // Ongevangen liep dit uit op een crashpagina: de verkoper zag
+                // niet wát er mis was en probeerde het opnieuw met dezelfde
+                // foto. De reden van de job is Engels en technisch, dus die
+                // gaat naar de log; de verkoper krijgt de begrijpelijke versie.
+                report($e);
+                $this->addError('photos', __('Deze foto konden we niet verwerken. Gebruik een JPG, PNG of WebP van minstens 200x200 pixels en hoogstens 64 megapixel — een schermafdruk van een screenshot gaat vaak mis.'));
+
+                return;
+            }
         }
 
         try {
