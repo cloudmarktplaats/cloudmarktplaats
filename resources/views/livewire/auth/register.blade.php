@@ -10,7 +10,7 @@
 
         <input wire:model="username" placeholder="{{ __('username') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('username') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-        <p class="text-xs text-cmp-faint -mt-1">{{ __('Dit is je naam op het platform. Je kunt later in je profiel een aparte weergavenaam kiezen.') }}</p>
+        <p class="text-xs text-cmp-faint -mt-1">{{ __('Dit is je naam op het platform — inloggen doe je straks met je e-mailadres. Je kunt later in je profiel een aparte weergavenaam kiezen.') }}</p>
 
         <input type="password" wire:model="password" placeholder="{{ __('wachtwoord') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
