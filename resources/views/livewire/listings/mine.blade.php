@@ -73,6 +73,17 @@
                         <a href="{{ route('listings.edit', $listing) }}" class="cmp-btn cmp-btn-secondary px-3 py-1.5 text-sm">
                             {{ __('Bewerken') }}
                         </a>
+                        {{-- "Markeer als verkocht" stond alleen op de publieke
+                             advertentiepagina. Een verkoper beheert hier, dus die
+                             moest zijn eigen advertentie opzoeken alsof hij bezoeker
+                             was om te melden dat hij hem verkocht had. Resultaat:
+                             14 contactverzoeken over 10 advertenties, 0 bevestigde
+                             deals. De knop hoort waar de verkoper staat. --}}
+                        @if ($listing->state === 'published' && config('cloudmarktplaats.features.deals'))
+                            <a href="/listings/{{ $listing->ulid }}-{{ $listing->slug }}#deal-panel" class="cmp-btn cmp-btn-primary px-3 py-1.5 text-sm">
+                                {{ __('Verkocht melden') }}
+                            </a>
+                        @endif
                     </div>
                 </li>
             @endforeach
