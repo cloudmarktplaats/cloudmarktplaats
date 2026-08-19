@@ -29,7 +29,10 @@ it('schedules a weekly truncate of the nginx access log', function () {
     // ("0 4 * * 0  php artisan traffic:truncate-log ..."), and the first
     // expectation consumes that line, starving the second.
     Artisan::call('schedule:list');
-    $output = Artisan::output();
+    // schedule:list lijnt de cron-kolom uit op de breedste regel, dus de
+    // spatiëring verschuift zodra er een taak bij komt. Normaliseer whitespace:
+    // deze test gaat over het moment, niet over de opmaak van de tabel.
+    $output = (string) preg_replace('/\s+/', ' ', Artisan::output());
 
     expect($output)
         ->toContain('traffic:truncate-log')
