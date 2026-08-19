@@ -589,5 +589,9 @@
     "Wij vragen je nooit uit onszelf om een overboeking — niet per e-mail, niet via een bericht op het platform. Krijg je zoiets namens Cloudmarktplaats, dan is het niet van ons.": "We will never ask you out of the blue to transfer money — not by email, not through a message on the platform. If you get one in Cloudmarktplaats' name, it isn't from us.",
     "Dit is je naam op het platform — inloggen doe je straks met je e-mailadres. Je kunt later in je profiel een aparte weergavenaam kiezen.": "This is your name on the platform — you will sign in with your email address. You can choose a separate display name later in your profile.",
     "Deze foto konden we niet verwerken. Gebruik een JPG, PNG of WebP van minstens 200x200 pixels en hoogstens 64 megapixel — een schermafdruk van een screenshot gaat vaak mis.": "We couldn't process this photo. Use a JPG, PNG or WebP of at least 200x200 pixels and no more than 64 megapixels — a screenshot of a screenshot often fails.",
-    "Verkocht melden": "Mark as sold"
+    "Verkocht melden": "Mark as sold",
+    "Aantal": "Quantity",
+    "Heb je er meer dan één van precies hetzelfde? Zet het aantal hier, dan hoef je niet dezelfde advertentie meerdere keren te maken. Verschillen ze onderling in specs of staat, maak er dan aparte advertenties van.": "Got more than one of exactly the same thing? Put the number here instead of creating the same listing several times. If they differ in specs or condition, list them separately.",
+    ":count stuk|:count stuks": ":count unit|:count units",
+    ":count stuk beschikbaar|:count stuks beschikbaar": ":count unit available|:count units available"
 }

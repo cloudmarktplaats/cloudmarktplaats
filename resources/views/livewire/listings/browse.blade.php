@@ -94,6 +94,9 @@
                             <span class="shrink-0 font-mono text-sm font-medium text-cmp-text">
                                 € {{ number_format($listing->price_cents / 100, 2, ',', '.') }}
                             </span>
+                            @if ($listing->quantity > 1)
+                                <span class="font-mono text-[11px] text-cmp-signal">{{ trans_choice(':count stuk|:count stuks', $listing->quantity) }}</span>
+                            @endif
                         </div>
 
                         <div class="mt-auto flex items-center justify-between pt-1">

@@ -61,6 +61,9 @@ class Wizard extends Component
 
     public int $price_cents = 0;
 
+    /** Aantal identieke exemplaren achter deze advertentie. */
+    public int $quantity = 1;
+
     public bool $is_trade_allowed = false;
 
     // Step 2 fields
@@ -97,6 +100,10 @@ class Wizard extends Component
             $this->category_id = $listing->category_id;
             $this->condition = (string) $listing->condition;
             $this->price_cents = (int) $listing->price_cents;
+            // Null-safe: een model dat net via create() is gemaakt kent de
+            // databasedefault nog niet, en advertenties van vóór de
+            // quantity-migratie hebben hem evenmin in het geheugen.
+            $this->quantity = (int) ($listing->quantity ?? 1);
             $this->is_trade_allowed = (bool) $listing->is_trade_allowed;
             $this->description = (string) ($listing->description ?? '');
             $this->region_postcode = $listing->region_postcode;
@@ -115,6 +122,7 @@ class Wizard extends Component
                 'category_id' => ['required', 'integer', 'exists:categories,id'],
                 'condition' => ['required', 'in:new,used,defective,for_parts'],
                 'price_cents' => ['required', 'integer', 'min:0'],
+                'quantity' => ['required', 'integer', 'min:1', 'max:99'],
                 'is_trade_allowed' => ['boolean'],
             ]);
             $this->saveDraft(step1: true);
@@ -235,6 +243,7 @@ class Wizard extends Component
                 'title' => $this->title,
                 'condition' => $this->condition,
                 'price_cents' => $this->price_cents,
+                'quantity' => $this->quantity,
                 'is_trade_allowed' => $this->is_trade_allowed,
                 // Description is nullable for drafts (see migration
                 // `add_nullable_description_to_listings`); the step-2

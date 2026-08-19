@@ -24,6 +24,7 @@ class Listing extends Model
         'description',
         'condition',
         'price_cents',
+        'quantity',
         'currency',
         'is_trade_allowed',
         'region_postcode',

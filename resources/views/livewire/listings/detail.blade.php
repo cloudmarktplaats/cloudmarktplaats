@@ -63,6 +63,9 @@
                 <div class="mt-3 font-mono text-2xl font-medium text-cmp-text">
                     € {{ number_format($listing->price_cents / 100, 2, ',', '.') }}
                 </div>
+                @if ($listing->quantity > 1)
+                    <div class="mt-1 font-mono text-xs text-cmp-signal">{{ trans_choice(':count stuk beschikbaar|:count stuks beschikbaar', $listing->quantity) }}</div>
+                @endif
 
                 <p class="mt-2 text-sm text-cmp-muted">
                     {{ __('Verkoper') }}: {{ $listing->user->display_name ?? __('onbekend') }}
