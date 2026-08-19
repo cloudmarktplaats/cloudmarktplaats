@@ -6,6 +6,7 @@
                 <ul class="space-y-2 text-sm text-cmp-muted">
                     <li><a href="{{ route('about') }}" class="hover:text-cmp-text">{{ __('Over ons') }}</a></li>
                     <li><a href="{{ route('values') }}" class="hover:text-cmp-text">{{ __('Onze waarden') }}</a></li>
+                    <li><a href="{{ route('scope') }}" class="hover:text-cmp-text">{{ __('Wat mag erop?') }}</a></li>
                     <li><a href="{{ route('faq') }}" class="hover:text-cmp-text">{{ __('Veelgestelde vragen') }}</a></li>
                     <li><a href="{{ route('donate') }}" class="hover:text-cmp-text">{{ __('Doneren') }}</a></li>
                     <li><a href="{{ route('sponsor') }}" class="hover:text-cmp-text">{{ __('Sponsoring') }}</a></li>

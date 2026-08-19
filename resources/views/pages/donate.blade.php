@@ -24,40 +24,8 @@
             <span class="font-mono text-[11px] text-cmp-faint">{{ __('iDEAL of kaart · via Revolut · kies zelf het bedrag') }}</span>
         </div>
 
-        {{-- Eenmalig via bankoverschrijving (SEPA). --}}
-        <div class="mt-10 rounded-sm border-2 border-cmp-ink bg-cmp-surface p-6">
-            <div class="font-mono text-[11px] uppercase tracking-[0.14em] text-cmp-muted mb-4">
-                {{ __('Eenmalig · bankoverschrijving') }}
-            </div>
-            <dl class="space-y-2 text-sm">
-                <div class="flex items-baseline justify-between gap-4">
-                    <dt class="font-mono text-[11px] uppercase tracking-wide text-cmp-muted">{{ __('Begunstigde') }}</dt>
-                    <dd class="font-medium text-right">Aldewereld Consultancy</dd>
-                </div>
-                <div class="flex items-center justify-between gap-4" x-data="{ copied: false }">
-                    <dt class="font-mono text-[11px] uppercase tracking-wide text-cmp-muted">IBAN</dt>
-                    <dd class="flex items-center gap-3">
-                        <span class="font-mono font-medium">NL19&nbsp;REVO&nbsp;7336&nbsp;3721&nbsp;47</span>
-                        <button type="button"
-                                @click="navigator.clipboard.writeText('NL19REVO7336372147'); copied = true; setTimeout(() => copied = false, 1500)"
-                                class="rounded-sm border border-cmp-border px-2 py-0.5 font-mono text-[10px] uppercase tracking-wide text-cmp-muted hover:border-cmp-ink hover:text-cmp-ink transition-colors">
-                            <span x-text="copied ? '{{ __('gekopieerd') }}' : '{{ __('kopieer') }}'">{{ __('kopieer') }}</span>
-                        </button>
-                    </dd>
-                </div>
-                <div class="flex items-baseline justify-between gap-4">
-                    <dt class="font-mono text-[11px] uppercase tracking-wide text-cmp-muted">BIC</dt>
-                    <dd class="font-mono font-medium text-right">REVONL22</dd>
-                </div>
-                <div class="flex items-baseline justify-between gap-4">
-                    <dt class="font-mono text-[11px] uppercase tracking-wide text-cmp-muted">{{ __('Valuta') }}</dt>
-                    <dd class="font-mono font-medium text-right">EUR</dd>
-                </div>
-            </dl>
-        </div>
-
         {{-- Maandelijks via GitHub Sponsors. --}}
-        <div class="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-cmp-border bg-cmp-surface p-6">
+        <div class="mt-10 flex flex-wrap items-center justify-between gap-3 rounded-sm border border-cmp-border bg-cmp-surface p-6">
             <div>
                 <div class="font-mono text-[11px] uppercase tracking-[0.14em] text-cmp-muted mb-1">{{ __('Maandelijks') }}</div>
                 <p class="text-sm text-cmp-muted">{{ __('Liever een vast bedrag per maand? Dat kan via GitHub Sponsors.') }}</p>
@@ -70,6 +38,12 @@
         {{-- Eerlijk over de status: geen ANBI, geen aftrek, geen tegenprestatie. --}}
         <div class="mt-10 border-t border-cmp-border pt-6 font-mono text-[11px] leading-relaxed text-cmp-faint space-y-2">
             <p>{{ __('Een donatie is een gift, geen aankoop: er staat geen tegenprestatie tegenover en er is geen herroepingsrecht.') }}</p>
+            {{-- Rekeningnummers horen niet publiek op een pagina die iedereen kan
+                 scrapen; wie per se wil overmaken vraagt de gegevens gewoon op. --}}
+            <p>{!! __('Liever een gewone bankoverschrijving? Vraag de gegevens op via <a href="mailto:info@cloudmarktplaats.nl" class="underline hover:text-cmp-muted">info@cloudmarktplaats.nl</a>.') !!}</p>
+            {{-- Het oude IBAN heeft publiek gestaan en is dus gescrapet. Deze regel
+                 kost niets en haalt de bodem onder een nagemaakte oproep vandaan. --}}
+            <p>{{ __('Wij vragen je nooit uit onszelf om een overboeking — niet per e-mail, niet via een bericht op het platform. Krijg je zoiets namens Cloudmarktplaats, dan is het niet van ons.') }}</p>
             <p>{!! __('Aldewereld Consultancy is geen goededoelenorganisatie (geen ANBI-status). Donaties zijn daardoor <span class="text-cmp-muted">niet fiscaal aftrekbaar</span>.') !!}</p>
             <p>{{ __('Ontvanger:') }} Aldewereld Consultancy, KvK 61862533, Nieuwe Hemweg 26, 1013 CX Amsterdam (postadres). {{ __('Vragen:') }} <a href="mailto:info@cloudmarktplaats.nl" class="underline hover:text-cmp-muted">info@cloudmarktplaats.nl</a>.</p>
         </div>

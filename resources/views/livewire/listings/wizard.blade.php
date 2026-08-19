@@ -32,6 +32,11 @@
                 </select>
             </label>
             @error('category_id') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+            {{-- Hier zit de twijfel ("mag mijn spul hier eigenlijk wel op?"), dus
+                 hier hoort het antwoord. Nieuw tabblad: de draft blijft staan. --}}
+            <p class="text-xs text-cmp-muted">
+                <a href="{{ route('scope') }}" target="_blank" rel="noopener" class="underline hover:text-cmp-blue">{{ __('Twijfel je of je spullen erop mogen?') }}</a>
+            </p>
 
             <label class="block text-sm">
                 <span class="mb-1 block font-medium">{{ __('Staat') }}</span>
