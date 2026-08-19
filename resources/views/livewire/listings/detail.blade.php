@@ -32,7 +32,9 @@
         @endif
 
         @if (auth()->id() === $listing->user_id && $listing->state === 'published' && config('cloudmarktplaats.features.deals'))
-            <div class="mt-6 rounded-sm border border-cmp-border bg-cmp-surface p-4">
+            {{-- Ankerdoel voor de "Verkocht melden"-knop op Mijn advertenties: de
+                 verkoper beheert daar, maar dit paneel woont hier. --}}
+            <div id="deal-panel" class="mt-6 rounded-sm border border-cmp-border bg-cmp-surface p-4">
                 <div class="cmp-section-label mb-3">{{ __('Verkocht?') }}</div>
                 <p class="text-sm text-cmp-muted">{{ __('Markeer als verkocht. Geef optioneel de gebruikersnaam van de koper op; die kan de deal dan bevestigen.') }}</p>
                 <div class="mt-3 flex flex-wrap items-center gap-2">
