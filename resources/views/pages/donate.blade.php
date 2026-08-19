@@ -41,6 +41,9 @@
             {{-- Rekeningnummers horen niet publiek op een pagina die iedereen kan
                  scrapen; wie per se wil overmaken vraagt de gegevens gewoon op. --}}
             <p>{!! __('Liever een gewone bankoverschrijving? Vraag de gegevens op via <a href="mailto:info@cloudmarktplaats.nl" class="underline hover:text-cmp-muted">info@cloudmarktplaats.nl</a>.') !!}</p>
+            {{-- Het oude IBAN heeft publiek gestaan en is dus gescrapet. Deze regel
+                 kost niets en haalt de bodem onder een nagemaakte oproep vandaan. --}}
+            <p>{{ __('Wij vragen je nooit uit onszelf om een overboeking — niet per e-mail, niet via een bericht op het platform. Krijg je zoiets namens Cloudmarktplaats, dan is het niet van ons.') }}</p>
             <p>{!! __('Aldewereld Consultancy is geen goededoelenorganisatie (geen ANBI-status). Donaties zijn daardoor <span class="text-cmp-muted">niet fiscaal aftrekbaar</span>.') !!}</p>
             <p>{{ __('Ontvanger:') }} Aldewereld Consultancy, KvK 61862533, Nieuwe Hemweg 26, 1013 CX Amsterdam (postadres). {{ __('Vragen:') }} <a href="mailto:info@cloudmarktplaats.nl" class="underline hover:text-cmp-muted">info@cloudmarktplaats.nl</a>.</p>
         </div>
