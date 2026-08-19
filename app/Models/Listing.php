@@ -43,6 +43,7 @@ class Listing extends Model
             'shipping_options' => 'array',
             'is_trade_allowed' => 'boolean',
             'published_at' => 'datetime',
+            'draft_reminded_at' => 'datetime',
             'sold_at' => 'datetime',
         ];
     }

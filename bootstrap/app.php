@@ -61,6 +61,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // that log holds no IP (see docker/nginx/default.conf) — purely so it
         // doesn't grow unbounded. Sunday 04:00, when nobody is reading reports.
         $schedule->command('traffic:truncate-log')->weeklyOn(0, '04:00');
+
+        // Dagelijkse duw richting blijven liggen concepten. Eén keer per
+        // concept (zie `draft_reminded_at`), en pas na 48 uur. Om 10:00 omdat
+        // een advertentie afmaken iets is dat je overdag even doet.
+        $schedule->command('listings:remind-drafts')->dailyAt('10:00');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
