@@ -29,6 +29,7 @@ class ListingFactory extends Factory
             'is_trade_allowed' => false,
             'region_postcode' => (string) fake()->numberBetween(1000, 9999),
             'shipping_options' => ['pickup' => true, 'post' => false],
+            'quantity' => 1,
             'state' => 'draft',
         ];
     }

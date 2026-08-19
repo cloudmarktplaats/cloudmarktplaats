@@ -39,7 +39,14 @@ class DealService
                 }
             }
 
-            $this->state->transition($locked, 'sold');
+            // Eén exemplaar verkopen is niet hetzelfde als de advertentie
+            // sluiten. Staan er nog meer, dan gaat er eentje af en blijft hij
+            // gewoon staan; pas bij de laatste gaat hij op `sold`.
+            if ($locked->quantity > 1) {
+                $locked->decrement('quantity');
+            } else {
+                $this->state->transition($locked, 'sold');
+            }
 
             if ($buyer === null) {
                 return null;

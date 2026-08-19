@@ -55,6 +55,17 @@
             </label>
             @error('price_cents') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
+            <label class="block text-sm">
+                <span class="mb-1 block font-medium">{{ __('Aantal') }}</span>
+                <input wire:model="quantity" type="number" min="1" max="99" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+            </label>
+            @error('quantity') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+            {{-- De grens die ertoe doet: aantallen gaan over identieke exemplaren.
+                 Tweedehands hardware is dat vaak niet, en een verkoper die vier
+                 verschillende dingen onder één aantal schuift misleidt de koper
+                 zonder het te willen. --}}
+            <p class="text-xs text-cmp-muted -mt-1">{{ __('Heb je er meer dan één van precies hetzelfde? Zet het aantal hier, dan hoef je niet dezelfde advertentie meerdere keren te maken. Verschillen ze onderling in specs of staat, maak er dan aparte advertenties van.') }}</p>
+
             <label class="flex items-center gap-2 text-sm">
                 <input wire:model="is_trade_allowed" type="checkbox">
                 <span>{{ __('Ruilen toegestaan') }}</span>
