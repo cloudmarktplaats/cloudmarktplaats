@@ -24,6 +24,39 @@ beforeEach(function () {
  * describes the first, so a seller whose upload died was told they had
  * forgotten photos they had just picked. Yvan reported exactly that.
  */
+/*
+ * Een afgekeurde foto (te groot, te klein, geen echte afbeelding) gooide een
+ * InvalidUploadException die niemand ving: de verkoper kreeg een crashpagina.
+ * Verkoper 296 liep hier op 16-08 zes keer op stuk en gaf toen op. Wie zijn
+ * foto niet kwijt kan, hoort te lezen waarom.
+ */
+it('shows a readable error instead of crashing when a photo is rejected', function () {
+    $this->actingAs($this->user);
+
+    // 100x100 zit onder de ondergrens en wordt door de job geweigerd.
+    $gd = imagecreatetruecolor(100, 100);
+    ob_start();
+    imagejpeg($gd);
+    $bytes = (string) ob_get_clean();
+    imagedestroy($gd);
+
+    $tooSmall = UploadedFile::fake()->createWithContent('rack.jpg', $bytes);
+
+    Livewire::test(Wizard::class)
+        ->set('title', 'Cisco Catalyst 2960')
+        ->set('category_id', $this->category->id)
+        ->set('condition', 'used')
+        ->set('price_cents', 5000)
+        ->call('next')
+        ->set('description', 'Fully working 24-port switch with all original modules.')
+        ->set('region_postcode', '3500')
+        ->call('next')
+        ->set('photos', [$tooSmall])
+        ->call('submit')
+        ->assertHasErrors('photos')
+        ->assertSee('konden we niet verwerken');
+});
+
 it('blames the upload, not the seller, when photos never arrived', function () {
     $this->actingAs($this->user);
 
