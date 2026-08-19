@@ -51,6 +51,11 @@
             'a' => __('<p>In volgorde van impact: (1) plaats advertenties en gebruik het platform — netwerkeffect is wat we nodig hebben; (2) <a href="/doneren" class="text-cmp-blue underline hover:text-cmp-blue-dark">doneer eenmalig of maandelijks</a>; (3) word sponsor of haal je werkgever over; (4) draag code, vertalingen of documentatie bij via GitHub; (5) modereer mee — meld misstanden en help nieuwe gebruikers.</p>'),
         ],
         [
+            'q' => __('Wat mag ik wél verkopen?'),
+            'a' => __('<p>Eén regel: <strong>hoort het in een lab, een serverkast, een netwerk of op een werkbank, dan hoort het hier.</strong> Servers, switches, storage, CPU\'s, RAM, GPU\'s, thin clients, dev boards, meetapparatuur, 3D-printers, racks, PDU\'s, en de kabels die daarbij horen.</p>
+                    <p class="mt-3">Twijfelgeval? Drie tests: past het in een van onze categorieën; koop je het om ermee te <em>bouwen</em> of om ermee te <em>consumeren</em> (bouwen mag); en is het los een advertentie waard — één patchkabel is ruis, een doos van veertig is een kavel. De volledige lijst met randgevallen staat op <a href="/wat-mag-erop" class="text-cmp-blue underline hover:text-cmp-blue-dark">Wat mag erop?</a>.</p>'),
+        ],
+        [
             'q' => __('Wat mag ik NIET verkopen?'),
             'a' => __('<ul class="list-disc list-outside ml-5 space-y-1.5">
                 <li>Wapens en munitie (Wwm), inclusief geconverteerde tools die als wapen kunnen dienen.</li>
@@ -84,7 +89,7 @@
 
 <x-layouts.marketing
     :title="__('Veelgestelde vragen — Cloudmarktplaats')"
-    :description="__('Tien vragen die je waarschijnlijk hebt, met eerlijke antwoorden. Inclusief de juridisch gevoelige.')"
+    :description="__('De vragen die je waarschijnlijk hebt, met eerlijke antwoorden. Inclusief de juridisch gevoelige.')"
     :canonical="url('/faq')"
     :jsonLd="$jsonLd"
 >
@@ -94,7 +99,7 @@
         <header class="mb-12">
             <div class="cmp-section-label mb-4">{{ __('FAQ') }}</div>
             <h1 class="text-4xl sm:text-5xl font-bold tracking-display-tighter leading-[1.05]">
-                {{ __('Tien vragen.') }}<br>
+                {{ trans_choice(':count vraag.|:count vragen.', count($faqs)) }}<br>
                 <span class="text-cmp-muted">{{ __('Eerlijke antwoorden.') }}</span>
             </h1>
         </header>
