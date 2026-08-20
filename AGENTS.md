@@ -40,6 +40,14 @@ Aandachtspunten die een keer misgingen:
   eeuwig vasthield. Sinds 19-08 lost `resolver 127.0.0.11` in `docker/nginx/default.conf`
   dat op: php-fpm mag verhuizen zonder dat nginx eraan te pas komt. Verwijder die
   resolver niet — hij voorkomt een storing van minuten bij elke deploy.
+- **Chown na een sync alleen de paden die je stuurde, en nooit `bootstrap/` als
+  geheel.** `bootstrap/cache` is van uid 82 (www-data); zet je die op 1000, dan
+  kan artisan zijn config- en routecache niet meer schrijven en faalt de deploy
+  halverwege. Zelfde geldt voor `storage/`.
+- **Sync en `route:cache` horen direct achter elkaar.** Tussen het uitpakken van
+  een nieuwe view die naar een nieuwe route verwijst en het herbouwen van de
+  routecache zit een venster waarin bezoekers een 500 krijgen. Op 19-08 waren dat
+  er vier in twee seconden — zichtbaar geworden dankzij `platform:daily-check`.
 - **`storage/` is van uid 82.** Artisan lokaal draaien buiten Docker faalt op de log;
   gebruik `docker compose exec -T php-fpm php artisan ...`.
 
