@@ -42,6 +42,7 @@
             @endif
             @if (config('cloudmarktplaats.features.deals'))
                 <a href="{{ route('profile.deals') }}" class="{{ $item }}" role="menuitem">{{ __('Mijn deals') }}</a>
+                <a href="{{ route('profile.seller-type') }}" class="{{ $item }}" role="menuitem">{{ __('Verkopen als bedrijf') }}</a>
             @endif
             @if (config('cloudmarktplaats.features.invites'))
                 <a href="{{ route('profile.invites') }}" class="{{ $item }}" role="menuitem">{{ __('Uitnodigingen') }}</a>

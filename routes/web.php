@@ -25,6 +25,7 @@ use App\Livewire\Listings\Wizard as ListingWizard;
 use App\Livewire\Profile\Deals as ProfileDeals;
 use App\Livewire\Profile\Invites as ProfileInvites;
 use App\Livewire\Profile\Security as ProfileSecurity;
+use App\Livewire\Profile\SellerType as ProfileSellerType;
 use App\Livewire\Profile\Stats as ProfileStats;
 use App\Livewire\Profile\TwoFactorSetup;
 use Illuminate\Foundation\Auth\EmailVerificationRequest;
@@ -135,6 +136,12 @@ Route::get('/profile/security/2fa', TwoFactorSetup::class)
 Route::get('/profile/invites', ProfileInvites::class)
     ->middleware(['auth', 'verified'])
     ->name('profile.invites');
+
+// Particulier of zakelijk verkopen. Alleen `auth`: dit is een instelling, geen
+// handeling met gevolgen — de wizard bewaakt zelf de strengere poort.
+Route::get('/profile/verkopen', ProfileSellerType::class)
+    ->middleware('auth')
+    ->name('profile.seller-type');
 
 Route::get('/profile/stats', ProfileStats::class)
     ->middleware('auth')

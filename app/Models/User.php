@@ -41,6 +41,10 @@ class User extends Authenticatable implements CanResetPassword, FilamentUser, Ha
         // unaffected by this list; this only enables the edit-form path,
         // whose is_banned false→true transition is caught by the
         // static::updated() hook below.
+        'seller_type',
+        'business_name',
+        'business_registration',
+        'business_vat',
         'is_banned',
         'banned_reason',
     ];

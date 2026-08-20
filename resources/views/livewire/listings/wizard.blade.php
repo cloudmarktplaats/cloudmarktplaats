@@ -36,6 +36,10 @@
                  hier hoort het antwoord. Nieuw tabblad: de draft blijft staan. --}}
             <p class="text-xs text-cmp-muted">
                 <a href="{{ route('scope') }}" target="_blank" rel="noopener" class="underline hover:text-cmp-blue">{{ __('Twijfel je of je spullen erop mogen?') }}</a>
+                @if (auth()->user()?->seller_type !== 'business')
+                    ·
+                    <a href="{{ route('profile.seller-type') }}" target="_blank" rel="noopener" class="underline hover:text-cmp-blue">{{ __('Verkoop je namens een bedrijf?') }}</a>
+                @endif
             </p>
 
             <label class="block text-sm">
