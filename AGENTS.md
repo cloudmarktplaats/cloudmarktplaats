@@ -87,15 +87,52 @@ als verkocht" alleen op de publieke advertentiepagina stond en niet op Mijn
 advertenties. **Als een getal op 0 staat, zoek eerst de knop voordat je de motivatie
 van gebruikers in twijfel trekt.**
 
+## De dagelijkse check leest mee
+
+`platform:daily-check` draait elke ochtend om 07:30 en mailt naar `OPS_DIGEST_TO`.
+Hij telt **ook afwezigheid**: nul foto's of nul advertenties in een week is hier
+een alarm, geen rustige week. Zo was de fotobug zes dagen onzichtbaar.
+
+Draai hem met `--show` om het rapport in de terminal te zien zonder te mailen.
+Dat is ook de snelste manier om na een deploy te controleren of je niets hebt
+gebroken — hij las binnen een dag vier 500's uit de log die niemand had gemeld.
+
+---
+
+## Geld en zichtbaarheid
+
+Eén regel, en die is niet onderhandelbaar: **geld mag identiteit kopen, nooit
+positie.** Een bedrijf mag betalen voor een eigen pagina, zijn logo, zijn verhaal.
+Betalen voor een hogere plek, langer meedraaien of voorrang in de feed breekt
+"geen algoritmische manipulatie" — punt 5 van de waarden — en dat is precies de
+belofte waarvoor mensen hier zijn.
+
+De grens van twee advertenties per verkoper op de voorpagina
+(`RecentListings::$maxPerSeller`) is daar het technische anker van. Die staat er
+bewust vóórdat er iemand betaalt. Haal hem niet weg zonder te beseffen wat je
+daarmee opgeeft.
+
+Of er überhaupt geld gevraagd wordt aan bedrijven, is op 20-08 in consultatie
+gegaan — `GOVERNANCE.md` schrijft dat voor bij geldvragen. De teksten staan in
+`launch/consultatie-bedrijven-en-geld.md`. **De terugkoppeling is verplicht:**
+consultatie zonder gevolg is erger dan niets vragen, en dat staat in je eigen
+governance.
+
+---
+
 ## Beslissingen die vastliggen
 
 - **Scope van wat er verkocht mag worden**: `docs/scope.md`, gepubliceerd op
   /wat-mag-erop, gelinkt vanuit de wizard en de FAQ. De categorieboom in
   `database/seeders/CategorySeeder.php` is de bron; die pagina is de leesbare versie.
   Wijzigen gaat via een openbaar issue, niet stilletjes.
-- **Zakelijke verkopers**: ontworpen in `docs/superpowers/specs/2026-08-19-zakelijke-verkoper-design.md`,
-  **nog niet gebouwd**. Nodig zodra een MSP gaat plaatsen. Let op: de ToS-wijziging
-  triggert re-acceptatie voor álle leden, dus bundelen met ander ToS-werk.
+- **Zakelijke verkopers**: gebouwd op 20-08 (`seller_type` op `users`, instelling op
+  `/profile/verkopen`, mededeling op de advertentie). Ontwerp in
+  `docs/superpowers/specs/2026-08-19-zakelijke-verkoper-design.md`. Het label is een
+  feitelijke mededeling, **geen keurmerk** — het KvK-nummer wordt niet geverifieerd,
+  en afwezigheid van het label is evenmin een claim. **Nog open:** de ToS-tekst (die
+  triggert re-acceptatie voor álle leden, dus bundelen met ander ToS-werk) en de
+  btw-weergave.
 - **DAC7**: er lopen geen betalingen over het platform, dus er valt niets te
   rapporteren. Volledige analyse in `docs/dac7-position.md`. Zakelijke verkopers
   veranderen daar niets aan.
