@@ -66,6 +66,19 @@
                 @if ($listing->quantity > 1)
                     <div class="mt-1 font-mono text-xs text-cmp-signal">{{ trans_choice(':count stuk beschikbaar|:count stuks beschikbaar', $listing->quantity) }}</div>
                 @endif
+                {{-- Feitelijke mededeling, geen keurmerk: wij verifiëren het
+                     KvK-nummer niet. Een badge die op een garantie lijkt wekt
+                     vertrouwen dat we niet kunnen dragen. Andersom geldt ook:
+                     géén label betekent niet dat iemand particulier ís. --}}
+                @if ($listing->user?->seller_type === 'business')
+                    <div class="mt-4 rounded-sm border border-cmp-border bg-cmp-bg2 p-4 text-sm">
+                        <div class="font-medium">{{ __('Zakelijke verkoper') }}</div>
+                        <div class="mt-1 font-mono text-xs text-cmp-muted">
+                            {{ $listing->user->business_name }}@if ($listing->user->business_registration) · {{ __('KvK') }} {{ $listing->user->business_registration }}@endif
+                        </div>
+                        <p class="mt-2 text-cmp-muted">{{ __('Je koopt van een bedrijf. Daardoor heb je wettelijke rechten die je bij een particuliere verkoper niet hebt — bij verzending onder meer veertien dagen bedenktijd.') }}</p>
+                    </div>
+                @endif
 
                 <p class="mt-2 text-sm text-cmp-muted">
                     {{ __('Verkoper') }}: {{ $listing->user->display_name ?? __('onbekend') }}

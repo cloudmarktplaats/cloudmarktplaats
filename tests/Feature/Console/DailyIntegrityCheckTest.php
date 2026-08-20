@@ -1,0 +1,95 @@
+<?php
+
+declare(strict_types=1);
+
+use App\Mail\DailyIntegrityMail;
+use App\Models\Listing;
+use App\Models\ListingPhoto;
+use Illuminate\Support\Facades\Mail;
+
+beforeEach(function () {
+    Mail::fake();
+    $this->logPath = storage_path('framework/testing/integrity-test.log');
+    @mkdir(dirname($this->logPath), 0777, true);
+    @unlink($this->logPath);
+    config([
+        'cloudmarktplaats.ops.digest_to' => 'nick@example.test',
+        'cloudmarktplaats.ops.log_path' => $this->logPath,
+        'cloudmarktplaats.ops.silence_days' => 7,
+    ]);
+});
+
+afterEach(function () {
+    @unlink($this->logPath);
+});
+
+/*
+ * Dit is de check die de panoramabug had gevangen: zes dagen lang geen enkele
+ * geslaagde upload, terwijl niemand een klacht instuurde.
+ */
+it('treats a week without a single photo as a signal, not as a quiet week', function () {
+    Listing::factory()->published()->create(['published_at' => now()->subHours(2)]);
+
+    $this->artisan('platform:daily-check')->assertSuccessful();
+
+    Mail::assertSent(DailyIntegrityMail::class, function (DailyIntegrityMail $mail) {
+        return collect($mail->signalen)->contains(fn (string $s) => str_contains($s, 'Geen enkele foto'));
+    });
+});
+
+it('stays quiet when photos and listings keep coming', function () {
+    $listing = Listing::factory()->published()->create(['published_at' => now()->subHour()]);
+    ListingPhoto::factory()->for($listing)->create(['created_at' => now()->subHour()]);
+
+    $this->artisan('platform:daily-check')->assertSuccessful();
+
+    Mail::assertSent(DailyIntegrityMail::class, fn (DailyIntegrityMail $mail) => $mail->signalen === []);
+});
+
+it('picks up error lines from the log and groups them', function () {
+    $listing = Listing::factory()->published()->create(['published_at' => now()->subHour()]);
+    ListingPhoto::factory()->for($listing)->create(['created_at' => now()->subHour()]);
+
+    $stamp = now()->subHours(3)->format('Y-m-d H:i:s');
+    file_put_contents($this->logPath, implode("\n", [
+        "[{$stamp}] production.ERROR: Image dimensions out of bounds (8160x3768) {\"userId\":296}",
+        "[{$stamp}] production.ERROR: Image dimensions out of bounds (8160x3768) {\"userId\":296}",
+        '[2020-01-01 00:00:00] production.ERROR: Iets van heel lang geleden',
+        "[{$stamp}] production.INFO: dit is geen fout",
+    ])."\n");
+
+    $this->artisan('platform:daily-check')->assertSuccessful();
+
+    Mail::assertSent(DailyIntegrityMail::class, function (DailyIntegrityMail $mail) {
+        $regels = collect($mail->fouten);
+
+        return $regels->count() === 1
+            && $regels->first()['aantal'] === 2
+            && str_contains($regels->first()['regel'], 'dimensions out of bounds')
+            // De context-JSON hoort eraf, en oude regels tellen niet mee.
+            && ! str_contains($regels->first()['regel'], 'userId');
+    });
+});
+
+it('flags drafts that hang without a photo', function () {
+    $listing = Listing::factory()->published()->create(['published_at' => now()->subHour()]);
+    ListingPhoto::factory()->for($listing)->create(['created_at' => now()->subHour()]);
+
+    $draft = Listing::factory()->create(['state' => 'draft']);
+    Listing::query()->whereKey($draft->id)->update(['updated_at' => now()->subDays(3)]);
+
+    $this->artisan('platform:daily-check')->assertSuccessful();
+
+    Mail::assertSent(DailyIntegrityMail::class, function (DailyIntegrityMail $mail) {
+        return $mail->cijfers['concepten_zonder_foto'] === 1
+            && collect($mail->signalen)->contains(fn (string $s) => str_contains($s, 'blijven hangen zonder foto'));
+    });
+});
+
+it('sends nothing when no recipient is configured', function () {
+    config(['cloudmarktplaats.ops.digest_to' => '']);
+
+    $this->artisan('platform:daily-check')->assertSuccessful();
+
+    Mail::assertNothingSent();
+});

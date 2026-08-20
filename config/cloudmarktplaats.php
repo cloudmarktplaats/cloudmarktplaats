@@ -57,6 +57,21 @@ return [
         // www-data test fixture.
         'access_log' => env('TRAFFIC_ACCESS_LOG', storage_path('nginx/access.log')),
     ],
+    /*
+     * Dagelijkse integriteitscheck. Er zitten bewust geen trackers op dit
+     * platform, dus stille storingen worden niet gemeld door een dashboard en
+     * evenmin door gebruikers: die verdwijnen gewoon. De foto-upload lag zes
+     * dagen plat voordat iemand het doorhad. Deze digest is de vervanging.
+     */
+    'ops' => [
+        // Waar de digest heen gaat. Leeg = niet versturen.
+        'digest_to' => env('OPS_DIGEST_TO'),
+        // Losgekoppeld van het echte logbestand zodat tests niet aan de log
+        // van de draaiende app zitten (zelfde reden als traffic.access_log).
+        'log_path' => env('OPS_LOG_PATH', storage_path('logs/laravel.log')),
+        // Hoeveel dagen stilte op een signaal alarm is.
+        'silence_days' => 7,
+    ],
     'gamification' => [
         'starting_invite_credits' => 3,
         'karma_invite_activation' => 10,
