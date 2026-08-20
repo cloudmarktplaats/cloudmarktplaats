@@ -66,6 +66,11 @@ return Application::configure(basePath: dirname(__DIR__))
         // concept (zie `draft_reminded_at`), en pas na 48 uur. Om 10:00 omdat
         // een advertentie afmaken iets is dat je overdag even doet.
         $schedule->command('listings:remind-drafts')->dailyAt('10:00');
+
+        // Dagelijkse integriteitscheck. Vroeg genoeg om er iets aan te doen
+        // voordat er een dag overheen gaat. Zie IntegrityReport: dit rapport
+        // telt ook wat er níet gebeurde, want daar zat de fotobug.
+        $schedule->command('platform:daily-check')->dailyAt('07:30');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
