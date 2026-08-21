@@ -38,7 +38,10 @@ class IntegrityReport
             'gepubliceerd' => Listing::query()->where('published_at', '>=', $since)->count(),
             'fotos' => ListingPhoto::query()->where('created_at', '>=', $since)->count(),
             'contactverzoeken' => DB::table('contact_relay_logs')->where('created_at', '>=', $since)->count(),
-            'deals_bevestigd' => Transaction::query()->where('status', 'confirmed')->where('updated_at', '>=', $since)->count(),
+            // Tellen op `completed_at`, niet op `updated_at`: dat laatste
+            // beweegt ook als er iets anders aan de rij verandert.
+            'deals_bevestigd' => Transaction::query()->where('status', 'completed')->where('completed_at', '>=', $since)->count(),
+            'verkopen_gemeld' => Transaction::query()->where('created_at', '>=', $since)->count(),
             'mislukte_jobs' => DB::table('failed_jobs')->count(),
             'concepten_zonder_foto' => Listing::query()
                 ->where('state', 'draft')
