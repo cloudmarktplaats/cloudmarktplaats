@@ -16,6 +16,7 @@ use App\Livewire\Auth\ResetPassword;
 use App\Livewire\Auth\SiweOnboarding;
 use App\Livewire\Auth\TwoFactorChallenge;
 use App\Livewire\Auth\VerifyEmailNotice;
+use App\Livewire\Deals\Claim as DealClaim;
 use App\Livewire\Homelab\Detail;
 use App\Livewire\Homelab\Feed as HomelabFeed;
 use App\Livewire\Listings\Browse as ListingsBrowse;
@@ -81,7 +82,9 @@ Route::get('/email/verify-notice', VerifyEmailNotice::class)
 Route::get('/email/verify/{id}/{hash}', function (EmailVerificationRequest $request) {
     $request->fulfill();
 
-    return redirect('/');
+    // `intended` in plaats van een vaste '/': wie via een claim-link
+    // registreert, hoort na het verifiëren terug te komen op die deal.
+    return redirect()->intended('/');
 })->middleware(['auth', 'signed', 'throttle:6,1'])->name('verification.verify');
 
 Route::post('/email/verification-notification', function () {
@@ -150,6 +153,13 @@ Route::get('/profile/stats', ProfileStats::class)
 Route::get('/profile/deals', ProfileDeals::class)
     ->middleware('auth')
     ->name('profile.deals');
+
+// De koperskant van een gemelde verkoop. Publiek bereikbaar omdat de koper
+// hier koud binnenkomt via een link uit de mail van de verkoper — vaak zonder
+// account. Bevestigen zelf eist auth + verified; dat bewaakt de component.
+Route::get('/deal/{token}', DealClaim::class)
+    ->where('token', '[A-Za-z0-9]{32}')
+    ->name('deals.claim');
 
 // 2FA challenge after primary auth — guest-accessible because the user
 // is not yet seated in the session at this point.
