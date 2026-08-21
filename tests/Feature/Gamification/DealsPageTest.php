@@ -68,13 +68,14 @@ it('does not let a buyer confirm a deal once the deals feature is turned off mid
         'buyer_user_id' => $buyer->id, 'status' => 'pending',
     ]);
 
-    // The flag check in mount() only guards the initial request; a component
-    // that is already mounted skips mount() on a subsequent call. Turning the
-    // flag off *after* mounting proves confirm() carries its own guard too.
+    // De check zit in boot(), dat Livewire vóór élk request aanroept — ook bij
+    // een component dat al gemount is. De vlag ná het mounten omzetten bewijst
+    // dat confirm() er niet omheen komt. 404, want met de vlag uit bestaat
+    // deze pagina niet.
     $component = Livewire::actingAs($buyer)->test(Deals::class);
     config()->set('cloudmarktplaats.features.deals', false);
 
-    $component->call('confirm', $tx->id)->assertForbidden();
+    $component->call('confirm', $tx->id)->assertStatus(404);
 
     expect($tx->fresh()->status)->toBe('pending');
 });

@@ -86,6 +86,27 @@ blijft het gevolg beperkt tot een label: `features.trust_autopublish` staat
 standaard op `false`, dus een opgekweekt trustlevel ontgrendelt nu nog geen
 automatische publicatie zonder moderatie.
 
+### De legacy-tak in Mijn deals wacht op één rij
+`Transaction` draagt twee vormen tegelijk: de nieuwe (koper onbekend, claim-token)
+en de oude (koper bekend, geen token). Dat is te zien aan `Profile\Deals::pending()`
+en `::confirm()`, en aan de `whereNull('claim_expires_at')`-tak in
+`Ops\IntegrityReport`. Die blijven bestaan voor precies één rij op productie: een
+verkoop die in juli met het oude gebruikersnaamveld is gemeld en waarvan de koper
+nog niet bevestigd heeft.
+
+Dit is geen ontwerpkeuze maar een tijdelijke staat, en dit is het criterium om hem
+op te ruimen:
+
+```sql
+select count(*) from transactions where status = 'pending' and buyer_user_id is not null;
+```
+
+Staat die op nul, dan kunnen `pending()` en `confirm()` uit `Profile\Deals` weg,
+inclusief het `@if ($pending->isNotEmpty())`-blok in de view en de tests die
+`confirm` aanroepen. De `whereNull`-tak in `IntegrityReport` mag dan ook weg.
+Zonder dit criterium hier wordt de dubbele vorm een permanente uitzondering bij
+toeval in plaats van bij besluit.
+
 ---
 
 ## Privacy & retentie

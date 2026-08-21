@@ -7,6 +7,7 @@ namespace Database\Factories;
 use App\Models\Listing;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\Gamification\DealService;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -40,7 +41,7 @@ class TransactionFactory extends Factory
         return $this->state(fn () => [
             'buyer_user_id' => null,
             'claim_token' => Str::random(32),
-            'claim_expires_at' => now()->addDays(30),
+            'claim_expires_at' => now()->addDays(DealService::CLAIM_DAYS),
         ]);
     }
 }

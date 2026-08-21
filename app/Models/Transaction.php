@@ -84,4 +84,20 @@ class Transaction extends Model
             ->where('status', 'completed')
             ->whereHas('buyer', fn ($q) => $q->where('is_banned', false));
     }
+
+    /**
+     * Gemelde verkopen die nog op een koper wachten.
+     *
+     * Wat een openstaande claim is, staat hier en nergens anders: het paneel
+     * op de advertentie en de markering op Mijn advertenties leunen er allebei
+     * op. Schreven ze het los uit, dan kon de markering blijven staan terwijl
+     * het paneel de claim al niet meer als open zag.
+     *
+     * @param  Builder<Transaction>  $query
+     * @return Builder<Transaction>
+     */
+    public function scopeUnclaimed(Builder $query): Builder
+    {
+        return $query->where('status', 'pending')->whereNull('buyer_user_id');
+    }
 }

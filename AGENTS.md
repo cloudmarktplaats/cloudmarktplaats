@@ -69,12 +69,21 @@ niet met een omweg op de aanroepplek.
 
 ## Livewire kill-switches
 
-Een feature-flag-controle in `mount()` van een Livewire-component is **geen
-kill-switch**. Een vervolgrequest op een al gemounte component loopt eromheen.
-Elke publiek aanroepbare methode die iets muteert heeft zijn eigen
-`abort_unless((bool) config(...), 403)` nodig — zie `confirm()` naast `mount()`
-in `app/Livewire/Profile/Deals.php`. Dit gat is tijdens de koper-koppeling-reeks
-drie keer als echt gat aangetoond.
+Een feature-flag-controle in `mount()` is **geen kill-switch**: `mount()` draait
+alleen bij de eerste page load, dus een pagina die al openstond klikt gewoon door
+nadat de vlag om is. Dit gat is tijdens de koper-koppeling-reeks drie keer echt
+aangetoond.
+
+De plek is `boot()`. Livewire roept die aan bij mount én bij elke hydrate, telkens
+vóór de actie — dus één regel dekt het hele component. Route-middleware helpt niet:
+vervolgrequests gaan naar `/livewire/update`, niet naar de oorspronkelijke route.
+
+**Maar alleen als het hele component van die feature is.** `Deals\Claim` en
+`Profile\Deals` bestaan niet zonder de dealsfunctie, dus daar staat de check in
+`boot()`. `Listings\Detail` is de publieke advertentiepagina die toevallig ook een
+verkooppaneel heeft — zet je de check daar in `boot()`, dan 403't de hele pagina
+zodra de vlag uit gaat. Daar hoort hij dus per muterende methode, zoals bij
+`markSold()` en `newLink()`.
 
 ## Meten zonder analytics
 

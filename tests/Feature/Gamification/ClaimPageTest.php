@@ -106,6 +106,10 @@ it('404s when the deals feature is off', function () {
     $this->get('/deal/'.saleWithToken())->assertNotFound();
 });
 
+// De noodschakelaar zit in boot(), dat Livewire óók vóór elk vervolgrequest
+// aanroept. Een pagina die al openstond toen de vlag omging kan dus niet
+// alsnog bevestigen. 404 en niet 403: met de vlag uit bestaat deze pagina
+// niet, en dat is precies wat een bezoeker bij het openen ook al kreeg.
 it('refuses to confirm once the flag is switched off after the page was already open', function () {
     $token = saleWithToken();
     $buyer = User::factory()->create(['email_verified_at' => now()]);
@@ -114,7 +118,20 @@ it('refuses to confirm once the flag is switched off after the page was already 
 
     config()->set('cloudmarktplaats.features.deals', false);
 
-    $component->call('confirm')->assertForbidden();
+    $component->call('confirm')->assertStatus(404);
+
+    expect(Transaction::query()->where('claim_token', $token)->first()->status)->toBe('pending');
+});
+
+it('refuses to decline once the flag is switched off too', function () {
+    $token = saleWithToken();
+    $buyer = User::factory()->create(['email_verified_at' => now()]);
+
+    $component = Livewire::actingAs($buyer)->test(Claim::class, ['token' => $token]);
+
+    config()->set('cloudmarktplaats.features.deals', false);
+
+    $component->call('decline')->assertStatus(404);
 
     expect(Transaction::query()->where('claim_token', $token)->first()->status)->toBe('pending');
 });

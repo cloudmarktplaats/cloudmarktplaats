@@ -13,29 +13,29 @@ use Illuminate\Support\Facades\File;
  * which weren't wrapped in __() at all and so weren't even reachable by
  * a views-only scan.
  *
- * This test statically collects every literal __() / trans_choice() key
- * used across resources/views and app, and fails if lang/en.json doesn't
- * have a translation for it. Only string-literal arguments are checked: a
- * call like __($status) can't be resolved without executing the code, so
- * those are skipped rather than guessed at. As of writing, the only such
- * call in the app is __($status) in ResetPassword.php, resolved against
- * Laravel's line-based `passwords` namespace rather than lang/en.json.
+ * Only string-literal arguments are checked: a call like __($status) can't
+ * be resolved without executing the code, so those are skipped rather than
+ * guessed at. As of writing, the only such call in the app is __($status)
+ * in ResetPassword.php, resolved against Laravel's line-based `passwords`
+ * namespace rather than lang/en.json.
  */
-it('has an English translation for every literal __() and trans_choice() key used in the app', function () {
-    $translations = json_decode(
-        (string) file_get_contents(lang_path('en.json')),
-        associative: true,
-        flags: JSON_THROW_ON_ERROR,
-    );
 
+/**
+ * Elke letterlijke __() / trans_choice()-sleutel in views en app-code,
+ * met per sleutel het bestand waar hij vandaan komt.
+ *
+ * @return array<string, string>
+ */
+function literalTranslationKeys(): array
+{
     $pattern = '/(__|trans_choice)\(\s*([\'"])((?:\\\\.|(?!\2).)*)\2/s';
-
-    $missing = [];
 
     $files = collect(File::allFiles(resource_path('views')))
         ->filter(fn ($file) => str_ends_with($file->getFilename(), '.blade.php'))
         ->merge(collect(File::allFiles(app_path()))
             ->filter(fn ($file) => str_ends_with($file->getFilename(), '.php')));
+
+    $keys = [];
 
     foreach ($files as $file) {
         if (! preg_match_all($pattern, $file->getContents(), $matches, PREG_SET_ORDER)) {
@@ -47,11 +47,52 @@ it('has an English translation for every literal __() and trans_choice() key use
                 ? str_replace(['\\\'', '\\\\'], ['\'', '\\'], $raw)
                 : str_replace(['\\"', '\\\\'], ['"', '\\'], $raw);
 
-            if (! array_key_exists($key, $translations)) {
-                $missing[] = $file->getRelativePathname().': "'.$key.'"';
-            }
+            $keys[$key] = $file->getRelativePathname();
+        }
+    }
+
+    return $keys;
+}
+
+/** @return array<string, string> */
+function englishTranslations(): array
+{
+    return json_decode(
+        (string) file_get_contents(lang_path('en.json')),
+        associative: true,
+        flags: JSON_THROW_ON_ERROR,
+    );
+}
+
+it('has an English translation for every literal __() and trans_choice() key used in the app', function () {
+    $translations = englishTranslations();
+
+    $missing = [];
+    foreach (literalTranslationKeys() as $key => $file) {
+        if (! array_key_exists($key, $translations)) {
+            $missing[] = $file.': "'.$key.'"';
         }
     }
 
     expect($missing)->toBe([]);
+});
+
+/*
+ * De andere kant op. Verwijder je een scherm of een veld, dan blijft de
+ * vertaling achter en gaat de volgende lezer ervan uit dat de tekst nog
+ * ergens gebruikt wordt. Dat gebeurde bij het gebruikersnaamveld van de
+ * koper: twee sleutels bleven staan nadat het veld eruit was.
+ *
+ * Dit is opruimwerk, geen bug — een Engelse bezoeker ziet er niets van.
+ * Maar het is gratis te bewaken zolang alle sleutels letterlijk zijn.
+ */
+it('has no leftover translations for keys the app no longer uses', function () {
+    $used = literalTranslationKeys();
+
+    $dead = array_values(array_filter(
+        array_keys(englishTranslations()),
+        fn (string $key) => ! array_key_exists($key, $used),
+    ));
+
+    expect($dead)->toBe([]);
 });

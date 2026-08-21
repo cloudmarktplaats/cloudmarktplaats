@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Listings\ListingStateService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -57,10 +58,23 @@ class DealService
                 'currency' => 'EUR',
                 'status' => 'pending',
                 'off_platform' => true,
-                'claim_token' => Str::random(32),
-                'claim_expires_at' => now()->addDays(self::CLAIM_DAYS),
+                ...self::freshClaim(),
             ]);
         });
+    }
+
+    /**
+     * Een verse claim-link. Melden en "nieuwe link" maken er allebei een, en
+     * dat moet dezelfde blijven — lengte, alfabet en looptijd horen bij elkaar.
+     *
+     * @return array{claim_token: string, claim_expires_at: Carbon}
+     */
+    private static function freshClaim(): array
+    {
+        return [
+            'claim_token' => Str::random(32),
+            'claim_expires_at' => now()->addDays(self::CLAIM_DAYS),
+        ];
     }
 
     /**
@@ -71,9 +85,8 @@ class DealService
     public function openClaims(Listing $listing): Collection
     {
         return Transaction::query()
+            ->unclaimed()
             ->where('listing_id', $listing->id)
-            ->where('status', 'pending')
-            ->whereNull('buyer_user_id')
             ->orderBy('id')
             ->get();
     }
@@ -129,10 +142,7 @@ class DealService
                 throw new DealException((string) __('Deze deal is al afgehandeld.'));
             }
 
-            $locked->forceFill([
-                'claim_token' => Str::random(32),
-                'claim_expires_at' => now()->addDays(self::CLAIM_DAYS),
-            ])->save();
+            $locked->forceFill(self::freshClaim())->save();
 
             return $locked;
         });

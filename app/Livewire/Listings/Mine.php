@@ -40,9 +40,8 @@ class Mine extends Component
         // niet meer rendert, dus een link ernaartoe zou dood zijn.
         $openClaimListingIds = config('cloudmarktplaats.features.deals')
             ? Transaction::query()
+                ->unclaimed()
                 ->whereIn('listing_id', $listings->pluck('id'))
-                ->where('status', 'pending')
-                ->whereNull('buyer_user_id')
                 ->pluck('listing_id')
                 ->all()
             : [];

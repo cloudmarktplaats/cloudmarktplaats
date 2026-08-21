@@ -81,7 +81,11 @@ class Detail extends Component
      */
     private function openClaims(): Collection
     {
-        if (! config('cloudmarktplaats.features.deals') || auth()->id() !== $this->listing->user_id) {
+        // Via de policy, niet via een eigen id-vergelijking: ListingPolicy is
+        // de plek waar staat wie wat met een advertentie mag, en `markSold`
+        // bewaakt hierboven al dezelfde twee methoden.
+        if (! config('cloudmarktplaats.features.deals')
+            || ! (auth()->user()?->can('markSold', $this->listing) ?? false)) {
             return new Collection;
         }
 

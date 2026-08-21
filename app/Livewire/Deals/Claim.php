@@ -29,10 +29,24 @@ class Claim extends Component
     /** '' zolang er nog een keuze te maken valt, daarna 'confirmed' of 'declined'. */
     public string $done = '';
 
-    public function mount(string $token): void
+    /**
+     * Livewire roept `boot()` aan bij de eerste page load én bij elk
+     * vervolgrequest, telkens vóór de actie. Dat is de enige plek waar de
+     * noodschakelaar één keer geschreven hoeft te worden: stond hij in
+     * `mount()`, dan kon een pagina die al openstond gewoon doorklikken.
+     *
+     * Dit component bestaat alleen dankzij de dealsfunctie, dus mag de hele
+     * component eronder vallen. Bij een component dat óók iets anders doet —
+     * de advertentiepagina bijvoorbeeld — hoort de check per methode, want
+     * anders verdwijnt de hele pagina zodra de vlag uit gaat.
+     */
+    public function boot(): void
     {
         abort_unless((bool) config('cloudmarktplaats.features.deals'), 404);
+    }
 
+    public function mount(string $token): void
+    {
         $this->token = $token;
 
         // Zowel een gast als een ingelogde gebruiker zonder geverifieerd
@@ -46,8 +60,6 @@ class Claim extends Component
 
     public function confirm(): void
     {
-        abort_unless((bool) config('cloudmarktplaats.features.deals'), 403);
-
         try {
             app(DealService::class)->claim($this->token, $this->verifiedUser());
         } catch (DealException $e) {
@@ -61,8 +73,6 @@ class Claim extends Component
 
     public function decline(): void
     {
-        abort_unless((bool) config('cloudmarktplaats.features.deals'), 403);
-
         try {
             app(DealService::class)->decline($this->token, $this->verifiedUser());
         } catch (DealException $e) {

@@ -24,15 +24,18 @@ use Livewire\Component;
 #[Layout('components.layouts.marketing', ['title' => 'Mijn deals — Cloudmarktplaats'])]
 class Deals extends Component
 {
-    public function mount(): void
+    /**
+     * De noodschakelaar hoort in `boot()`, niet in `mount()`: Livewire roept
+     * `boot()` óók aan bij elk vervolgrequest, vóór de actie. Deze hele pagina
+     * bestaat dankzij de dealsfunctie, dus valt hij er in zijn geheel onder.
+     */
+    public function boot(): void
     {
         abort_unless((bool) config('cloudmarktplaats.features.deals'), 404);
     }
 
     public function confirm(int $id): void
     {
-        abort_unless((bool) config('cloudmarktplaats.features.deals'), 403);
-
         $tx = Transaction::query()->findOrFail($id);
         $user = auth()->user();
         abort_unless($user !== null && $tx->buyer_user_id === $user->id, 403);
