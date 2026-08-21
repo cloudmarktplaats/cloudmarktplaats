@@ -30,6 +30,7 @@ class SellerContactMail extends Mailable
         public Listing $listing,
         public string $buyerEmail,
         public string $messageBody,
+        public ?string $buyerUsername = null,
     ) {}
 
     public function envelope(): Envelope
@@ -48,6 +49,7 @@ class SellerContactMail extends Mailable
                 'title' => $this->listing->title,
                 'url' => url('/listings/'.$this->listing->ulid.'-'.$this->listing->slug),
                 'body' => $this->messageBody,
+                'username' => $this->buyerUsername,
             ],
         );
     }

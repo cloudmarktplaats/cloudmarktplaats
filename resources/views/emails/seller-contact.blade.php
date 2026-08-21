@@ -18,6 +18,12 @@
             <strong>{{ $title }}</strong>.
         </p>
 
+        @if ($username)
+            <p style="margin:0 0 16px;color:#7B8DB0;font-size:14px;">
+                De afzender is ingelogd als <strong style="color:#E8EDF8;">{{ '@'.$username }}</strong>.
+            </p>
+        @endif
+
         <div style="border-left:2px solid #1E2A45;padding:4px 0 4px 16px;margin:0 0 24px;color:#E8EDF8;white-space:pre-wrap;">{{ $body }}</div>
 
         <p style="margin:0 0 24px;color:#7B8DB0;font-size:14px;">

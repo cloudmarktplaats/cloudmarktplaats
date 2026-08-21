@@ -110,6 +110,44 @@ it('logs only the listing id — no email, no message body', function () {
         ->and((array) $row)->not->toHaveKeys(['email', 'body', 'ip', 'message']);
 });
 
+it('names a logged-in buyer in the relay mail, unless they opt out', function () {
+    Mail::fake();
+    $buyer = User::factory()->create(['username' => 'robin']);
+
+    $this->actingAs($buyer);
+    relayForm()
+        ->set('email', 'robin@example.test')
+        ->set('body', 'Is deze nog beschikbaar en wat is de laagste prijs?')
+        ->call('send')
+        ->assertHasNoErrors();
+
+    Mail::assertSent(SellerContactMail::class, fn (SellerContactMail $m) => $m->buyerUsername === 'robin');
+});
+
+it('stays anonymous when the buyer unticks the box', function () {
+    Mail::fake();
+    $this->actingAs(User::factory()->create(['username' => 'robin']));
+
+    relayForm()
+        ->set('revealUsername', false)
+        ->set('email', 'robin@example.test')
+        ->set('body', 'Is deze nog beschikbaar en wat is de laagste prijs?')
+        ->call('send');
+
+    Mail::assertSent(SellerContactMail::class, fn (SellerContactMail $m) => $m->buyerUsername === null);
+});
+
+it('never names a buyer who is not logged in', function () {
+    Mail::fake();
+
+    relayForm()
+        ->set('email', 'onbekend@example.test')
+        ->set('body', 'Is deze nog beschikbaar en wat is de laagste prijs?')
+        ->call('send');
+
+    Mail::assertSent(SellerContactMail::class, fn (SellerContactMail $m) => $m->buyerUsername === null);
+});
+
 it('blocks more than three messages to the same listing from one sender', function () {
     Mail::fake();
     RateLimiter::clear('test'); // defensive; keys are hashed below

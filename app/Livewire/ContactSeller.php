@@ -41,6 +41,14 @@ class ContactSeller extends Component
     /** Honeypot. Must stay empty; real users never see this field. */
     public string $website = '';
 
+    /**
+     * Ingelogde kopers mogen zich bekendmaken. Standaard aan, omdat een vinkje
+     * dat standaard uit staat in de praktijk nooit wordt aangeraakt — en de
+     * verkoper anders nooit weet met wie hij handelt. Anoniem blijven is één
+     * klik weg, en dat is precies wat "optioneel anoniem" hoort te betekenen.
+     */
+    public bool $revealUsername = true;
+
     /** Unix timestamp of form render, for the timing trap. */
     public int $formLoadedAt = 0;
 
@@ -96,10 +104,13 @@ class ContactSeller extends Component
         // static analyser honest about the nullable relation.
         $seller = $this->listing->user;
         if ($seller !== null) {
+            $buyer = auth()->user();
+
             Mail::to($seller->email)->send(new SellerContactMail(
                 listing: $this->listing,
                 buyerEmail: $this->email,
                 messageBody: $this->body,
+                buyerUsername: $this->revealUsername ? $buyer?->username : null,
             ));
 
             ContactRelayLog::create(['listing_id' => $this->listing->id]);
