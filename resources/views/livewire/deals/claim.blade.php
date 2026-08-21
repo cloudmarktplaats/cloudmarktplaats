@@ -53,7 +53,7 @@
             @else
                 <div class="mt-6 flex flex-wrap gap-2">
                     <button wire:click="confirm" class="cmp-btn cmp-btn-primary">{{ __('Ja, dat klopt') }}</button>
-                    <button wire:click="decline" class="cmp-btn cmp-btn-ghost">{{ __('Nee, dit klopt niet') }}</button>
+                    <button wire:click="decline" wire:confirm="{{ __('Dit kan niet ongedaan gemaakt worden. Weet je het zeker?') }}" class="cmp-btn cmp-btn-ghost">{{ __('Nee, dit klopt niet') }}</button>
                 </div>
             @endif
         @endauth

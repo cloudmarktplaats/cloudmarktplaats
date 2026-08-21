@@ -94,6 +94,14 @@ class IntegrityReport
             $signalen[] = sprintf('%d deal(s) wachten nog op bevestiging terwijl er geen bruikbare claim-link meer is — de verkoper kan een nieuwe sturen.', $vergeten);
         }
 
+        // Weigeren is onomkeerbaar: de advertentie blijft op 'sold' staan en
+        // geen enkel scherm toont een 'cancelled'-rij. Zonder dit signaal ziet
+        // de verkoper nergens dat zijn verkoop stilletjes is afgeketst.
+        $geweigerd = Transaction::query()->where('status', 'cancelled')->where('updated_at', '>=', $since)->count();
+        if ($geweigerd > 0) {
+            $signalen[] = sprintf('%d deal(s) geweigerd door de koper in de laatste 24 uur — de advertentie blijft op verkocht staan.', $geweigerd);
+        }
+
         return ['cijfers' => $cijfers, 'fouten' => $fouten, 'signalen' => $signalen];
     }
 

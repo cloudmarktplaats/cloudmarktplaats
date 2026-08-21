@@ -63,3 +63,31 @@ it('still signals a legacy pending sale without a claim link that has gone quiet
 
     expect(collect($signalen)->contains(fn ($signaal) => str_contains($signaal, 'koper') || str_contains($signaal, 'claim')))->toBeTrue();
 });
+
+/*
+ * Declining is a one-way door: the listing stays 'sold', markSold() and
+ * refreshClaimToken() both refuse, and no screen surfaces a cancelled row.
+ * This signal is the only place a decline becomes visible to anyone.
+ */
+it('signals a deal the buyer declined in the last 24 hours', function () {
+    $seller = User::factory()->create();
+    $listing = Listing::factory()->published()->for($seller)->create();
+    $tx = app(DealService::class)->markSold($listing, $seller);
+    app(DealService::class)->decline((string) $tx->claim_token, User::factory()->create(['email_verified_at' => now()]));
+
+    $signalen = app(IntegrityReport::class)->build(now())['signalen'];
+
+    expect(collect($signalen)->contains(fn ($signaal) => str_contains($signaal, 'geweigerd')))->toBeTrue();
+});
+
+it('does not signal a decline from outside the 24-hour window', function () {
+    Transaction::factory()->create([
+        'status' => 'cancelled',
+        'created_at' => now()->subDays(3),
+        'updated_at' => now()->subDays(3),
+    ]);
+
+    $signalen = app(IntegrityReport::class)->build(now())['signalen'];
+
+    expect(collect($signalen)->contains(fn ($signaal) => str_contains($signaal, 'geweigerd')))->toBeFalse();
+});

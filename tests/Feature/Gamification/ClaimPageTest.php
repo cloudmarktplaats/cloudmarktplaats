@@ -40,6 +40,22 @@ it('lets the buyer decline', function () {
         ->assertSet('done', 'declined');
 });
 
+/*
+ * Declining is a one-way door: refreshClaimToken() and markSold() both refuse
+ * once the transaction has left 'pending', and no screen surfaces a
+ * cancelled row. Unlike markSold on the detail page, which already asks for
+ * confirmation, this button fired the moment it was clicked — a missed tap
+ * on a phone would permanently kill a real sale with no way back.
+ */
+it('asks the buyer to confirm before declining, same as markSold does', function () {
+    $token = saleWithToken();
+    $buyer = User::factory()->create(['email_verified_at' => now()]);
+
+    Livewire::actingAs($buyer)
+        ->test(Claim::class, ['token' => $token])
+        ->assertSeeHtml('wire:confirm');
+});
+
 it('parks the url for a guest so login brings them back here', function () {
     $token = saleWithToken();
 
