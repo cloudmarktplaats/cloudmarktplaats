@@ -91,7 +91,7 @@ class IntegrityReport
             })
             ->count();
         if ($vergeten > 0) {
-            $signalen[] = sprintf('%d deal(s) blijven op "pending" staan zonder tijdige actie van de koper — claim-link verlopen of te lang stil; verkoper kan opnieuw contact zoeken.', $vergeten);
+            $signalen[] = sprintf('%d deal(s) wachten op koper met verlopen claim-link — verkoper kan een nieuwe link aanmaken.', $vergeten);
         }
 
         return ['cijfers' => $cijfers, 'fouten' => $fouten, 'signalen' => $signalen];
