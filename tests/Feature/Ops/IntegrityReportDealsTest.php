@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\Listing;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Gamification\DealService;
 use App\Services\Ops\IntegrityReport;
@@ -24,4 +25,41 @@ it('counts a reported sale and a confirmed one', function () {
     app(DealService::class)->claim((string) $tx->claim_token, User::factory()->create(['email_verified_at' => now()]));
 
     expect(app(IntegrityReport::class)->build(now())['cijfers']['deals_bevestigd'])->toBe(1);
+});
+
+/*
+ * Een claim-link is 30 dagen geldig (DealService::CLAIM_DAYS), ver ruimer
+ * dan `silence_days` (7). Een tien dagen oude, nog niet geclaimde verkoop
+ * is dus volstrekt normaal en mag geen signaal geven.
+ */
+it('does not signal a reported sale whose claim link is still valid', function () {
+    Transaction::factory()->unclaimed()->create(['created_at' => now()->subDays(10)]);
+
+    $signalen = app(IntegrityReport::class)->build(now())['signalen'];
+
+    expect(collect($signalen)->contains(fn ($signaal) => str_contains($signaal, 'koper') || str_contains($signaal, 'claim')))->toBeFalse();
+});
+
+it('signals a reported sale whose claim link has expired unused', function () {
+    Transaction::factory()->unclaimed()->create([
+        'created_at' => now()->subDay(),
+        'claim_expires_at' => now()->subDay(),
+    ]);
+
+    $signalen = app(IntegrityReport::class)->build(now())['signalen'];
+
+    expect(collect($signalen)->contains(fn ($signaal) => str_contains($signaal, 'claim')))->toBeTrue();
+});
+
+it('still signals a legacy pending sale without a claim link that has gone quiet', function () {
+    Transaction::factory()->create([
+        'status' => 'pending',
+        'claim_token' => null,
+        'claim_expires_at' => null,
+        'created_at' => now()->subDays(10),
+    ]);
+
+    $signalen = app(IntegrityReport::class)->build(now())['signalen'];
+
+    expect(collect($signalen)->contains(fn ($signaal) => str_contains($signaal, 'koper') || str_contains($signaal, 'claim')))->toBeTrue();
 });

@@ -74,9 +74,24 @@ class IntegrityReport
             );
         }
 
-        $vergeten = Transaction::query()->where('status', 'pending')->where('created_at', '<=', $quiet)->count();
+        // Een claim-link is 30 dagen geldig (DealService::CLAIM_DAYS), ruim
+        // langer dan `silence_days`. Alarmeren op `created_at` zou dus elke
+        // normale, nog niet geclaimde verkoop vanaf dag 7 laten afgaan.
+        // Het signaal moet daarom op de vervaldatum van de link zitten: pas
+        // als die verstreken is zonder claim, is er echt iets aan de hand.
+        // Legacy-rijen zonder claim-token (van vóór de claim-link) hebben
+        // geen vervaldatum en vallen terug op de oude `created_at`-regel.
+        $vergeten = Transaction::query()
+            ->where('status', 'pending')
+            ->where(function ($query) use ($now, $quiet) {
+                $query->where('claim_expires_at', '<=', $now)
+                    ->orWhere(function ($query) use ($quiet) {
+                        $query->whereNull('claim_expires_at')->where('created_at', '<=', $quiet);
+                    });
+            })
+            ->count();
         if ($vergeten > 0) {
-            $signalen[] = sprintf('%d deal(s) wachten al langer dan %d dagen op bevestiging door de koper.', $vergeten, $silenceDays);
+            $signalen[] = sprintf('%d deal(s) blijven op "pending" staan zonder tijdige actie van de koper — claim-link verlopen of te lang stil; verkoper kan opnieuw contact zoeken.', $vergeten);
         }
 
         return ['cijfers' => $cijfers, 'fouten' => $fouten, 'signalen' => $signalen];
