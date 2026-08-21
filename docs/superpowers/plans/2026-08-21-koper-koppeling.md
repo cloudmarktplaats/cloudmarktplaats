@@ -27,7 +27,8 @@
 - `database/migrations/2026_08_21_000100_transactions_nullable_buyer_and_claim_token.php` — schema
 - `app/Livewire/Deals/Claim.php` — de claim-pagina
 - `resources/views/livewire/deals/claim.blade.php` — de claim-pagina
-- `resources/views/components/deals/claim-link.blade.php` — één claim-link met kopieerknop
+- `resources/views/components/copy-button.blade.php` — herbruikbare kopieerknop (nu ook voor het deelpaneel)
+- `resources/views/components/deals/claim-link.blade.php` — één claim-link, leunt op de kopieerknop
 - `tests/Feature/Gamification/ClaimLinkTest.php` — service-gedrag rond de token
 - `tests/Feature/Gamification/ClaimPageTest.php` — de pagina
 
@@ -40,6 +41,7 @@
 - `app/Livewire/ContactSeller.php` + `resources/views/livewire/contact-seller.blade.php`
 - `app/Mail/SellerContactMail.php` + `resources/views/emails/seller-contact.blade.php`
 - `app/Services/Ops/IntegrityReport.php` + `resources/views/emails/daily-integrity.blade.php`
+- `resources/views/components/listings/share-panel.blade.php` — leunt voortaan op de gedeelde kopieerknop
 - `routes/web.php`
 - `docs/known-gaps.md`, `AGENTS.md`
 - Bestaande tests: `DealServiceTest.php`, `MarkSoldUiTest.php`, `DealsPageTest.php`
@@ -402,7 +404,7 @@ Laat `confirm()` en `confirmedSalesCount()` ongewijzigd staan.
 docker compose exec -T php-fpm ./vendor/bin/pest tests/Feature/Gamification/DealServiceTest.php tests/Feature/Gamification/ClaimLinkTest.php
 ```
 
-Verwacht: PASS. De rest van de suite is nu tijdelijk stuk (`Detail::markSold` geeft nog drie argumenten mee) — dat is Task 5.
+Verwacht: PASS. De rest van de suite is nu tijdelijk stuk (`Detail::markSold` geeft nog drie argumenten mee) — dat is Task 6.
 
 - [ ] **Step 5: Commit**
 
@@ -940,12 +942,165 @@ git commit -m "Add the buyer-facing claim page at /deal/{token}"
 
 ---
 
-### Task 5: Het verkoperspaneel — één knop, dan de link
+### Task 5: Eén kopieerknop voor twee panelen
+
+Het deelpaneel heeft al een kopieerknop met clipboard-API en een eerlijke terugval. Het claim-paneel uit Task 6 heeft precies hetzelfde nodig. Dit is een **pure refactor**: eerst het gedrag verplaatsen naar een component, met de bestaande tests als vangnet, en pas daarna een tweede gebruiker toevoegen.
+
+**Files:**
+- Create: `resources/views/components/copy-button.blade.php`
+- Modify: `resources/views/components/listings/share-panel.blade.php:20-87`
+- Test: `tests/Feature/Listings/SharePanelTest.php`
+
+**Interfaces:**
+- Consumes: niets uit eerdere taken.
+- Produces: `<x-copy-button :text="..." :label="..." />` — een knop die `text` naar het klembord schrijft, "Gekopieerd" toont bij succes, en bij falen het verborgen invoerveld onthult en selecteert. `label` is optioneel (default `Kopieer`). Extra attributen (bijvoorbeeld `wire:key`) landen via `$attributes` op de root.
+
+- [ ] **Step 1: Write the failing test**
+
+Voeg toe aan `tests/Feature/Listings/SharePanelTest.php`:
+
+```php
+// De kopieerknop zit sinds deze refactor in <x-copy-button>. Deze test houdt
+// vast dat het deelpaneel hem nog steeds rendert met zijn eigen label — anders
+// verdwijnt de knop stilletjes bij een wijziging aan het component.
+it('renders the shared copy button inside the share panel', function () {
+    $listing = Listing::factory()->create(['state' => 'published']);
+
+    $this->actingAs($listing->user)
+        ->get("/listings/{$listing->ulid}-{$listing->slug}")
+        ->assertOk()
+        ->assertSee('Kopieer tekst + link')
+        ->assertSee('Kopiëren lukte niet', false);
+});
+```
+
+- [ ] **Step 2: Run test to verify it fails**
+
+```bash
+docker compose exec -T php-fpm ./vendor/bin/pest tests/Feature/Listings/SharePanelTest.php
+```
+
+Verwacht: FAIL is **niet** gegarandeerd — de huidige markup bevat beide teksten al, dus deze test slaagt mogelijk meteen. Dat is hier de bedoeling: hij is het vangnet dat bewijst dat de refactor niets sloopt. Noteer de uitkomst en ga door.
+
+- [ ] **Step 3: Write the component**
+
+`resources/views/components/copy-button.blade.php`:
+
+```blade
+@props(['text', 'label' => null])
+
+{{--
+    Kopieerknop met een eerlijke terugval.
+
+    De clipboard-API vereist een secure context. Productie is https en
+    localhost telt als secure, dus dat is het normale pad; de catch is er voor
+    de rest. We claimen nooit succes dat we niet kunnen vaststellen: mislukt
+    het schrijven, dan onthullen we het invoerveld en selecteren we de tekst
+    zodat de bezoeker zelf kan kopiëren.
+--}}
+<div
+    x-data="{
+        copied: false,
+        failed: false,
+        async copy() {
+            const input = $refs.source;
+
+            try {
+                if (! navigator.clipboard) {
+                    throw new Error('clipboard api unavailable');
+                }
+                await navigator.clipboard.writeText(input.value);
+            } catch (error) {
+                this.failed = true;
+                input.classList.remove('sr-only');
+                input.removeAttribute('aria-hidden');
+                input.removeAttribute('tabindex');
+                input.select();
+
+                return;
+            }
+
+            this.copied = true;
+            setTimeout(() => this.copied = false, 2000);
+        },
+    }"
+    {{ $attributes->class(['flex flex-wrap items-center gap-2']) }}
+>
+    <button type="button" class="cmp-btn cmp-btn-ghost" @click="copy()">
+        <span x-show="!copied">{{ $label ?? __('Kopieer') }}</span>
+        <span x-show="copied" x-cloak>{{ __('Gekopieerd') }}</span>
+    </button>
+
+    {{-- Start verborgen; wordt alleen onthuld als het schrijven mislukt. --}}
+    <input
+        type="text"
+        x-ref="source"
+        value="{{ $text }}"
+        readonly
+        class="sr-only w-full font-mono text-xs sm:w-auto sm:flex-1"
+        tabindex="-1"
+        aria-hidden="true"
+    >
+
+    <p x-show="failed" x-cloak class="text-sm text-cmp-muted">
+        {{ __('Kopiëren lukte niet — selecteer de tekst hierboven en kopieer zelf.') }}
+    </p>
+</div>
+```
+
+- [ ] **Step 4: Let the share panel use it**
+
+In `resources/views/components/listings/share-panel.blade.php`: vervang alles vanaf `<div` met het `x-data`-blok (regel 20) tot en met de afsluitende `</div>` net vóór `</section>` (regel 87) door:
+
+```blade
+        <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
+            <a
+                href="{{ $share->linkedIn($listing) }}"
+                target="_blank"
+                rel="noopener external"
+                class="cmp-btn cmp-btn-primary"
+            >{{ __('Deel op LinkedIn') }}</a>
+
+            <a
+                href="{{ $share->mainDeckUrl() }}"
+                target="_blank"
+                rel="noopener external"
+                class="cmp-btn cmp-btn-secondary"
+            >{{ __('Deel op MainDeck') }}</a>
+
+            <x-copy-button :text="$shareText" :label="__('Kopieer tekst + link')" />
+        </div>
+```
+
+De twee deellinks zaten voorheen ín het `x-data`-blok; ze hebben die scope nooit gebruikt, dus ze verhuizen naar de buitenste flexrij. De kopieerknop is nu zelf een flex-item en houdt daarmee dezelfde plek in de rij.
+
+- [ ] **Step 5: Run tests to verify they pass**
+
+```bash
+docker compose exec -T php-fpm ./vendor/bin/pest tests/Feature/Listings/SharePanelTest.php
+npm run build
+```
+
+Verwacht: PASS, 4 tests. De build moet zonder fouten doorlopen — er komen geen nieuwe Tailwind-classes bij, maar de blade-wijziging moet wel meegenomen worden.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add resources/views/components/copy-button.blade.php \
+        resources/views/components/listings/share-panel.blade.php \
+        tests/Feature/Listings/SharePanelTest.php
+git commit -m "Extract the copy button so a second panel can use it"
+```
+
+---
+
+### Task 6: Het verkoperspaneel — één knop, dan de link
 
 **Files:**
 - Modify: `app/Livewire/Listings/Detail.php`
 - Modify: `resources/views/livewire/listings/detail.blade.php:34-46`
 - Create: `resources/views/components/deals/claim-link.blade.php`
+- Uses: `<x-copy-button>` uit Task 5
 - Modify: `app/Livewire/Listings/Mine.php`
 - Modify: `resources/views/livewire/listings/mine.blade.php:82-86`
 - Test: `tests/Feature/Gamification/MarkSoldUiTest.php` (herschrijven), `tests/Feature/Listings/MarkSoldFromMineTest.php` (aanvullen)
@@ -1145,7 +1300,7 @@ door
 
 - [ ] **Step 4: Write the claim-link component**
 
-`resources/views/components/deals/claim-link.blade.php` — het kopieerpatroon is overgenomen van `components/listings/share-panel.blade.php`, inclusief de eerlijke terugval als de clipboard-API niet beschikbaar is:
+`resources/views/components/deals/claim-link.blade.php` — het kopiëren zelf komt uit `<x-copy-button>` (Task 5):
 
 ```blade
 @props(['transaction'])
@@ -1167,49 +1322,7 @@ door
     @else
         <p class="break-all font-mono text-xs text-cmp-text">{{ $url }}</p>
 
-        <div
-            x-data="{
-                copied: false,
-                async copy() {
-                    const input = $refs.claimText;
-
-                    try {
-                        if (! navigator.clipboard) {
-                            throw new Error('clipboard api unavailable');
-                        }
-                        await navigator.clipboard.writeText(input.value);
-                    } catch (error) {
-                        // Nooit succes claimen dat we niet kunnen vaststellen:
-                        // toon de tekst en laat de verkoper zelf kopiëren.
-                        input.classList.remove('sr-only');
-                        input.removeAttribute('aria-hidden');
-                        input.removeAttribute('tabindex');
-                        input.select();
-
-                        return;
-                    }
-
-                    this.copied = true;
-                    setTimeout(() => this.copied = false, 2000);
-                },
-            }"
-            class="mt-2 flex flex-wrap items-center gap-2"
-        >
-            <button type="button" class="cmp-btn cmp-btn-ghost" @click="copy()">
-                <span x-show="!copied">{{ __('Kopieer link + tekst') }}</span>
-                <span x-show="copied" x-cloak>{{ __('Gekopieerd') }}</span>
-            </button>
-
-            <input
-                type="text"
-                x-ref="claimText"
-                value="{{ $copyText }}"
-                readonly
-                class="sr-only w-full font-mono text-xs"
-                tabindex="-1"
-                aria-hidden="true"
-            >
-        </div>
+        <x-copy-button :text="$copyText" :label="__('Kopieer link + tekst')" class="mt-2" />
 
         <p class="mt-2 font-mono text-[11px] text-cmp-faint">
             {{ __('Nog niet bevestigd. Link verloopt :date.', ['date' => $transaction->claim_expires_at?->translatedFormat('j F') ?? '—']) }}
@@ -1320,7 +1433,7 @@ git commit -m "Give the seller one button and a link to hand over"
 
 ---
 
-### Task 6: Mijn deals wordt een overzicht
+### Task 7: Mijn deals wordt een overzicht
 
 **Files:**
 - Modify: `app/Livewire/Profile/Deals.php`
@@ -1477,7 +1590,7 @@ git commit -m "Turn Mijn deals into a record of confirmed trades"
 
 ---
 
-### Task 7: De dagelijkse check kan het weer zien
+### Task 8: De dagelijkse check kan het weer zien
 
 **Files:**
 - Modify: `app/Services/Ops/IntegrityReport.php:41`
@@ -1573,7 +1686,7 @@ git commit -m "Count deals with a status the enum actually has, and report repor
 
 ---
 
-### Task 8: De koper mag zich bekendmaken in de relay
+### Task 9: De koper mag zich bekendmaken in de relay
 
 **Files:**
 - Modify: `app/Livewire/ContactSeller.php`
@@ -1741,7 +1854,7 @@ git commit -m "Let a logged-in buyer say who they are, without making it the def
 
 ---
 
-### Task 9: Poorten, documentatie en de oude rijen
+### Task 10: Poorten, documentatie en de oude rijen
 
 **Files:**
 - Modify: `docs/known-gaps.md`
