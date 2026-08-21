@@ -35,7 +35,7 @@
             setTimeout(() => this.copied = false, 2000);
         },
     }"
-    {{ $attributes->class(['flex flex-wrap items-center gap-2']) }}
+    {{ $attributes->class(['flex flex-wrap items-center gap-3']) }}
 >
     <button type="button" class="cmp-btn cmp-btn-ghost" @click="copy()">
         <span x-show="!copied">{{ $label ?? __('Kopieer') }}</span>
