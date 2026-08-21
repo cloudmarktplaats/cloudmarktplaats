@@ -35,15 +35,19 @@ class Claim extends Component
 
         $this->token = $token;
 
-        // Een gast komt hier binnen zonder sessie. Parkeer de URL zodat
-        // inloggen én registreren hem op deze pagina terugzetten.
-        if (! auth()->check()) {
+        // Zowel een gast als een ingelogde gebruiker zonder geverifieerd
+        // e-mailadres kan hier nog niets: parkeer de URL zodat inloggen,
+        // registreren én verifiëren hem op deze pagina terugzetten.
+        $user = auth()->user();
+        if ($user === null || ! $user->hasVerifiedEmail()) {
             session()->put('url.intended', route('deals.claim', ['token' => $token]));
         }
     }
 
     public function confirm(): void
     {
+        abort_unless((bool) config('cloudmarktplaats.features.deals'), 403);
+
         try {
             app(DealService::class)->claim($this->token, $this->verifiedUser());
         } catch (DealException $e) {
@@ -57,6 +61,8 @@ class Claim extends Component
 
     public function decline(): void
     {
+        abort_unless((bool) config('cloudmarktplaats.features.deals'), 403);
+
         try {
             app(DealService::class)->decline($this->token, $this->verifiedUser());
         } catch (DealException $e) {

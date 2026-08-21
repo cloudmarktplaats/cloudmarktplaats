@@ -157,8 +157,12 @@ Route::get('/profile/deals', ProfileDeals::class)
 // De koperskant van een gemelde verkoop. Publiek bereikbaar omdat de koper
 // hier koud binnenkomt via een link uit de mail van de verkoper — vaak zonder
 // account. Bevestigen zelf eist auth + verified; dat bewaakt de component.
+// Een echt token is 32 tekens, maar een afgekapte plak-actie mag hier nog
+// binnenkomen: de component legt een onbekend token dan zelf rustig uit in
+// plaats van dat de route al met een kale 404 afbreekt. {8,64} laat ruimte
+// voor verminking in beide richtingen zonder een loze constraint te worden.
 Route::get('/deal/{token}', DealClaim::class)
-    ->where('token', '[A-Za-z0-9]{32}')
+    ->where('token', '[A-Za-z0-9]{8,64}')
     ->name('deals.claim');
 
 // 2FA challenge after primary auth — guest-accessible because the user

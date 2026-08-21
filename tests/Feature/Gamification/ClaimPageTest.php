@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Livewire\Deals\Claim;
 use App\Models\Listing;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Gamification\DealService;
 use Livewire\Livewire;
@@ -69,4 +70,32 @@ it('404s when the deals feature is off', function () {
     config()->set('cloudmarktplaats.features.deals', false);
 
     $this->get('/deal/'.saleWithToken())->assertNotFound();
+});
+
+it('refuses to confirm once the flag is switched off after the page was already open', function () {
+    $token = saleWithToken();
+    $buyer = User::factory()->create(['email_verified_at' => now()]);
+
+    $component = Livewire::actingAs($buyer)->test(Claim::class, ['token' => $token]);
+
+    config()->set('cloudmarktplaats.features.deals', false);
+
+    $component->call('confirm')->assertForbidden();
+
+    expect(Transaction::query()->where('claim_token', $token)->first()->status)->toBe('pending');
+});
+
+it('parks the url for a logged-in but unverified buyer too', function () {
+    $token = saleWithToken();
+    $buyer = User::factory()->create(['email_verified_at' => null]);
+
+    $this->actingAs($buyer)->get("/deal/{$token}")->assertOk();
+
+    expect(session('url.intended'))->toBe(route('deals.claim', ['token' => $token]));
+});
+
+it('explains an unknown link instead of 404ing for a truncated token', function () {
+    $this->get('/deal/'.str_repeat('x', 20))
+        ->assertOk()
+        ->assertSee('Deze link kennen we niet');
 });
