@@ -8,8 +8,10 @@ use App\Exceptions\DealException;
 use App\Jobs\Listings\IncrementViewJob;
 use App\Livewire\ContactSeller;
 use App\Models\Listing;
+use App\Models\Transaction;
 use App\Services\Gamification\DealService;
 use App\Support\ListingJsonLd;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Gate;
@@ -35,8 +37,6 @@ class Detail extends Component
 {
     public Listing $listing;
 
-    public string $buyerUsername = '';
-
     public function markSold(): void
     {
         abort_unless((bool) config('cloudmarktplaats.features.deals'), 403);
@@ -45,18 +45,45 @@ class Detail extends Component
         abort_unless($user?->can('markSold', $this->listing) ?? false, 403);
 
         try {
-            app(DealService::class)->markSold(
-                $this->listing,
-                $user,
-                $this->buyerUsername !== '' ? $this->buyerUsername : null,
-            );
+            app(DealService::class)->markSold($this->listing, $user);
         } catch (DealException $e) {
-            $this->addError('buyerUsername', $e->getMessage());
+            $this->addError('deal', $e->getMessage());
 
             return;
         }
 
         $this->listing->refresh();
+    }
+
+    /** Verlopen link vervangen. De verkoper is de enige die hem kan doorgeven. */
+    public function newLink(int $transactionId): void
+    {
+        $user = auth()->user();
+        abort_unless($user?->can('markSold', $this->listing) ?? false, 403);
+
+        $tx = Transaction::query()
+            ->where('listing_id', $this->listing->id)
+            ->findOrFail($transactionId);
+
+        try {
+            app(DealService::class)->refreshClaimToken($tx, $user);
+        } catch (DealException $e) {
+            $this->addError('deal', $e->getMessage());
+        }
+    }
+
+    /**
+     * Openstaande claims van deze advertentie, alleen voor de eigenaar.
+     *
+     * @return Collection<int, Transaction>
+     */
+    private function openClaims(): Collection
+    {
+        if (! config('cloudmarktplaats.features.deals') || auth()->id() !== $this->listing->user_id) {
+            return new Collection;
+        }
+
+        return app(DealService::class)->openClaims($this->listing);
     }
 
     public function mount(string $ulid, string $slug): void
@@ -104,7 +131,7 @@ class Detail extends Component
 
     public function render(): View
     {
-        $view = view('livewire.listings.detail');
+        $view = view('livewire.listings.detail', ['openClaims' => $this->openClaims()]);
 
         // Only a published listing gets its own OG tags. For draft /
         // pending_review / rejected the layout defaults stay, so a listing

@@ -6,43 +6,82 @@ use App\Livewire\Listings\Detail;
 use App\Models\Listing;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Services\Gamification\DealService;
 use Livewire\Livewire;
 
-it('lets the owner mark their listing sold and tag a buyer', function () {
+/** @return array{0: User, 1: Listing} */
+function sellerWithListing(): array
+{
     $seller = User::factory()->create();
-    $buyer = User::factory()->create(['username' => 'koper', 'email_verified_at' => now()]);
-    $listing = Listing::factory()->published()->for($seller)->create();
+
+    return [$seller, Listing::factory()->published()->for($seller)->create()];
+}
+
+it('marks the listing sold with one button and shows the claim link afterwards', function () {
+    [$seller, $listing] = sellerWithListing();
 
     Livewire::actingAs($seller)
         ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
-        ->set('buyerUsername', 'koper')
         ->call('markSold')
-        ->assertHasNoErrors();
+        ->assertHasNoErrors()
+        ->assertSee('Stuur de koper deze link');
+
+    $tx = Transaction::query()->sole();
 
     expect($listing->fresh()->state)->toBe('sold')
-        ->and(Transaction::query()->where('buyer_user_id', $buyer->id)->where('status', 'pending')->exists())->toBeTrue();
+        ->and($tx->buyer_user_id)->toBeNull()
+        ->and($tx->claim_token)->not->toBeNull();
 });
 
-it('does not let a non-owner mark it sold', function () {
-    $seller = User::factory()->create();
+it('keeps showing the panel on a sold listing while a claim is open', function () {
+    [$seller, $listing] = sellerWithListing();
+    app(DealService::class)->markSold($listing, $seller);
+
+    Livewire::actingAs($seller)
+        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->assertSee('Nog niet bevestigd');
+});
+
+it('hands out a fresh link when the seller asks for one', function () {
+    [$seller, $listing] = sellerWithListing();
+    $tx = app(DealService::class)->markSold($listing, $seller);
+    $old = (string) $tx->claim_token;
+
+    Livewire::actingAs($seller)
+        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->call('newLink', $tx->id)
+        ->assertHasNoErrors();
+
+    expect($tx->fresh()->claim_token)->not->toBe($old);
+});
+
+it('does not let a non-owner mark it sold or refresh a link', function () {
+    [$seller, $listing] = sellerWithListing();
+    $tx = app(DealService::class)->markSold($listing, $seller);
     $stranger = User::factory()->create();
-    $listing = Listing::factory()->published()->for($seller)->create();
+
+    // Mount op een *gepubliceerde* advertentie van dezelfde verkoper: een
+    // vreemde die een 'sold' advertentie opvraagt krijgt al in mount() een 404
+    // van de view-ability, en dan komt newLink nooit aan de beurt.
+    $other = Listing::factory()->published()->for($seller)->create();
 
     Livewire::actingAs($stranger)
-        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->test(Detail::class, ['ulid' => (string) $other->ulid, 'slug' => (string) $other->slug])
         ->call('markSold')
+        ->assertForbidden();
+
+    Livewire::actingAs($stranger)
+        ->test(Detail::class, ['ulid' => (string) $other->ulid, 'slug' => (string) $other->slug])
+        ->call('newLink', $tx->id)
         ->assertForbidden();
 });
 
 it('does not let the owner mark it sold when the deals feature is off', function () {
     config(['cloudmarktplaats.features.deals' => false]);
-
-    $seller = User::factory()->create();
-    $listing = Listing::factory()->published()->for($seller)->create();
+    [$seller, $listing] = sellerWithListing();
 
     Livewire::actingAs($seller)
         ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
-        ->set('buyerUsername', 'koper')
         ->call('markSold')
         ->assertForbidden();
 

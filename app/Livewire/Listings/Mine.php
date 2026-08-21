@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Livewire\Listings;
 
 use App\Models\Listing;
+use App\Models\Transaction;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -31,8 +32,19 @@ class Mine extends Component
             ->orderByDesc('created_at')
             ->get();
 
+        // Zonder deze markering raakt de claim-link kwijt: de advertentie staat
+        // op 'sold' en de verkoper heeft geen reden meer om de detailpagina te
+        // openen, terwijl de koper daar nog op wacht.
+        $openClaimListingIds = Transaction::query()
+            ->whereIn('listing_id', $listings->pluck('id'))
+            ->where('status', 'pending')
+            ->whereNull('buyer_user_id')
+            ->pluck('listing_id')
+            ->all();
+
         return view('livewire.listings.mine', [
             'listings' => $listings,
+            'openClaimListingIds' => $openClaimListingIds,
         ]);
     }
 }
