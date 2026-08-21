@@ -51,6 +51,13 @@
                 @error('body') <p class="mt-1 text-sm text-cmp-amber">{{ $message }}</p> @enderror
             </div>
 
+            @auth
+                <label class="flex items-start gap-2 text-sm text-cmp-muted">
+                    <input type="checkbox" wire:model="revealUsername" class="mt-0.5 rounded-sm border-cmp-border bg-cmp-bg2 text-cmp-blue focus:ring-cmp-blue">
+                    <span>{{ __('Laat de verkoper zien dat ik :username ben.', ['username' => '@'.auth()->user()->username]) }}</span>
+                </label>
+            @endauth
+
             <button type="submit" class="cmp-btn cmp-btn-primary" wire:loading.attr="disabled" wire:target="send">
                 <span wire:loading.remove wire:target="send">{{ __('Verstuur bericht') }}</span>
                 <span wire:loading wire:target="send">{{ __('Versturen…') }}</span>

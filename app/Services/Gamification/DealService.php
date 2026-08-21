@@ -9,34 +9,35 @@ use App\Models\Listing;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Listings\ListingStateService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 
 class DealService
 {
     public function __construct(private readonly ListingStateService $state) {}
 
-    public function markSold(Listing $listing, User $seller, ?string $buyerUsername = null): ?Transaction
+    /** Hoeveel dagen een claim-link bruikbaar blijft. */
+    public const CLAIM_DAYS = 30;
+
+    /**
+     * Meld een verkoop. Levert altijd een transactie op, ook zonder koper.
+     *
+     * De verkoper kán de koper niet aanwijzen: de contact-relay is anoniem en
+     * geeft hem alleen een e-mailadres. Daarom legt melden de verkoop vast met
+     * een claim-token, en vult de koper zichzelf later in via die link.
+     */
+    public function markSold(Listing $listing, User $seller): Transaction
     {
         if ($seller->id !== $listing->user_id) {
-            throw new DealException('Alleen de verkoper kan deze advertentie als verkocht markeren.');
+            throw new DealException((string) __('Alleen de verkoper kan deze advertentie als verkocht markeren.'));
         }
 
-        return DB::transaction(function () use ($listing, $seller, $buyerUsername): ?Transaction {
+        return DB::transaction(function () use ($listing, $seller): Transaction {
             /** @var Listing $locked */
             $locked = Listing::query()->lockForUpdate()->findOrFail($listing->id);
             if ($locked->state !== 'published') {
-                throw new DealException('Alleen een gepubliceerde advertentie kan als verkocht worden gemarkeerd.');
-            }
-
-            $buyer = null;
-            if (is_string($buyerUsername) && trim($buyerUsername) !== '') {
-                $buyer = User::query()->where('username', strtolower(trim($buyerUsername)))->first();
-                if ($buyer === null || $buyer->email_verified_at === null) {
-                    throw new DealException('Onbekende of niet-geverifieerde koper.');
-                }
-                if ($buyer->id === $seller->id) {
-                    throw new DealException('Je kunt jezelf niet als koper opgeven.');
-                }
+                throw new DealException((string) __('Alleen een gepubliceerde advertentie kan als verkocht worden gemarkeerd.'));
             }
 
             // Eén exemplaar verkopen is niet hetzelfde als de advertentie
@@ -48,20 +49,121 @@ class DealService
                 $this->state->transition($locked, 'sold');
             }
 
-            if ($buyer === null) {
-                return null;
-            }
-
             return Transaction::query()->create([
                 'listing_id' => $locked->id,
                 'seller_user_id' => $seller->id,
-                'buyer_user_id' => $buyer->id,
+                'buyer_user_id' => null,
                 'amount_cents' => $locked->price_cents,
                 'currency' => 'EUR',
                 'status' => 'pending',
                 'off_platform' => true,
+                'claim_token' => Str::random(32),
+                'claim_expires_at' => now()->addDays(self::CLAIM_DAYS),
             ]);
         });
+    }
+
+    /**
+     * Gemelde verkopen van deze advertentie die nog op een koper wachten.
+     *
+     * @return Collection<int, Transaction>
+     */
+    public function openClaims(Listing $listing): Collection
+    {
+        return Transaction::query()
+            ->where('listing_id', $listing->id)
+            ->where('status', 'pending')
+            ->whereNull('buyer_user_id')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * De koper vult zichzelf in en bevestigt, in één handeling.
+     *
+     * Een tussenstap via /profile/deals zou friction zonder doel zijn: wie de
+     * link opent en op "ja" klikt zegt precies wat we willen weten.
+     */
+    public function claim(string $token, User $buyer): Transaction
+    {
+        return DB::transaction(function () use ($token, $buyer): Transaction {
+            $tx = $this->lockClaimable($token, $buyer);
+
+            $tx->forceFill([
+                'buyer_user_id' => $buyer->id,
+                'status' => 'completed',
+                'completed_at' => now(),
+            ])->save();
+
+            return $tx;
+        });
+    }
+
+    /**
+     * "Nee, dit klopt niet." Zonder deze uitweg is een claim-link een
+     * eenrichtingsclaim en kan een verkoper er ongestraft mee strooien.
+     */
+    public function decline(string $token, User $buyer): Transaction
+    {
+        return DB::transaction(function () use ($token, $buyer): Transaction {
+            $tx = $this->lockClaimable($token, $buyer);
+
+            $tx->forceFill(['status' => 'cancelled'])->save();
+
+            return $tx;
+        });
+    }
+
+    /** Verlopen link? De verkoper maakt een nieuwe, anders zit hij op dag 31 klem. */
+    public function refreshClaimToken(Transaction $tx, User $seller): Transaction
+    {
+        if ($tx->seller_user_id !== $seller->id) {
+            throw new DealException((string) __('Alleen de verkoper kan een nieuwe link maken.'));
+        }
+
+        return DB::transaction(function () use ($tx): Transaction {
+            /** @var Transaction $locked */
+            $locked = Transaction::query()->lockForUpdate()->findOrFail($tx->id);
+
+            if ($locked->status !== 'pending') {
+                throw new DealException((string) __('Deze deal is al afgehandeld.'));
+            }
+
+            $locked->forceFill([
+                'claim_token' => Str::random(32),
+                'claim_expires_at' => now()->addDays(self::CLAIM_DAYS),
+            ])->save();
+
+            return $locked;
+        });
+    }
+
+    /**
+     * De token blijft na afhandeling staan, zodat een tweede klik "al
+     * bevestigd" kan zeggen in plaats van "onbekende link". De status is wat
+     * telt, niet het bestaan van de token.
+     */
+    private function lockClaimable(string $token, User $buyer): Transaction
+    {
+        $tx = Transaction::query()->lockForUpdate()->where('claim_token', $token)->first();
+
+        if ($tx === null) {
+            throw new DealException((string) __('Deze link kennen we niet.'));
+        }
+        if ($tx->status === 'completed') {
+            throw new DealException((string) __('Deze deal is al bevestigd.'));
+        }
+        if ($tx->status === 'cancelled') {
+            throw new DealException((string) __('Deze deal is al afgewezen.'));
+        }
+        if ($tx->claim_expires_at?->isPast() ?? false) {
+            throw new DealException((string) __('Deze link is verlopen. Vraag de verkoper om een nieuwe.'));
+        }
+        if ($tx->seller_user_id === $buyer->id) {
+            throw new DealException((string) __('Je kunt je eigen verkoop niet bevestigen.'));
+        }
+
+        return $tx;
     }
 
     public function confirm(Transaction $tx, User $buyer): void
@@ -71,10 +173,10 @@ class DealService
             $locked = Transaction::query()->lockForUpdate()->findOrFail($tx->id);
 
             if ($locked->buyer_user_id !== $buyer->id) {
-                throw new DealException('Alleen de gemarkeerde koper kan deze deal bevestigen.');
+                throw new DealException((string) __('Alleen de gemarkeerde koper kan deze deal bevestigen.'));
             }
             if ($locked->status !== 'pending') {
-                throw new DealException('Deze deal is al afgehandeld.');
+                throw new DealException((string) __('Deze deal is al afgehandeld.'));
             }
 
             $locked->forceFill(['status' => 'completed', 'completed_at' => now()])->save();

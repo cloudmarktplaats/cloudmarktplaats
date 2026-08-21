@@ -32,3 +32,16 @@ it('hides the share panel on a listing that is not published yet', function () {
         ->assertOk()
         ->assertDontSee('Deel je advertentie');
 });
+
+// De kopieerknop zit sinds deze refactor in <x-copy-button>. Deze test houdt
+// vast dat het deelpaneel hem nog steeds rendert met zijn eigen label — anders
+// verdwijnt de knop stilletjes bij een wijziging aan het component.
+it('renders the shared copy button inside the share panel', function () {
+    $listing = Listing::factory()->create(['state' => 'published']);
+
+    $this->actingAs($listing->user)
+        ->get("/listings/{$listing->ulid}-{$listing->slug}")
+        ->assertOk()
+        ->assertSee('Kopieer tekst + link')
+        ->assertSee('Kopiëren lukte niet', false);
+});

@@ -38,7 +38,10 @@ class IntegrityReport
             'gepubliceerd' => Listing::query()->where('published_at', '>=', $since)->count(),
             'fotos' => ListingPhoto::query()->where('created_at', '>=', $since)->count(),
             'contactverzoeken' => DB::table('contact_relay_logs')->where('created_at', '>=', $since)->count(),
-            'deals_bevestigd' => Transaction::query()->where('status', 'confirmed')->where('updated_at', '>=', $since)->count(),
+            // Tellen op `completed_at`, niet op `updated_at`: dat laatste
+            // beweegt ook als er iets anders aan de rij verandert.
+            'deals_bevestigd' => Transaction::query()->where('status', 'completed')->where('completed_at', '>=', $since)->count(),
+            'verkopen_gemeld' => Transaction::query()->where('created_at', '>=', $since)->count(),
             'mislukte_jobs' => DB::table('failed_jobs')->count(),
             'concepten_zonder_foto' => Listing::query()
                 ->where('state', 'draft')
@@ -71,9 +74,38 @@ class IntegrityReport
             );
         }
 
-        $vergeten = Transaction::query()->where('status', 'pending')->where('created_at', '<=', $quiet)->count();
+        // Een claim-link is 30 dagen geldig (DealService::CLAIM_DAYS), ruim
+        // langer dan `silence_days`. Alarmeren op `created_at` zou dus elke
+        // normale, nog niet geclaimde verkoop vanaf dag 7 laten afgaan.
+        // Het signaal moet daarom op de vervaldatum van de link zitten: pas
+        // als die verstreken is zonder claim, is er echt iets aan de hand.
+        // Legacy-rijen zonder claim-token (van vóór de claim-link) hebben
+        // geen vervaldatum en vallen terug op de oude `created_at`-regel.
+        $vergeten = Transaction::query()
+            ->where('status', 'pending')
+            ->where(function ($query) use ($now, $quiet) {
+                $query->where('claim_expires_at', '<=', $now)
+                    ->orWhere(function ($query) use ($quiet) {
+                        $query->whereNull('claim_expires_at')->where('created_at', '<=', $quiet);
+                    });
+            })
+            ->count();
         if ($vergeten > 0) {
-            $signalen[] = sprintf('%d deal(s) wachten al langer dan %d dagen op bevestiging door de koper.', $vergeten, $silenceDays);
+            $signalen[] = sprintf('%d deal(s) wachten nog op bevestiging terwijl er geen bruikbare claim-link meer is — de verkoper kan een nieuwe sturen.', $vergeten);
+        }
+
+        // Weigeren is onomkeerbaar: de advertentie blijft op 'sold' staan en
+        // geen enkel scherm toont een 'cancelled'-rij. Zonder dit signaal ziet
+        // de verkoper nergens dat zijn verkoop stilletjes is afgeketst.
+        //
+        // `updated_at` is hier wel veilig, in tegenstelling tot bij
+        // `deals_bevestigd` hierboven: claim(), decline() en
+        // refreshClaimToken() weigeren alle drie een status die niet
+        // 'pending' is, dus een 'cancelled'-rij wordt na het weigeren nooit
+        // meer aangeraakt.
+        $geweigerd = Transaction::query()->where('status', 'cancelled')->where('updated_at', '>=', $since)->count();
+        if ($geweigerd > 0) {
+            $signalen[] = sprintf('%d deal(s) geweigerd door de koper in de laatste 24 uur — de advertentie blijft op verkocht staan.', $geweigerd);
         }
 
         return ['cijfers' => $cijfers, 'fouten' => $fouten, 'signalen' => $signalen];

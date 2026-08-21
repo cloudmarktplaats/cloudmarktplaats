@@ -25,7 +25,7 @@
     <div style="background:#FFFFFF;border:1px solid #D9DDDE;padding:24px;margin-top:16px;">
         <div style="font-family:ui-monospace,Menlo,monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:#5C6166;margin:0 0 12px;">Afgelopen 24 uur</div>
         <table style="width:100%;border-collapse:collapse;font-size:14px;">
-            @foreach (['nieuwe_leden' => 'Nieuwe leden', 'gepubliceerd' => 'Advertenties gepubliceerd', 'fotos' => "Foto's geüpload", 'contactverzoeken' => 'Contactverzoeken', 'deals_bevestigd' => 'Deals bevestigd', 'mislukte_jobs' => 'Mislukte jobs (totaal)', 'concepten_zonder_foto' => 'Concepten zonder foto'] as $sleutel => $label)
+            @foreach (['nieuwe_leden' => 'Nieuwe leden', 'gepubliceerd' => 'Advertenties gepubliceerd', 'fotos' => "Foto's geüpload", 'contactverzoeken' => 'Contactverzoeken', 'verkopen_gemeld' => 'Verkopen gemeld', 'deals_bevestigd' => 'Deals bevestigd', 'mislukte_jobs' => 'Mislukte jobs (totaal)', 'concepten_zonder_foto' => 'Concepten zonder foto'] as $sleutel => $label)
                 <tr>
                     <td style="padding:4px 0;color:#5C6166;">{{ $label }}</td>
                     <td style="padding:4px 0;text-align:right;font-family:ui-monospace,Menlo,monospace;font-weight:700;">{{ $cijfers[$sleutel] ?? 0 }}</td>

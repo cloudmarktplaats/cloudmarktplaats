@@ -84,6 +84,12 @@
                                 {{ __('Verkocht melden') }}
                             </a>
                         @endif
+
+                        @if (config('cloudmarktplaats.features.deals') && in_array($listing->id, $openClaimListingIds, true))
+                            <a href="/listings/{{ $listing->ulid }}-{{ $listing->slug }}#deal-panel" class="cmp-btn cmp-btn-ghost px-3 py-1.5 text-sm">
+                                {{ __('koper nog niet bevestigd') }}
+                            </a>
+                        @endif
                     </div>
                 </li>
             @endforeach

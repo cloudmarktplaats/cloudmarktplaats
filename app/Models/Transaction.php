@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 use Database\Factories\TransactionFactory;
@@ -24,16 +26,19 @@ class Transaction extends Model
         'completed_at',
         'off_platform',
         'external_tx_ref',
+        'claim_token',
+        'claim_expires_at',
     ];
 
     /**
-     * @return array<string, string>
+     * @return array{off_platform: 'boolean', completed_at: 'datetime', claim_expires_at: 'datetime'}
      */
     protected function casts(): array
     {
         return [
             'off_platform' => 'boolean',
             'completed_at' => 'datetime',
+            'claim_expires_at' => 'datetime',
         ];
     }
 
@@ -46,6 +51,9 @@ class Transaction extends Model
     }
 
     /**
+     * De koper. Null zolang de verkoop nog niet geclaimd is — melden legt
+     * de deal vast, bevestigen vult de koper in.
+     *
      * @return BelongsTo<User, $this>
      */
     public function buyer(): BelongsTo

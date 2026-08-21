@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Models\Listing;
 use App\Models\User;
+use App\Services\Gamification\DealService;
 
 /*
  * "Markeer als verkocht" woonde alleen op de publieke advertentiepagina, terwijl
@@ -42,4 +43,32 @@ it('anchors at the deal panel on the listing page', function () {
         ->get("/listings/{$listing->ulid}-{$listing->slug}")
         ->assertOk()
         ->assertSee('id="deal-panel"', false);
+});
+
+// Zonder deze regel is de claim-link kwijt zodra de verkoper de detailpagina
+// sluit: de advertentie staat dan op 'sold' en verdwijnt uit zijn blikveld.
+it('flags a sold listing whose buyer has not confirmed yet', function () {
+    $seller = User::factory()->create();
+    $listing = Listing::factory()->for($seller)->published()->create();
+    app(DealService::class)->markSold($listing, $seller);
+
+    $this->actingAs($seller)
+        ->get('/mijn-advertenties')
+        ->assertOk()
+        ->assertSee('koper nog niet bevestigd');
+});
+
+// "Verkocht melden" checkte de vlag al, deze regel niet — met FEATURE_DEALS=false
+// linkte hij naar #deal-panel, dat dan niet meer rendert.
+it('does not offer the unconfirmed-buyer link when the deals feature is off', function () {
+    $seller = User::factory()->create();
+    $listing = Listing::factory()->for($seller)->published()->create();
+    app(DealService::class)->markSold($listing, $seller);
+
+    config()->set('cloudmarktplaats.features.deals', false);
+
+    $this->actingAs($seller)
+        ->get('/mijn-advertenties')
+        ->assertOk()
+        ->assertDontSee('koper nog niet bevestigd');
 });

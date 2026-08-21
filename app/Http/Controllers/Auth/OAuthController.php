@@ -92,7 +92,10 @@ class OAuthController extends Controller
                 $this->postLogin($request, $identityUser);
             }
 
-            return redirect('/');
+            // Honor a parked claim URL (see Claim::mount()) — a plain redirect('/')
+            // would drop a buyer who came from a claim link straight back to the
+            // homepage instead of back to the deal they were about to confirm.
+            return redirect()->intended('/');
         }
 
         $email = $oauthUser->getEmail();
@@ -186,7 +189,9 @@ class OAuthController extends Controller
         auth()->login($user);
         $this->postLogin($request, $user);
 
-        return redirect('/');
+        // Same reasoning as the returning-user branch above: a parked claim URL
+        // must survive a brand-new OAuth signup too.
+        return redirect()->intended('/');
     }
 
     private function postLogin(Request $request, User $user): void

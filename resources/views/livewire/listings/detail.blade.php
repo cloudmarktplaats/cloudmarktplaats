@@ -31,17 +31,36 @@
             </div>
         @endif
 
-        @if (auth()->id() === $listing->user_id && $listing->state === 'published' && config('cloudmarktplaats.features.deals'))
+        @if (auth()->id() === $listing->user_id && config('cloudmarktplaats.features.deals')
+             && ($listing->state === 'published' || $openClaims->isNotEmpty()))
             {{-- Ankerdoel voor de "Verkocht melden"-knop op Mijn advertenties: de
-                 verkoper beheert daar, maar dit paneel woont hier. --}}
+                 verkoper beheert daar, maar dit paneel woont hier. Het blijft
+                 zichtbaar zolang er een claim openstaat — anders is de link
+                 onbereikbaar zodra de advertentie op 'sold' staat. --}}
             <div id="deal-panel" class="mt-6 rounded-sm border border-cmp-border bg-cmp-surface p-4">
                 <div class="cmp-section-label mb-3">{{ __('Verkocht?') }}</div>
-                <p class="text-sm text-cmp-muted">{{ __('Markeer als verkocht. Geef optioneel de gebruikersnaam van de koper op; die kan de deal dan bevestigen.') }}</p>
-                <div class="mt-3 flex flex-wrap items-center gap-2">
-                    <input wire:model="buyerUsername" placeholder="{{ __('gebruikersnaam koper (optioneel)') }}" class="rounded-sm border-cmp-border p-2 text-sm focus:border-cmp-signal focus:ring-cmp-signal">
-                    <button wire:click="markSold" wire:confirm="{{ __('Advertentie als verkocht markeren?') }}" class="cmp-btn cmp-btn-primary">{{ __('Markeer als verkocht') }}</button>
-                </div>
-                @error('buyerUsername') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                @if ($listing->state === 'published')
+                    <p class="text-sm text-cmp-muted">
+                        {{ __('Meld je verkoop. Je krijgt daarna een link die je aan de koper stuurt; bevestigt hij die, dan telt de verkoop mee voor je verkopersprofiel.') }}
+                    </p>
+                    <div class="mt-3">
+                        <button wire:click="markSold" wire:confirm="{{ __('Advertentie als verkocht markeren?') }}" class="cmp-btn cmp-btn-primary">
+                            {{ __('Markeer als verkocht') }}
+                        </button>
+                    </div>
+                @endif
+
+                @error('deal') <p class="mt-2 text-sm text-red-600">{{ $message }}</p> @enderror
+
+                @if ($openClaims->isNotEmpty())
+                    <p class="mt-4 text-sm text-cmp-muted">
+                        {{ trans_choice('Verkocht. Stuur de koper deze link, dan kan hij de deal bevestigen.|Verkocht. Stuur elke koper zijn eigen link, dan kunnen ze de deals bevestigen.', $openClaims->count()) }}
+                    </p>
+                    @foreach ($openClaims as $claim)
+                        <x-deals.claim-link :transaction="$claim" wire:key="claim-{{ $claim->id }}" />
+                    @endforeach
+                @endif
             </div>
         @endif
     @endauth

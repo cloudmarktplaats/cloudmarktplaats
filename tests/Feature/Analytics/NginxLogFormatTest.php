@@ -35,3 +35,19 @@ it('keeps the access log out of storage/logs, where laravel.log lives', function
     // owners in one directory is exactly how web logging broke on 2026-07-03.
     expect($conf)->not->toContain('/app/storage/logs/access.log');
 });
+
+/**
+ * The path-redaction map ($cmp_path) is a denylist, not an allowlist: only the
+ * path segments listed here get redacted, everything else passes through
+ * verbatim. /deal/{token} carries a live, 30-day claim token — reading, not
+ * just knowing, the token lets anyone confirm or decline someone else's deal.
+ * Shipping that route without an entry here would write it straight into a
+ * 644 file kept for a week. Same shape as /reset-password/ and
+ * /email/verify/, so it belongs in the same map.
+ */
+it('redacts the claim token out of /deal/ before it reaches the access log', function () {
+    $conf = (string) file_get_contents(base_path('docker/nginx/default.conf'));
+
+    expect($conf)->toContain('~^/deal/')
+        ->and($conf)->toContain('/deal/[redacted]');
+});
