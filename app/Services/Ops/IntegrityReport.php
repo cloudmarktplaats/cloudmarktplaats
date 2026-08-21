@@ -97,6 +97,12 @@ class IntegrityReport
         // Weigeren is onomkeerbaar: de advertentie blijft op 'sold' staan en
         // geen enkel scherm toont een 'cancelled'-rij. Zonder dit signaal ziet
         // de verkoper nergens dat zijn verkoop stilletjes is afgeketst.
+        //
+        // `updated_at` is hier wel veilig, in tegenstelling tot bij
+        // `deals_bevestigd` hierboven: claim(), decline() en
+        // refreshClaimToken() weigeren alle drie een status die niet
+        // 'pending' is, dus een 'cancelled'-rij wordt na het weigeren nooit
+        // meer aangeraakt.
         $geweigerd = Transaction::query()->where('status', 'cancelled')->where('updated_at', '>=', $since)->count();
         if ($geweigerd > 0) {
             $signalen[] = sprintf('%d deal(s) geweigerd door de koper in de laatste 24 uur — de advertentie blijft op verkocht staan.', $geweigerd);
