@@ -660,5 +660,16 @@
     "Fotoweergave": "Photo viewer",
     "Sluiten": "Close",
     "Vorige foto": "Previous photo",
-    "Volgende foto": "Next photo"
+    "Volgende foto": "Next photo",
+    "Alleen de verkoper kan deze advertentie als verkocht markeren.": "Only the seller can mark this listing as sold.",
+    "Alleen een gepubliceerde advertentie kan als verkocht worden gemarkeerd.": "Only a published listing can be marked as sold.",
+    "Alleen de verkoper kan een nieuwe link maken.": "Only the seller can create a new link.",
+    "Deze deal is al afgehandeld.": "This deal has already been settled.",
+    "Deze link kennen we niet.": "We don't recognize this link.",
+    "Deze deal is al bevestigd.": "This deal has already been confirmed.",
+    "Deze deal is al afgewezen.": "This deal has already been declined.",
+    "Deze link is verlopen. Vraag de verkoper om een nieuwe.": "This link has expired. Ask the seller for a new one.",
+    "Je kunt je eigen verkoop niet bevestigen.": "You can't confirm your own sale.",
+    "Alleen de gemarkeerde koper kan deze deal bevestigen.": "Only the marked buyer can confirm this deal.",
+    "Als moderator of admin is tweefactor-authenticatie verplicht. Stel het in om verder te gaan.": "Two-factor authentication is required for moderators and admins. Set it up to continue."
 }

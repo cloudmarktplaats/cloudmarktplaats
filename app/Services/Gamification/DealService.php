@@ -30,14 +30,14 @@ class DealService
     public function markSold(Listing $listing, User $seller): Transaction
     {
         if ($seller->id !== $listing->user_id) {
-            throw new DealException('Alleen de verkoper kan deze advertentie als verkocht markeren.');
+            throw new DealException((string) __('Alleen de verkoper kan deze advertentie als verkocht markeren.'));
         }
 
         return DB::transaction(function () use ($listing, $seller): Transaction {
             /** @var Listing $locked */
             $locked = Listing::query()->lockForUpdate()->findOrFail($listing->id);
             if ($locked->state !== 'published') {
-                throw new DealException('Alleen een gepubliceerde advertentie kan als verkocht worden gemarkeerd.');
+                throw new DealException((string) __('Alleen een gepubliceerde advertentie kan als verkocht worden gemarkeerd.'));
             }
 
             // Eén exemplaar verkopen is niet hetzelfde als de advertentie
@@ -118,7 +118,7 @@ class DealService
     public function refreshClaimToken(Transaction $tx, User $seller): Transaction
     {
         if ($tx->seller_user_id !== $seller->id) {
-            throw new DealException('Alleen de verkoper kan een nieuwe link maken.');
+            throw new DealException((string) __('Alleen de verkoper kan een nieuwe link maken.'));
         }
 
         return DB::transaction(function () use ($tx): Transaction {
@@ -126,7 +126,7 @@ class DealService
             $locked = Transaction::query()->lockForUpdate()->findOrFail($tx->id);
 
             if ($locked->status !== 'pending') {
-                throw new DealException('Deze deal is al afgehandeld.');
+                throw new DealException((string) __('Deze deal is al afgehandeld.'));
             }
 
             $locked->forceFill([
@@ -148,19 +148,19 @@ class DealService
         $tx = Transaction::query()->lockForUpdate()->where('claim_token', $token)->first();
 
         if ($tx === null) {
-            throw new DealException('Deze link kennen we niet.');
+            throw new DealException((string) __('Deze link kennen we niet.'));
         }
         if ($tx->status === 'completed') {
-            throw new DealException('Deze deal is al bevestigd.');
+            throw new DealException((string) __('Deze deal is al bevestigd.'));
         }
         if ($tx->status === 'cancelled') {
-            throw new DealException('Deze deal is al afgewezen.');
+            throw new DealException((string) __('Deze deal is al afgewezen.'));
         }
         if ($tx->claim_expires_at?->isPast() ?? false) {
-            throw new DealException('Deze link is verlopen. Vraag de verkoper om een nieuwe.');
+            throw new DealException((string) __('Deze link is verlopen. Vraag de verkoper om een nieuwe.'));
         }
         if ($tx->seller_user_id === $buyer->id) {
-            throw new DealException('Je kunt je eigen verkoop niet bevestigen.');
+            throw new DealException((string) __('Je kunt je eigen verkoop niet bevestigen.'));
         }
 
         return $tx;
@@ -173,10 +173,10 @@ class DealService
             $locked = Transaction::query()->lockForUpdate()->findOrFail($tx->id);
 
             if ($locked->buyer_user_id !== $buyer->id) {
-                throw new DealException('Alleen de gemarkeerde koper kan deze deal bevestigen.');
+                throw new DealException((string) __('Alleen de gemarkeerde koper kan deze deal bevestigen.'));
             }
             if ($locked->status !== 'pending') {
-                throw new DealException('Deze deal is al afgehandeld.');
+                throw new DealException((string) __('Deze deal is al afgehandeld.'));
             }
 
             $locked->forceFill(['status' => 'completed', 'completed_at' => now()])->save();
