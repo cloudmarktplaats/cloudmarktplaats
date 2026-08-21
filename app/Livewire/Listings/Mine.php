@@ -35,12 +35,17 @@ class Mine extends Component
         // Zonder deze markering raakt de claim-link kwijt: de advertentie staat
         // op 'sold' en de verkoper heeft geen reden meer om de detailpagina te
         // openen, terwijl de koper daar nog op wacht.
-        $openClaimListingIds = Transaction::query()
-            ->whereIn('listing_id', $listings->pluck('id'))
-            ->where('status', 'pending')
-            ->whereNull('buyer_user_id')
-            ->pluck('listing_id')
-            ->all();
+        //
+        // Alleen draaien als de vlag aan staat: uit betekent dat #deal-panel
+        // niet meer rendert, dus een link ernaartoe zou dood zijn.
+        $openClaimListingIds = config('cloudmarktplaats.features.deals')
+            ? Transaction::query()
+                ->whereIn('listing_id', $listings->pluck('id'))
+                ->where('status', 'pending')
+                ->whereNull('buyer_user_id')
+                ->pluck('listing_id')
+                ->all()
+            : [];
 
         return view('livewire.listings.mine', [
             'listings' => $listings,

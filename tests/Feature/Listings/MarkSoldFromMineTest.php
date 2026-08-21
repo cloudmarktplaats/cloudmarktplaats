@@ -57,3 +57,18 @@ it('flags a sold listing whose buyer has not confirmed yet', function () {
         ->assertOk()
         ->assertSee('koper nog niet bevestigd');
 });
+
+// "Verkocht melden" checkte de vlag al, deze regel niet — met FEATURE_DEALS=false
+// linkte hij naar #deal-panel, dat dan niet meer rendert.
+it('does not offer the unconfirmed-buyer link when the deals feature is off', function () {
+    $seller = User::factory()->create();
+    $listing = Listing::factory()->for($seller)->published()->create();
+    app(DealService::class)->markSold($listing, $seller);
+
+    config()->set('cloudmarktplaats.features.deals', false);
+
+    $this->actingAs($seller)
+        ->get('/mijn-advertenties')
+        ->assertOk()
+        ->assertDontSee('koper nog niet bevestigd');
+});
