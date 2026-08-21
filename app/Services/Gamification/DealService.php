@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Listings\ListingStateService;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -76,6 +77,93 @@ class DealService
             ->whereNull('buyer_user_id')
             ->orderBy('id')
             ->get();
+    }
+
+    /**
+     * De koper vult zichzelf in en bevestigt, in één handeling.
+     *
+     * Een tussenstap via /profile/deals zou friction zonder doel zijn: wie de
+     * link opent en op "ja" klikt zegt precies wat we willen weten.
+     */
+    public function claim(string $token, User $buyer): Transaction
+    {
+        return DB::transaction(function () use ($token, $buyer): Transaction {
+            $tx = $this->lockClaimable($token, $buyer);
+
+            $tx->forceFill([
+                'buyer_user_id' => $buyer->id,
+                'status' => 'completed',
+                'completed_at' => now(),
+            ])->save();
+
+            return $tx;
+        });
+    }
+
+    /**
+     * "Nee, dit klopt niet." Zonder deze uitweg is een claim-link een
+     * eenrichtingsclaim en kan een verkoper er ongestraft mee strooien.
+     */
+    public function decline(string $token, User $buyer): Transaction
+    {
+        return DB::transaction(function () use ($token, $buyer): Transaction {
+            $tx = $this->lockClaimable($token, $buyer);
+
+            $tx->forceFill(['status' => 'cancelled'])->save();
+
+            return $tx;
+        });
+    }
+
+    /** Verlopen link? De verkoper maakt een nieuwe, anders zit hij op dag 31 klem. */
+    public function refreshClaimToken(Transaction $tx, User $seller): Transaction
+    {
+        if ($tx->seller_user_id !== $seller->id) {
+            throw new DealException('Alleen de verkoper kan een nieuwe link maken.');
+        }
+        if ($tx->status !== 'pending') {
+            throw new DealException('Deze deal is al afgehandeld.');
+        }
+
+        $tx->forceFill([
+            'claim_token' => Str::random(32),
+            'claim_expires_at' => now()->addDays(self::CLAIM_DAYS),
+        ])->save();
+
+        return $tx;
+    }
+
+    /**
+     * De token blijft na afhandeling staan, zodat een tweede klik "al
+     * bevestigd" kan zeggen in plaats van "onbekende link". De status is wat
+     * telt, niet het bestaan van de token.
+     */
+    private function lockClaimable(string $token, User $buyer): Transaction
+    {
+        $tx = Transaction::query()->lockForUpdate()->where('claim_token', $token)->first();
+
+        if ($tx === null) {
+            throw new DealException('Deze link kennen we niet.');
+        }
+        if ($tx->status === 'completed') {
+            throw new DealException('Deze deal is al bevestigd.');
+        }
+        if ($tx->status === 'cancelled') {
+            throw new DealException('Deze deal is al afgewezen.');
+        }
+        // Larastan kent het `casts()`-returntype van Transaction niet als
+        // letterlijke array, en typeert claim_expires_at daardoor als string.
+        // Carbon::make() is zowel voor een string als voor een reeds gecast
+        // Carbon-object correct, dus dit klopt met wat er in werkelijkheid
+        // langskomt.
+        if (Carbon::make($tx->claim_expires_at)?->isPast() ?? false) {
+            throw new DealException('Deze link is verlopen. Vraag de verkoper om een nieuwe.');
+        }
+        if ($tx->seller_user_id === $buyer->id) {
+            throw new DealException('Je kunt je eigen verkoop niet bevestigen.');
+        }
+
+        return $tx;
     }
 
     public function confirm(Transaction $tx, User $buyer): void
