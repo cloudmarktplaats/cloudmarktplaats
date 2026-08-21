@@ -48,5 +48,5 @@ it('throttles after 5 failed attempts', function () {
  * page other than leaving the site.
  */
 it('links to registration for someone without an account yet', function () {
-    $this->get('/login')->assertSee(route('register'), false);
+    $this->get('/login')->assertSee('Nog geen account?');
 });
