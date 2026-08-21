@@ -91,7 +91,7 @@ class IntegrityReport
             })
             ->count();
         if ($vergeten > 0) {
-            $signalen[] = sprintf('%d deal(s) wachten op koper met verlopen claim-link — verkoper kan een nieuwe link aanmaken.', $vergeten);
+            $signalen[] = sprintf('%d deal(s) wachten nog op bevestiging terwijl er geen bruikbare claim-link meer is — de verkoper kan een nieuwe sturen.', $vergeten);
         }
 
         return ['cijfers' => $cijfers, 'fouten' => $fouten, 'signalen' => $signalen];
