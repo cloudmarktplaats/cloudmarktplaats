@@ -10,7 +10,6 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\Listings\ListingStateService;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -121,16 +120,22 @@ class DealService
         if ($tx->seller_user_id !== $seller->id) {
             throw new DealException('Alleen de verkoper kan een nieuwe link maken.');
         }
-        if ($tx->status !== 'pending') {
-            throw new DealException('Deze deal is al afgehandeld.');
-        }
 
-        $tx->forceFill([
-            'claim_token' => Str::random(32),
-            'claim_expires_at' => now()->addDays(self::CLAIM_DAYS),
-        ])->save();
+        return DB::transaction(function () use ($tx): Transaction {
+            /** @var Transaction $locked */
+            $locked = Transaction::query()->lockForUpdate()->findOrFail($tx->id);
 
-        return $tx;
+            if ($locked->status !== 'pending') {
+                throw new DealException('Deze deal is al afgehandeld.');
+            }
+
+            $locked->forceFill([
+                'claim_token' => Str::random(32),
+                'claim_expires_at' => now()->addDays(self::CLAIM_DAYS),
+            ])->save();
+
+            return $locked;
+        });
     }
 
     /**
@@ -151,12 +156,7 @@ class DealService
         if ($tx->status === 'cancelled') {
             throw new DealException('Deze deal is al afgewezen.');
         }
-        // Larastan kent het `casts()`-returntype van Transaction niet als
-        // letterlijke array, en typeert claim_expires_at daardoor als string.
-        // Carbon::make() is zowel voor een string als voor een reeds gecast
-        // Carbon-object correct, dus dit klopt met wat er in werkelijkheid
-        // langskomt.
-        if (Carbon::make($tx->claim_expires_at)?->isPast() ?? false) {
+        if ($tx->claim_expires_at?->isPast() ?? false) {
             throw new DealException('Deze link is verlopen. Vraag de verkoper om een nieuwe.');
         }
         if ($tx->seller_user_id === $buyer->id) {

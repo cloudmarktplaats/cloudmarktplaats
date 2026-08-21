@@ -110,3 +110,17 @@ it('does not let a stranger refresh someone elses link', function () {
     expect(fn () => app(DealService::class)->refreshClaimToken($tx, User::factory()->create()))
         ->toThrow(DealException::class, 'Alleen de verkoper kan een nieuwe link maken.');
 });
+
+it('refuses to refresh a token whose deal is already handled, even if the in-memory object still says pending', function () {
+    $seller = User::factory()->create();
+    $tx = reportedSale($seller);
+
+    // De rij is intussen 'completed' in de database, maar $tx in het geheugen
+    // weet daar niets van: refreshClaimToken() moet de verse status lezen,
+    // niet de verouderde staat van de aanroeper.
+    $buyer = User::factory()->create(['email_verified_at' => now()]);
+    app(DealService::class)->claim((string) $tx->claim_token, $buyer);
+
+    expect(fn () => app(DealService::class)->refreshClaimToken($tx, $seller))
+        ->toThrow(DealException::class, 'Deze deal is al afgehandeld.');
+});

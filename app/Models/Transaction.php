@@ -31,7 +31,7 @@ class Transaction extends Model
     ];
 
     /**
-     * @return array<string, string>
+     * @return array{off_platform: 'boolean', completed_at: 'datetime', claim_expires_at: 'datetime'}
      */
     protected function casts(): array
     {
