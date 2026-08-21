@@ -147,6 +147,33 @@ it('redirects to login instead of 500 when the oauth state is invalid', function
     expect(auth()->check())->toBeFalse();
 });
 
+/*
+ * Claim::mount() parks the claim URL in session('url.intended') so a buyer
+ * without a verified session lands back on the deal after logging in. Login
+ * and the 2FA challenge both honor that via redirect()->intended(), but this
+ * controller used a bare redirect('/') in two places — a buyer who chose
+ * "Inloggen met GitHub" from the claim page got dropped on the homepage
+ * instead, with no way back to the deal short of digging the mail back up.
+ */
+it('honors a parked claim url for a returning oauth user', function (): void {
+    $existing = User::factory()->create();
+    UserIdentity::factory()->github('555')->for($existing)->create();
+
+    fakeSocialiteUser('github', '555', 'irrelevant@example.nl');
+
+    session()->put('url.intended', '/deal/some-token');
+
+    $this->get('/oauth/github/callback?code=fake')->assertRedirect('/deal/some-token');
+});
+
+it('honors a parked claim url for a brand-new oauth signup', function (): void {
+    fakeSocialiteUser('github', '666', 'brandnew@example.nl', 'New');
+
+    session()->put('url.intended', '/deal/another-token');
+
+    $this->get('/oauth/github/callback?code=fake')->assertRedirect('/deal/another-token');
+});
+
 it('redirects to login instead of 500 when github rejects the token', function (): void {
     $driver = Mockery::mock();
     $driver->shouldReceive('user')->andThrow(new ClientException(
