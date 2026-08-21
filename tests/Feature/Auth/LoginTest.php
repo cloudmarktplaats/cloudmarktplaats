@@ -41,3 +41,12 @@ it('throttles after 5 failed attempts', function () {
     Livewire::test(Login::class)->set('email', 'a@b.nl')->set('password', 'x')->call('submit')
         ->assertHasErrors(['email']);
 });
+
+/*
+ * The login page had no link to /register at all — a claim-link visitor
+ * (see App\Livewire\Deals\Claim) with no account yet had no way off this
+ * page other than leaving the site.
+ */
+it('links to registration for someone without an account yet', function () {
+    $this->get('/login')->assertSee(route('register'), false);
+});

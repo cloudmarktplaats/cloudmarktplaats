@@ -11,6 +11,7 @@
         <label class="flex items-center space-x-2 text-sm"><input type="checkbox" wire:model="remember"> <span>{{ __('Onthoud mij') }}</span></label>
         <button class="w-full cmp-btn cmp-btn-primary">{{ __('Inloggen') }}</button>
         <p class="text-sm"><a href="/forgot-password" class="underline">{{ __('Wachtwoord vergeten?') }}</a></p>
+        <p class="text-sm">{{ __('Nog geen account?') }} <a href="{{ route('register') }}" class="underline">{{ __('Registreer je') }}</a>.</p>
     </form>
 
     @if (config('cloudmarktplaats.features.oauth_github') || config('cloudmarktplaats.features.oauth_gitlab'))

@@ -39,8 +39,9 @@
                 {{ __('Bevestigen kan alleen met een account, anders weten we niet wie het zegt.') }}
             </p>
             <div class="mt-3 flex flex-wrap gap-2">
-                <a href="{{ route('login') }}" class="cmp-btn cmp-btn-primary">{{ __('Inloggen of registreren') }}</a>
+                <a href="{{ route('login') }}" class="cmp-btn cmp-btn-primary">{{ __('Inloggen') }}</a>
             </div>
+            <p class="mt-2 text-sm">{{ __('Nog geen account?') }} <a href="{{ route('register') }}" class="underline">{{ __('Registreer je') }}</a>.</p>
         @endguest
 
         @auth

@@ -45,9 +45,27 @@ it('parks the url for a guest so login brings them back here', function () {
 
     $this->get("/deal/{$token}")
         ->assertOk()
-        ->assertSee('Inloggen of registreren');
+        ->assertSee('Inloggen');
 
     expect(session('url.intended'))->toBe(route('deals.claim', ['token' => $token]));
+});
+
+/*
+ * The button used to promise "Inloggen of registreren" but only linked to
+ * /login, which has no way out to /register — a buyer without an account who
+ * opens the link from the seller's mail hit a dead end. The marketing layout
+ * always carries a header/footer link to /register, so this asserts on text
+ * specific to the guest block on this page, not just the URL being present
+ * somewhere in the document.
+ */
+it('offers a guest both a login and a register link', function () {
+    $token = saleWithToken();
+
+    $this->get("/deal/{$token}")
+        ->assertOk()
+        ->assertSee('Inloggen')
+        ->assertSee('Registreer je')
+        ->assertSeeInOrder(['Inloggen', 'Nog geen account?', 'Registreer je']);
 });
 
 it('refuses to confirm on an unverified account', function () {
