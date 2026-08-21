@@ -62,6 +62,20 @@ docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 Faalt de EXIF-auto-oriëntatietest lokaal? Dan mist je php-fpm-image `ext-exif`:
 `docker compose build php-fpm`. Productie heeft hem wel.
 
+**Larastan leest de Laravel-11-vorm `casts(): array` niet** en ziet een
+`datetime`-cast dan als `string`. Los dat op het model op met een letterlijke
+`@return array{...}`-shape boven `casts()` — zie `app/Models/Transaction.php` —
+niet met een omweg op de aanroepplek.
+
+## Livewire kill-switches
+
+Een feature-flag-controle in `mount()` van een Livewire-component is **geen
+kill-switch**. Een vervolgrequest op een al gemounte component loopt eromheen.
+Elke publiek aanroepbare methode die iets muteert heeft zijn eigen
+`abort_unless((bool) config(...), 403)` nodig — zie `confirm()` naast `mount()`
+in `app/Livewire/Profile/Deals.php`. Dit gat is tijdens de koper-koppeling-reeks
+drie keer als echt gat aangetoond.
+
 ## Meten zonder analytics
 
 Er zitten bewust geen trackers op, dus er is **geen funnel-data**. Elke vraag over
@@ -87,11 +101,25 @@ als verkocht" alleen op de publieke advertentiepagina stond en niet op Mijn
 advertenties. **Als een getal op 0 staat, zoek eerst de knop voordat je de motivatie
 van gebruikers in twijfel trekt.**
 
+`deals_bevestigd` telde tot 21-08 `status = 'confirmed'` — een waarde die de enum
+(`pending|completed|cancelled`) niet kent. Dat cijfer stond dus structureel op nul,
+ongeacht wat gebruikers deden. Controleer bij een nulmeting altijd eerst of het
+getal überhaupt kán bewegen.
+
 ## De dagelijkse check leest mee
 
 `platform:daily-check` draait elke ochtend om 07:30 en mailt naar `OPS_DIGEST_TO`.
 Hij telt **ook afwezigheid**: nul foto's of nul advertenties in een week is hier
 een alarm, geen rustige week. Zo was de fotobug zes dagen onzichtbaar.
+
+Het signaal voor deals die op bevestiging wachten alarmeert sinds 21-08 **niet**
+meer op `silence_days` (7 dagen), maar op een verlopen claim-link
+(`claim_expires_at`, geldig 30 dagen). Reden: een claim-link leeft vier keer zo
+lang als `silence_days`, dus alarmeren op de oude regel liet elke normale, nog
+niet geclaimde melding vanaf dag 7 dagelijks vals afgaan — in precies de mail die
+dit platform als enige zichtbaarheid heeft. Legacy-rijen zonder `claim_token`
+(van vóór de claim-link) hebben geen vervaldatum en vallen terug op de oude
+`created_at`/`silence_days`-regel.
 
 Draai hem met `--show` om het rapport in de terminal te zien zonder te mailen.
 Dat is ook de snelste manier om na een deploy te controleren of je niets hebt
@@ -140,6 +168,14 @@ governance.
   staat → aparte advertenties. Die grens staat in de hint bij het veld en hoort daar.
 - **Feature flags** in `config/cloudmarktplaats.php`. `features.deals` staat aan op
   productie (geen env-override).
+- **De koper koppelen aan een verkoop**: "Markeer als verkocht" is één knop en legt
+  altijd een `transaction` vast, ook zonder koper. De koper vult zichzelf in via
+  een claim-link (`/deal/{token}`, 30 dagen, eenmalig) die de **verkoper zelf** in
+  zijn antwoordmail plakt — wij kennen het adres van de koper niet en kunnen hem
+  dus niet mailen. Ontwerp in
+  `docs/superpowers/specs/2026-08-21-koper-koppeling-design.md`. Het oude
+  gebruikersnaamveld vroeg om iets wat de verkoper structureel niet kon weten; dat
+  meldde een verkoper zelf op 21-08.
 
 ## Mail
 

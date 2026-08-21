@@ -62,6 +62,23 @@ De Filament-tests draaien via `Livewire::test(...)`-helpers (geen browser). Voor
 
 ---
 
+## Deals
+
+### Wie de claim-link heeft, kan zich koper noemen
+Een verkoop wordt bevestigd door wie de link opent, niet door een geverifieerde
+koper. Een verkoper die de link naar zijn eigen tweede account stuurt, kweekt
+daarmee trustlevel. Dat gold precies zo voor het gebruikersnaamveld dat hiervoor
+in de plaats kwam, dus het is geen nieuw gat — maar het is er wel een.
+
+Wat het dempt: de DB-constraint `transactions_buyer_ne_seller` en de controle in
+`DealService::lockClaimable()` blokkeren de directe zelfkoop, en
+`Transaction::scopeConfirmedSaleFor()` telt gebande kopers niet mee. Wat het niet
+dempt: een tweede account dat nooit opvalt. Een echte oplossing vraagt om
+identiteit aan de koperskant, en dat botst met "optioneel anoniem" — dus die
+afweging hoort in een eigen sub-project, niet in een patch.
+
+---
+
 ## Privacy & retentie
 
 ### Logbestanden bevatten IPs langer dan 24 uur
