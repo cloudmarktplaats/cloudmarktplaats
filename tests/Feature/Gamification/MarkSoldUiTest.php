@@ -88,3 +88,18 @@ it('does not let the owner mark it sold when the deals feature is off', function
     expect($listing->fresh()->state)->toBe('published')
         ->and(Transaction::query()->count())->toBe(0);
 });
+
+it('does not let the owner refresh a claim link when the deals feature is off', function () {
+    [$seller, $listing] = sellerWithListing();
+    $tx = app(DealService::class)->markSold($listing, $seller);
+    $oldToken = (string) $tx->claim_token;
+
+    config(['cloudmarktplaats.features.deals' => false]);
+
+    Livewire::actingAs($seller)
+        ->test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->call('newLink', $tx->id)
+        ->assertForbidden();
+
+    expect($tx->fresh()->claim_token)->toBe($oldToken);
+});

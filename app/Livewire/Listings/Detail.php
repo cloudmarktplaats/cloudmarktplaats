@@ -58,6 +58,8 @@ class Detail extends Component
     /** Verlopen link vervangen. De verkoper is de enige die hem kan doorgeven. */
     public function newLink(int $transactionId): void
     {
+        abort_unless((bool) config('cloudmarktplaats.features.deals'), 403);
+
         $user = auth()->user();
         abort_unless($user?->can('markSold', $this->listing) ?? false, 403);
 
