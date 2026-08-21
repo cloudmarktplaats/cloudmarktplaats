@@ -70,6 +70,23 @@
             </ul>
             <p class="mt-3">In twijfel? Plaats het, en als het over de schreef is hoor je het van de moderatie. We modereren in dialoog, niet met een hakbijl.</p>'),
         ],
+        [
+            'q' => __('Hoe haal ik een advertentie weg?'),
+            'a' => __('<p>Op <strong>Mijn advertenties</strong> staan bij elke advertentie twee knoppen. <strong>Offline halen</strong> haalt hem uit de zoekresultaten en van de voorpagina, maar bewaart je tekst en foto\'s — je kunt hem later met één klik terugzetten als concept. <strong>Verwijderen</strong> gooit de advertentie en de foto\'s echt weg, ook van onze schijf; dat kunnen we niet terughalen.</p>
+                    <p class="mt-3">Dit kan in elke fase, ook terwijl je advertentie nog in de moderatiewachtrij staat. Dat was lange tijd niet zo, en dat was gewoon een gat: leden meldden het in juli, en het is sinds augustus 2026 opgelost.</p>'),
+        ],
+        [
+            'q' => __('Hoe verwijder ik mijn account?'),
+            'a' => __('<p>Zelf, zonder ons iets te vragen: <strong>Profiel → Beveiliging → Account verwijderen</strong>. Je typt je gebruikersnaam ter bevestiging en dan gaan je account, je advertenties, je foto\'s en je homelab-posts weg. Wat blijft staan zijn meldingen die je ooit over andermans advertentie deed, zonder je naam eraan — dat is een aantekening bij die advertentie, niet bij jou.</p>
+                    <p class="mt-3">Liever per mail, of wil je eerst inzage in wat we van je hebben? Mail <a href="mailto:privacy@cloudmarktplaats.nl" class="underline hover:text-cmp-text">privacy@cloudmarktplaats.nl</a>.</p>'),
+        ],
+        [
+            'q' => __('Wie beantwoordt mijn vraag of bugmelding?'),
+            'notice' => __('Volledige uitleg in <code class="font-mono text-cmp-text text-[12px]">SUPPORT.md</code> op GitHub.'),
+            'a' => __('<p>Eén persoon. Cloudmarktplaats wordt onderhouden door één maintainer, onbetaald, naast een baan — er is geen supportteam en aan donaties is tot nu toe € 0 binnengekomen. Dat hoor je te weten voordat je op antwoord wacht.</p>
+                    <p class="mt-3">Wat dat in de praktijk betekent: op iets dat kapot is en je tegenhoudt krijg je meestal binnen een week reactie. Op een idee of verzoek ook, maar de uitvoering kan lang duren. Privacy- en verwijderverzoeken lopen binnen de wettelijke maand. Blijft het stil, stuur dan gerust een herinnering — dat is niet vervelend, dat helpt.</p>
+                    <p class="mt-3">De beste plek om iets te melden is een <a href="https://github.com/cloudmarktplaats/cloudmarktplaats/issues" class="underline hover:text-cmp-text" rel="noopener external">issue op GitHub</a>: openbaar, vindbaar, en het raakt niet zoek in een mailbox. Liever mailen? <a href="mailto:info@cloudmarktplaats.nl" class="underline hover:text-cmp-text">info@cloudmarktplaats.nl</a>.</p>'),
+        ],
     ];
 
     // Build FAQ JSON-LD (strip HTML for the schema text).

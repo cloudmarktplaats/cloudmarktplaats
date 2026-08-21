@@ -193,6 +193,38 @@ governance.
   gebruikersnaamveld vroeg om iets wat de verkoper structureel niet kon weten; dat
   meldde een verkoper zelf op 21-08.
 
+## Support is één persoon, en dat moet ergens staan
+
+Op 21-08 zegde een lid zijn account op met: geen verwijderknop, geen supportadres,
+en een GitHub-melding die 29 dagen onbeantwoord bleef. Alle drie klopten. De
+duurste van de drie was de derde: er stond **nergens** dat hier één onbetaalde
+maintainer zit, dus hij mocht redelijkerwijs aannemen dat iemand meekeek.
+
+Dat staat nu in `SUPPORT.md`, in de FAQ en onder het contactblok in de footer.
+**Houd die drie gelijk** als de situatie verandert — een verwachting die je één
+keer uitspreekt en daarna laat verlopen is erger dan geen verwachting.
+
+De les die breder geldt: dit platform verkoopt "elke claim is in code te
+controleren". Het privacybeleid beloofde al maanden dat een advertentie blijft
+"tot je hem verwijdert" én dat je recht op verwijdering hebt, terwijl beide
+knoppen niet bestonden. **Als je een belofte in een juridisch document zet, zoek
+dan de code die hem waarmaakt — of haal de belofte eruit.**
+
+## Verwijderen: wat de code echt doet
+
+- `Listing` én `User` gebruiken **SoftDeletes**. Een gewone `delete()` zet alleen
+  `deleted_at`, en dan vuren de ON DELETE CASCADEs *niet*. Van buiten ziet dat er
+  identiek uit — weg uit elke query — terwijl de rijen en de foto's blijven staan.
+  Erasure is `forceDelete()`, en dat is precies wat de tests afdwingen.
+- `PhotoFileEraser` wist per **map**, niet per samengestelde bestandsnaam. De
+  extensie van `original.{ext}` komt uit de `mime`-kolom, en op de oudste
+  homelab-rijen klopt die niet met de schijf (kolom `image/webp`, bestand
+  `original.jpg`). Bij de eerste echte verwijdering op productie bleef daardoor de
+  foto van een verwijderd lid online staan. Raad nooit een bestandsnaam.
+- `archived` was tot 21-08 terminaal én onbereikbaar: nul aanroepers. Nu is het de
+  knop "Offline halen", met `archived → draft` als weg terug. Terug naar `draft`
+  en niet naar `published`, zodat moderatie bindend blijft.
+
 ## Mail
 
 SMTP is Hostinger, geauthenticeerd als `noreply@cloudmarktplaats.nl` — een andere

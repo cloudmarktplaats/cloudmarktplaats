@@ -69,4 +69,9 @@ class LocalStorage implements StorageInterface
     {
         return $this->disk()->exists($path);
     }
+
+    public function deleteDirectory(string $path): bool
+    {
+        return $this->disk()->deleteDirectory($path);
+    }
 }

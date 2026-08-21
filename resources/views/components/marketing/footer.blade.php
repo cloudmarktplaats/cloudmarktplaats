@@ -1,6 +1,8 @@
 <footer class="border-t border-cmp-border bg-cmp-bg2 mt-24">
     <div class="mx-auto max-w-6xl px-5 py-12 sm:px-8">
-        <div class="grid grid-cols-1 gap-10 sm:grid-cols-3">
+        {{-- Vier kolommen sinds Contact erbij kwam; op tablet twee, anders
+             worden ze te smal voor een e-mailadres. --}}
+        <div class="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4">
             <div>
                 <div class="cmp-section-label mb-4">{{ __('Over') }}</div>
                 <ul class="space-y-2 text-sm text-cmp-muted">
@@ -36,6 +38,19 @@
                     <li><a href="https://github.com/cloudmarktplaats/cloudmarktplaats/issues" class="hover:text-cmp-text" rel="noopener external">{{ __('Issues & bugs') }}</a></li>
                     <li><a href="https://github.com/sponsors/NickAldewereld" class="hover:text-cmp-text" rel="noopener external">GitHub Sponsors</a></li>
                     <li><a href="mailto:sponsoring@cloudmarktplaats.nl" class="hover:text-cmp-text">sponsoring@cloudmarktplaats.nl</a></li>
+                </ul>
+            </div>
+
+            {{-- De footer toonde alleen het adres waarop je geld kúnt geven.
+                 Wie hulp zocht vond niets, concludeerde terecht dat er geen
+                 support was, en mailde uiteindelijk om verwijderd te worden.
+                 Contact hoort net zo vindbaar te zijn als sponsoring. --}}
+            <div>
+                <div class="cmp-section-label mb-4">{{ __('Contact') }}</div>
+                <ul class="space-y-2 text-sm text-cmp-muted">
+                    <li><a href="mailto:info@cloudmarktplaats.nl" class="hover:text-cmp-text">info@cloudmarktplaats.nl</a></li>
+                    <li><a href="mailto:privacy@cloudmarktplaats.nl" class="hover:text-cmp-text">{{ __('privacy en verwijderverzoeken') }}</a></li>
+                    <li class="text-cmp-faint">{{ __('Eén maintainer, onbetaald. Reactie meestal binnen een week.') }}</li>
                 </ul>
             </div>
         </div>

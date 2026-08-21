@@ -53,7 +53,11 @@ We plaatsen alleen strikt noodzakelijke, functionele cookies (je sessie en een b
 
 ## 8. Je rechten
 
-Je hebt recht op inzage, rectificatie, verwijdering, beperking, bezwaar en overdraagbaarheid van je gegevens. Stuur je verzoek naar [privacy@cloudmarktplaats.nl](mailto:privacy@cloudmarktplaats.nl). Je hebt ook het recht een klacht in te dienen bij de **Autoriteit Persoonsgegevens** ([autoriteitpersoonsgegevens.nl](https://autoriteitpersoonsgegevens.nl)).
+Je hebt recht op inzage, rectificatie, verwijdering, beperking, bezwaar en overdraagbaarheid van je gegevens.
+
+Verwijderen doe je zelf, zonder ons iets te vragen en zonder reden op te geven: **Profiel → Beveiliging → Account verwijderen** wist je account, je advertenties, je foto's en je homelab-posts. Losse advertenties haal je weg op **Mijn advertenties**. Voor alle overige verzoeken — of als je liever niet zelf op de knop drukt — mail je [privacy@cloudmarktplaats.nl](mailto:privacy@cloudmarktplaats.nl); we reageren binnen de wettelijke termijn van een maand.
+
+Je hebt ook het recht een klacht in te dienen bij de **Autoriteit Persoonsgegevens** ([autoriteitpersoonsgegevens.nl](https://autoriteitpersoonsgegevens.nl)).
 
 ## 9. Beveiliging
 

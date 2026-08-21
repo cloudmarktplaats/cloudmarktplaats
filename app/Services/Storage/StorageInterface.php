@@ -48,4 +48,15 @@ interface StorageInterface
      * True iff a blob exists at `$path`.
      */
     public function exists(string $path): bool;
+
+    /**
+     * Delete a directory and everything under it. Returns true on success.
+     *
+     * Needed because a photo's variants cannot be reconstructed reliably from
+     * the one path we store: the original's extension is derived from the
+     * `mime` column, and on the oldest rows that column does not match what
+     * was actually written. Erasing by directory does not depend on guessing
+     * a filename right.
+     */
+    public function deleteDirectory(string $path): bool;
 }

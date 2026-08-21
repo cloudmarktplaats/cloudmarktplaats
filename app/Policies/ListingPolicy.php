@@ -16,8 +16,8 @@ use App\Models\User;
  *   - the **owner** (`listing.user_id === user.id`): fully manages their own
  *     listing — preview it while it is still a draft / in moderation, edit it,
  *     and mark it sold;
- *   - **staff** (`moderator` or `admin`): may preview, edit and delete any
- *     listing as part of moderation.
+ *   - **staff** (`moderator` or `admin`): may preview, edit, archive and
+ *     delete any listing as part of moderation.
  *
  * Deliberately there is NO `before()` admin bypass (mirroring
  * {@see UserPolicy}): abilities are granted per-method so a staff member does
@@ -64,10 +64,25 @@ class ListingPolicy
         return $this->owns($user, $listing) || $this->isStaff($user);
     }
 
-    /** Hard-deleting a listing is a staff-only moderation action. */
+    /**
+     * Taking a listing offline (→ `archived`) is the seller's own action.
+     * Staff may do it too: hiding a listing is the lighter half of the
+     * moderation toolkit, next to rejecting it.
+     */
+    public function archive(User $user, Listing $listing): bool
+    {
+        return $this->owns($user, $listing) || $this->isStaff($user);
+    }
+
+    /**
+     * Hard-deleting a listing — row and photo files gone. This used to be
+     * staff-only, which left a seller unable to remove their own data while
+     * the privacy statement promised they could ("Advertenties: tot je ze
+     * verwijdert"). The owner is exactly who that promise is about.
+     */
     public function delete(User $user, Listing $listing): bool
     {
-        return $this->isStaff($user);
+        return $this->owns($user, $listing) || $this->isStaff($user);
     }
 
     /** Marking a listing sold is the seller's own action — owner only. */

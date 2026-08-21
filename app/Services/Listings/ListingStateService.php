@@ -15,11 +15,22 @@ use App\Models\Listing;
  *
  * Allowed transitions:
  *   draft           → pending_review | archived
- *   pending_review  → published | rejected | draft
+ *   pending_review  → published | rejected | draft | archived
  *   published       → sold | archived
  *   sold            → archived
- *   rejected        → draft
- *   archived        → (terminal)
+ *   rejected        → draft | archived
+ *   archived        → draft
+ *
+ * `archived` was terminal and unreachable: no caller anywhere moved a
+ * listing into it, so a seller whose item sold elsewhere had no way to take
+ * their advertisement down — reported in issues #9 and #10, and the reason one
+ * member asked for their account to be deleted. Two consequences of that:
+ * every state a seller can be stuck in now has an exit to `archived`
+ * (moderation queue very much included — that is exactly where the wait
+ * hurts), and `archived` leads back to `draft` so "offline halen" is
+ * something you can undo. Returning as a draft rather than straight to
+ * `published` keeps moderation binding: re-publishing goes through the
+ * queue again like any other submission.
  *
  * Every transition is gated by {@see TRANSITIONS} so callers (the listing
  * wizard, admin moderation panel, scheduled archive jobs) cannot move a
@@ -33,11 +44,11 @@ class ListingStateService
     /** @var array<string, list<string>> */
     public const TRANSITIONS = [
         'draft' => ['pending_review', 'archived'],
-        'pending_review' => ['published', 'rejected', 'draft'],
+        'pending_review' => ['published', 'rejected', 'draft', 'archived'],
         'published' => ['sold', 'archived'],
         'sold' => ['archived'],
-        'rejected' => ['draft'],
-        'archived' => [],
+        'rejected' => ['draft', 'archived'],
+        'archived' => ['draft'],
     ];
 
     public function transition(Listing $listing, string $to, ?string $note = null): void

@@ -24,6 +24,7 @@ use App\Livewire\Listings\Detail as ListingDetail;
 use App\Livewire\Listings\Mine as ListingsMine;
 use App\Livewire\Listings\Wizard as ListingWizard;
 use App\Livewire\Profile\Deals as ProfileDeals;
+use App\Livewire\Profile\DeleteAccount;
 use App\Livewire\Profile\Invites as ProfileInvites;
 use App\Livewire\Profile\Security as ProfileSecurity;
 use App\Livewire\Profile\SellerType as ProfileSellerType;
@@ -131,6 +132,13 @@ Route::get('/profile/security', ProfileSecurity::class)
 Route::get('/profile/security/2fa', TwoFactorSetup::class)
     ->middleware('auth')
     ->name('profile.security.2fa');
+
+// Account verwijderen. Alleen `auth`, net als de andere profielpagina's: je
+// erasure-recht uitoefenen mag niet afhangen van een geverifieerd e-mailadres
+// of van een nieuwe versie van de voorwaarden die je nog moet accepteren.
+Route::get('/profile/verwijderen', DeleteAccount::class)
+    ->middleware('auth')
+    ->name('profile.delete');
 
 // Invites are gamification: only verified members earn credits, so the
 // page (and its flag check in mount()) requires both auth and verified,

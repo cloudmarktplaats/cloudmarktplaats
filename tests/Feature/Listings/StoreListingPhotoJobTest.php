@@ -220,6 +220,16 @@ it('deletes any partial blobs and the photo row if a variant write fails', funct
         {
             return in_array($path, $this->written, true);
         }
+
+        public function deleteDirectory(string $path): bool
+        {
+            $this->written = array_values(array_filter(
+                $this->written,
+                fn ($p) => ! str_starts_with($p, rtrim($path, '/').'/'),
+            ));
+
+            return true;
+        }
     };
 
     $manager = $this->mock(StorageManager::class);

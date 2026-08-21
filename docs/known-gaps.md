@@ -22,8 +22,12 @@ Bewuste keuze: we hebben geen "log in als deze gebruiker"-knop in het admin-pane
 
 ## Listings & foto's
 
-### Foto-cleanup hook ontbreekt
-Wanneer een advertentie wordt verwijderd (soft-delete of hard-delete) blijven de foto-blobs in storage achter. De variant-paden (`listings/{ulid}/{photo_id}/original.jpg`, etc.) zijn nu **wel** mee-soft-deleted in de `listing_photos`-tabel, maar er is nog geen cron die de feitelijke blobs opruimt. Pickup-werk voor sub-project **#4 Reviews** (waar we toch al cleanup-cron toevoegen voor verwijderde reviews) of een dedicated klein "storage gc" PR.
+### Foto-cleanup hook ontbreekt — ~~open~~ **opgelost 21-08-2026** (deels)
+Wanneer een advertentie werd verwijderd bleven de foto-blobs in storage achter. Verwijdert een gebruiker nu zelf een advertentie of zijn account, dan gaan de bestanden mee: `PhotoFileEraser` wist de hele map van de foto, en `ListingRemovalService` / `AccountRemovalService` roepen hem aan vóór de rij weg is.
+
+**Wat nog wél open staat:** blobs van advertenties die op een andere manier verdwenen (handmatige DB-actie, oude soft-deletes van vóór deze datum) zijn nooit opgeruimd. Er is nog steeds geen "storage gc" die weesbestanden opspoort. Pickup-werk voor een klein dedicated PR.
+
+> Erasure hangt niet op de bestandsnaam. `PhotoFileEraser` wist per **map**, niet per samengestelde bestandsnaam. Reden: de extensie van `original.{ext}` werd afgeleid uit de `mime`-kolom, en op de oudste homelab-rijen klopt die kolom niet met wat er op schijf staat — kolom zegt `image/webp`, bestand heet `original.jpg`. Bij de eerste echte verwijdering op productie (21-08) bleef daardoor de foto van een verwijderd lid staan: van elk scherm verdwenen, maar het bestand werd nog geserveerd. Bouw hier nooit een variant op die de bestandsnaam raadt.
 
 ### Wizard draft auto-resume UX
 De wizard *bewaart* drafts correct (per stap → DB). Maar er is nog geen "drafts"-tab in het dashboard die de open drafts toont. Een gebruiker moet zijn eigen URL onthouden (`/listings/{ulid}/edit`) om verder te gaan. Een dashboard-widget komt mee met sub-project #2 (Messaging) waar we toch al een persoonlijk dashboard uitbouwen.

@@ -35,14 +35,17 @@
                         'published'      => [__('Live'), 'cmp-blue'],
                         'sold'           => [__('Verkocht'), 'cmp-signal'],
                         'rejected'       => [__('Afgewezen'), 'cmp-amber'],
-                        'archived'       => [__('Gearchiveerd'), 'cmp-muted'],
+                        'archived'       => [__('Offline'), 'cmp-muted'],
                     ];
                     [$stateLabel, $stateToken] = $states[$listing->state] ?? [ucfirst($listing->state), 'cmp-muted'];
                     $photo = $listing->photos->first();
                 @endphp
                 <li
                     wire:key="listing-{{ $listing->id }}"
-                    class="flex flex-col gap-4 rounded-sm border border-cmp-border bg-cmp-surface p-4 sm:flex-row sm:items-center"
+                    {{-- `sm:flex-wrap` zodat het bevestigingsblok (basis-full)
+                         onder de rij valt in plaats van de knoppen plat te
+                         drukken. --}}
+                    class="flex flex-col gap-4 rounded-sm border border-cmp-border bg-cmp-surface p-4 sm:flex-row sm:flex-wrap sm:items-center"
                 >
                     <div class="h-16 w-16 shrink-0 overflow-hidden rounded-sm bg-cmp-bg2">
                         @if ($photo)
@@ -90,7 +93,41 @@
                                 {{ __('koper nog niet bevestigd') }}
                             </a>
                         @endif
+
+                        {{-- Weghalen wat je zelf plaatste. Dit ontbrak volledig:
+                             `archived` had nul aanroepers en verwijderen was
+                             staff-only, dus wie zijn spul elders verkocht had
+                             stond met lege handen. Twee knoppen, want dat zijn
+                             twee verschillende wensen: even weg, of echt weg. --}}
+                        @if ($listing->state === 'archived')
+                            <button type="button" wire:click="restore({{ $listing->id }})" class="cmp-btn cmp-btn-secondary px-3 py-1.5 text-sm">
+                                {{ __('Terugzetten') }}
+                            </button>
+                        @else
+                            <button type="button" wire:click="archive({{ $listing->id }})" class="cmp-btn cmp-btn-ghost px-3 py-1.5 text-sm">
+                                {{ __('Offline halen') }}
+                            </button>
+                        @endif
+
+                        <button type="button" wire:click="confirmDelete({{ $listing->id }})" class="cmp-btn cmp-btn-ghost px-3 py-1.5 text-sm text-cmp-amber">
+                            {{ __('Verwijderen') }}
+                        </button>
                     </div>
+
+                    @if ($confirmingDeleteId === $listing->id)
+                        <div class="basis-full rounded-sm border border-cmp-amber bg-cmp-bg2 p-4 text-sm">
+                            <p class="text-cmp-text">{{ __('Definitief verwijderen? De advertentie en de foto\'s gaan echt weg — dit kunnen we niet terughalen.') }}</p>
+                            <p class="mt-1 text-cmp-muted">{{ __('Wil je hem alleen even uit de zoekresultaten hebben, kies dan "Offline halen".') }}</p>
+                            <div class="mt-3 flex gap-2">
+                                <button type="button" wire:click="destroyListing({{ $listing->id }})" class="cmp-btn cmp-btn-primary px-3 py-1.5 text-sm">
+                                    {{ __('Ja, verwijder definitief') }}
+                                </button>
+                                <button type="button" wire:click="cancelDelete" class="cmp-btn cmp-btn-ghost px-3 py-1.5 text-sm">
+                                    {{ __('Annuleren') }}
+                                </button>
+                            </div>
+                        </div>
+                    @endif
                 </li>
             @endforeach
         </ul>

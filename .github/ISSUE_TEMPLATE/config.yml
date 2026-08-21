@@ -4,6 +4,13 @@
 blank_issues_enabled: true
 
 contact_links:
+  # Bovenaan, met opzet. Drie melders wachtten in juli en augustus wekenlang op
+  # een reactie die niet kwam, zonder dat ergens stond dat hier één onbetaalde
+  # maintainer zit. Eén van hen zegde zijn account op. Wie hier binnenkomt,
+  # hoort dat te weten vóórdat hij begint met wachten.
+  - name: Wat je van support kunt verwachten
+    url: https://github.com/cloudmarktplaats/cloudmarktplaats/blob/main/SUPPORT.md
+    about: Eén maintainer, onbetaald, naast een baan. Lees hier wat dat betekent voor reactietijden — en hoe je het sneller maakt.
   - name: Vraag over de site (geen bug)
     url: https://cloudmarktplaats.nl/faq
     about: Hoe iets werkt, privacy, founding members — waarschijnlijk staat het in de FAQ.

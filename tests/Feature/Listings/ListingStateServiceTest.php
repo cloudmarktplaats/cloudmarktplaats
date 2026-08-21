@@ -77,9 +77,30 @@ it('allows rejected → draft (resubmit flow)', function () {
     expect($listing->fresh()->state)->toBe('draft');
 });
 
-it('forbids transitioning out of archived (terminal)', function () {
+// `archived` was terminaal én onbereikbaar: nul aanroepers, dus de enige rijen
+// die er ooit in stonden waren met de hand gezet. Nu is het de knop "Offline
+// halen", en dan hoort er een weg terug te zijn — anders is offline halen net
+// zo definitief als verwijderen en durft niemand hem te gebruiken.
+it('allows archived → draft, so taking a listing offline can be undone', function () {
+    $listing = Listing::factory()->create(['state' => 'archived']);
+    app(ListingStateService::class)->transition($listing, 'draft');
+
+    expect($listing->fresh()->state)->toBe('draft');
+});
+
+// Terug naar draft, niet rechtstreeks naar published: moderatie blijft bindend,
+// opnieuw online betekent opnieuw door de wachtrij.
+it('forbids archived → published, so moderation cannot be skipped', function () {
     $listing = Listing::factory()->create(['state' => 'archived']);
 
-    expect(fn () => app(ListingStateService::class)->transition($listing, 'draft'))
+    expect(fn () => app(ListingStateService::class)->transition($listing, 'published'))
         ->toThrow(InvalidStateTransition::class);
+});
+
+// Precies Robs geval: ingediend, wachtend op moderatie, spul elders verkocht.
+it('allows pending_review → archived, the state sellers got stuck in', function () {
+    $listing = Listing::factory()->create(['state' => 'pending_review']);
+    app(ListingStateService::class)->transition($listing, 'archived');
+
+    expect($listing->fresh()->state)->toBe('archived');
 });

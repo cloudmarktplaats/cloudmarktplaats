@@ -125,4 +125,17 @@
         </a>
     </section>
     @endif
+
+    {{-- Zonder deze sectie stond het erasure-recht wel in het privacybeleid en
+         nergens in de app: wie eruit wilde moest een adres zoeken dat de site
+         niet toonde. --}}
+    <section>
+        <h2 class="text-lg font-semibold">{{ __('Account verwijderen') }}</h2>
+        <p class="text-sm text-cmp-muted">
+            {{ __('Je account, je advertenties en je foto\'s definitief weg. Geen reden nodig, geen mail naar ons nodig.') }}
+        </p>
+        <a href="{{ route('profile.delete') }}" class="mt-2 inline-block rounded border border-cmp-amber px-3 py-1 text-sm text-cmp-amber hover:bg-cmp-bg">
+            {{ __('Account verwijderen') }}
+        </a>
+    </section>
 </div>

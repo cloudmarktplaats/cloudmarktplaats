@@ -60,13 +60,27 @@ it('lets the owner or staff update a listing, but not a stranger', function () {
 
 // ---- delete --------------------------------------------------------------
 
-it('lets only staff delete a listing — not the owner nor a stranger', function () {
+// Dit was staff-only, en die regel klopte niet: het privacybeleid belooft dat
+// een advertentie blijft "tot je hem verwijdert", en dat is een belofte aan de
+// eigenaar. Drie leden liepen erop vast (issues #9 en #10), één van hen zegde
+// zijn account op. Een vreemde mag er nog steeds niet aan komen — dat is waar
+// deze test nu nog over gaat.
+it('lets the owner and staff delete a listing, but never a stranger', function () {
     $listing = Listing::factory()->for($this->owner)->published()->create();
 
-    expect($this->policy->delete($this->moderator, $listing))->toBeTrue()
+    expect($this->policy->delete($this->owner, $listing))->toBeTrue()
+        ->and($this->policy->delete($this->moderator, $listing))->toBeTrue()
         ->and($this->policy->delete($this->admin, $listing))->toBeTrue()
-        ->and($this->policy->delete($this->owner, $listing))->toBeFalse()
         ->and($this->policy->delete($this->stranger, $listing))->toBeFalse();
+});
+
+it('lets the owner and staff take a listing offline, but never a stranger', function () {
+    $listing = Listing::factory()->for($this->owner)->published()->create();
+
+    expect($this->policy->archive($this->owner, $listing))->toBeTrue()
+        ->and($this->policy->archive($this->moderator, $listing))->toBeTrue()
+        ->and($this->policy->archive($this->admin, $listing))->toBeTrue()
+        ->and($this->policy->archive($this->stranger, $listing))->toBeFalse();
 });
 
 // ---- markSold ------------------------------------------------------------
