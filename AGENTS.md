@@ -40,6 +40,13 @@ Aandachtspunten die een keer misgingen:
   eeuwig vasthield. Sinds 19-08 lost `resolver 127.0.0.11` in `docker/nginx/default.conf`
   dat op: php-fpm mag verhuizen zonder dat nginx eraan te pas komt. Verwijder die
   resolver niet — hij voorkomt een storing van minuten bij elke deploy.
+- **`docker/nginx/default.conf` wijzigen? Dan `up -d --force-recreate nginx`, niet
+  `nginx -s reload`.** Die bind-mount is een enkel *bestand*, en die hangt aan het
+  inode. `tar xzf` vervangt het bestand door een nieuw inode, dus de container blijft
+  aan het oude hangen: de reload slaagt, `nginx -t` zegt ok, en je draait nog steeds
+  de vorige config. Op 21-08 bleef de redactie van claim-tokens daardoor uit terwijl
+  alles groen leek — controleer altijd ín de container:
+  `docker compose -f docker-compose.prod.yml exec -T nginx grep redacted /etc/nginx/conf.d/default.conf`.
 - **Chown na een sync alleen de paden die je stuurde, en nooit `bootstrap/` als
   geheel.** `bootstrap/cache` is van uid 82 (www-data); zet je die op 1000, dan
   kan artisan zijn config- en routecache niet meer schrijven en faalt de deploy
