@@ -204,6 +204,10 @@ Dat staat nu in `SUPPORT.md`, in de FAQ en onder het contactblok in de footer.
 **Houd die drie gelijk** als de situatie verandert — een verwachting die je één
 keer uitspreekt en daarna laat verlopen is erger dan geen verwachting.
 
+Afgehandeld op 21-08: account gewist (rijen én fotobestanden geverifieerd),
+bevestigingsmail door Nick zelf verstuurd, en issues #9, #10 en #11 beantwoord
+en gesloten. **Niet nogmaals mailen** — zie de waarschuwing onder "Mail".
+
 De les die breder geldt: dit platform verkoopt "elke claim is in code te
 controleren". Het privacybeleid beloofde al maanden dat een advertentie blijft
 "tot je hem verwijdert" én dat je recht op verwijdering hebt, terwijl beide
@@ -224,6 +228,14 @@ dan de code die hem waarmaakt — of haal de belofte eruit.**
 - `archived` was tot 21-08 terminaal én onbereikbaar: nul aanroepers. Nu is het de
   knop "Offline halen", met `archived → draft` als weg terug. Terug naar `draft`
   en niet naar `published`, zodat moderatie bindend blijft.
+
+**Nog open — `Wizard::saveDraft()` degradeert stilletjes.** De step-1-payload bevat
+`'state' => 'draft'` en gaat via `fill()->save()`, dus buiten de state machine om.
+Bewerkt iemand een *gepubliceerde* advertentie, dan valt die stil offline zonder dat
+de verkoper iets ziet. Op productie staan vijf rijen met `state='draft'` én een
+gevulde `published_at`; vier delen exact `updated_at = 2026-08-19 13:57:29` (een
+bulkactie van Nick), rij 37 niet. De fix vraagt eerst een productbeslissing: blijft
+een bewerkte live advertentie publiek, of gaat hij terug de moderatiewachtrij in?
 
 ## Mail
 
