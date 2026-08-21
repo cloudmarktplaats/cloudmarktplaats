@@ -21,11 +21,11 @@
         <h1 class="text-3xl font-bold tracking-display-tighter">{{ __('Deal bevestigen') }}</h1>
 
         <p class="mt-4 text-cmp-text">
-            {{ '@'.($transaction->seller?->username ?? '?') }}
-            {{ __('geeft aan dat je') }}
-            <strong>{{ $transaction->listing?->title ?? __('een advertentie') }}</strong>
-            {{ __('van hem hebt gekocht voor') }}
-            <span class="font-mono">€ {{ number_format($transaction->amount_cents / 100, 2, ',', '.') }}</span>.
+            {{ __(':seller geeft aan dat je :title van hem hebt gekocht voor :amount.', [
+                'seller' => '@'.($transaction->seller?->username ?? '?'),
+                'title' => $transaction->listing?->title ?? __('een advertentie'),
+                'amount' => '€ '.number_format($transaction->amount_cents / 100, 2, ',', '.'),
+            ]) }}
         </p>
 
         <p class="mt-4 text-sm text-cmp-muted">

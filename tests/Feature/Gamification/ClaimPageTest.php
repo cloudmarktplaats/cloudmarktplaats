@@ -9,10 +9,10 @@ use App\Models\User;
 use App\Services\Gamification\DealService;
 use Livewire\Livewire;
 
-function saleWithToken(): string
+function saleWithToken(string $title = 'Dell R720'): string
 {
     $seller = User::factory()->create();
-    $listing = Listing::factory()->published()->for($seller)->create(['title' => 'Dell R720']);
+    $listing = Listing::factory()->published()->for($seller)->create(['title' => $title]);
 
     return (string) app(DealService::class)->markSold($listing, $seller)->claim_token;
 }
@@ -128,8 +128,17 @@ it('parks the url for a logged-in but unverified buyer too', function () {
     expect(session('url.intended'))->toBe(route('deals.claim', ['token' => $token]));
 });
 
-it('explains an unknown link instead of 404ing for a truncated token', function () {
-    $this->get('/deal/'.str_repeat('x', 20))
+/*
+ * The claim sentence splices the listing title straight from user input.
+ * A seller controls that title, and the buyer on the other end of the link
+ * has no reason to expect it might carry markup — it must never render as
+ * HTML, only as literal text.
+ */
+it('escapes a listing title that contains HTML on the claim page', function () {
+    $token = saleWithToken('<script>alert(1)</script>');
+
+    $this->get("/deal/{$token}")
         ->assertOk()
-        ->assertSee('Deze link kennen we niet');
+        ->assertDontSee('<script>alert(1)</script>', false)
+        ->assertSee('<script>alert(1)</script>');
 });
