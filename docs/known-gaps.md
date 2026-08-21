@@ -77,6 +77,15 @@ dempt: een tweede account dat nooit opvalt. Een echte oplossing vraagt om
 identiteit aan de koperskant, en dat botst met "optioneel anoniem" — dus die
 afweging hoort in een eigen sub-project, niet in een patch.
 
+`scopeConfirmedSaleFor()` telt daarbij **rijen, geen unieke kopers**. Eén
+advertentie met `quantity: 5` levert vijf losse claim-links op — elke
+`markSold()`-aanroep maakt een eigen `Transaction` met eigen token — die
+allemaal door hetzelfde tweede account geclaimd kunnen worden. Dat
+vermenigvuldigt de kweeksnelheid van hierboven met de quantity. Voorlopig
+blijft het gevolg beperkt tot een label: `features.trust_autopublish` staat
+standaard op `false`, dus een opgekweekt trustlevel ontgrendelt nu nog geen
+automatische publicatie zonder moderatie.
+
 ---
 
 ## Privacy & retentie
