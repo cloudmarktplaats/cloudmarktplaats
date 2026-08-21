@@ -8,6 +8,7 @@ use App\Models\Listing;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Str;
 
 /** @extends Factory<Transaction> */
 class TransactionFactory extends Factory
@@ -31,5 +32,15 @@ class TransactionFactory extends Factory
     public function completed(): static
     {
         return $this->state(fn () => ['status' => 'completed', 'completed_at' => now()]);
+    }
+
+    /** Een gemelde verkoop die nog op een koper wacht. */
+    public function unclaimed(): static
+    {
+        return $this->state(fn () => [
+            'buyer_user_id' => null,
+            'claim_token' => Str::random(32),
+            'claim_expires_at' => now()->addDays(30),
+        ]);
     }
 }
