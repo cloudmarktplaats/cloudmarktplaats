@@ -85,6 +85,10 @@ return [
         'log_path' => env('OPS_LOG_PATH', storage_path('logs/laravel.log')),
         // Hoeveel dagen stilte op een signaal alarm is.
         'silence_days' => 7,
+        // `composer audit` meedraaien in de dagelijkse check. Uit in de
+        // testsuite (zie phpunit.xml): het is een netwerkcall naar packagist,
+        // en die hoort niet in een test die over meldingen of stiltes gaat.
+        'audit_check' => env('OPS_AUDIT_CHECK', true),
     ],
     'gamification' => [
         'starting_invite_credits' => 3,

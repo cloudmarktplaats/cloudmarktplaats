@@ -26,6 +26,8 @@ class IntegrityReport
     /** Hoeveel bytes van de staart van de log we lezen. */
     private const LOG_TAIL_BYTES = 400_000;
 
+    public function __construct(private SecurityAdvisories $advisories) {}
+
     /** @return array{cijfers: array<string, int>, fouten: list<array{aantal: int, regel: string}>, signalen: list<string>} */
     public function build(Carbon $now): array
     {
@@ -122,6 +124,22 @@ class IntegrityReport
         $geweigerd = Transaction::query()->where('status', 'cancelled')->where('updated_at', '>=', $since)->count();
         if ($geweigerd > 0) {
             $signalen[] = sprintf('%d deal(s) geweigerd door de koper in de laatste 24 uur — de advertentie blijft op verkocht staan.', $geweigerd);
+        }
+
+        // Beveiligingsadviezen staan bewust in `signalen` en niet in `cijfers`:
+        // het antwoord kan "onbekend" zijn, en dat is geen getal. Een nul die
+        // in werkelijkheid "de controle is stuk" betekent, is het gevaarlijkste
+        // antwoord dat deze mail kan geven.
+        $adviezen = config('cloudmarktplaats.ops.audit_check')
+            ? $this->advisories->count()
+            : 0;
+        if ($adviezen === null) {
+            $signalen[] = 'Kon `composer audit` niet draaien — geen uitspraak over beveiligingsadviezen in de afhankelijkheden.';
+        } elseif ($adviezen > 0) {
+            $signalen[] = sprintf(
+                '%d beveiligingsadvies(en) in de afhankelijkheden. Draai `composer audit` voor de details.',
+                $adviezen,
+            );
         }
 
         return ['cijfers' => $cijfers, 'fouten' => $fouten, 'signalen' => $signalen];
