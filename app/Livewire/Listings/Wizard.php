@@ -210,6 +210,17 @@ class Wizard extends Component
             }
         }
 
+        // Een advertentie die al live is en dat tijdens het bewerken bleef,
+        // hoeft nergens heen: `saveDraft()` heeft de wijzigingen al weggeschreven
+        // en `published → pending_review` bestaat niet in de state machine. Zonder
+        // deze afslag krijgt de verkoper een "state"-fout op een bewerking die
+        // gewoon geslaagd is.
+        if ($listing->state === 'published') {
+            $this->redirect("/listings/{$listing->ulid}-{$listing->slug}");
+
+            return;
+        }
+
         try {
             $stateService = app(ListingStateService::class);
             $stateService->transition($listing, 'pending_review');
@@ -260,7 +271,6 @@ class Wizard extends Component
                 // `add_nullable_description_to_listings`); the step-2
                 // validation enforces a real value before submit.
                 'description' => $this->description !== '' ? $this->description : null,
-                'state' => 'draft',
             ]
             : [
                 'description' => $this->description,
@@ -271,10 +281,26 @@ class Wizard extends Component
                 ],
             ];
 
+        // Een nieuwe advertentie begint als concept. Een bestáánde houdt zijn
+        // toestand: `'state' => 'draft'` stond hierboven in de step-1-payload en
+        // gold dus óók voor een bewerking, via `fill()->save()` en dus buiten de
+        // state machine om. Wie een live advertentie ging bewerken haalde hem
+        // daarmee stil uit het aanbod, en brak hij het bewerken af dan bleef dat
+        // zo — zonder melding, en zonder dat de verkoper het kon zien. Vijf
+        // rijen op productie stonden op `draft` mét een gevulde `published_at`.
+        //
+        // Met de wachtrij aan is offline halen tijdens bewerken wél gewenst: er
+        // moet dan opnieuw een menselijk oordeel komen. Vandaar de vlag in
+        // plaats van het onvoorwaardelijk laten staan.
         if ($this->listing === null) {
+            $payload['state'] = 'draft';
             $this->listing = Listing::query()->create($payload);
 
             return;
+        }
+
+        if ($step1 && config('cloudmarktplaats.features.moderation')) {
+            $payload['state'] = 'draft';
         }
 
         $this->listing->fill($payload)->save();

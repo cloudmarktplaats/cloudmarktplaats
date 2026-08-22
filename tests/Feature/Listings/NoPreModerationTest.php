@@ -98,6 +98,52 @@ it('puts an edited listing straight back online', function () {
         ->and($listing->price_cents)->toBe(27500);
 });
 
+/*
+ * `saveDraft()` schreef `'state' => 'draft'` via `fill()->save()`, dus buiten de
+ * state machine om. Wie een gepubliceerde advertentie ging bewerken haalde hem
+ * daarmee stil offline, en brak hij het bewerken af, dan bleef dat zo — zonder
+ * enige melding. Vijf rijen op productie stonden zo op `draft` mét een gevulde
+ * `published_at`. Zonder wachtrij vooraf is er geen enkele reden meer om een
+ * live advertentie te verbergen terwijl de verkoper aan het typen is.
+ */
+it('leaves a published listing online while its owner is editing it', function () {
+    config()->set('cloudmarktplaats.features.moderation', false);
+
+    $this->actingAs($this->user);
+    $listing = Listing::factory()->for($this->user)->published()->create([
+        'category_id' => $this->category->id,
+        'price_cents' => 10000,
+        'description' => 'Originele beschrijving met genoeg tekens erin.',
+    ]);
+    ListingPhoto::factory()->for($listing)->create();
+
+    // Stap 1 passeren en dan weglopen — precies wat de verkoper deed.
+    Livewire::test(Wizard::class, ['listing' => $listing])
+        ->set('price_cents', 27500)
+        ->call('next');
+
+    expect($listing->fresh()->state)->toBe('published');
+});
+
+// Met de wachtrij aan hoort een bewerking wél uit het aanbod te verdwijnen: dan
+// is er een menselijk oordeel dat opnieuw gegeven moet worden.
+it('does take a published listing offline while editing when moderation is on', function () {
+    config()->set('cloudmarktplaats.features.moderation', true);
+
+    $this->actingAs($this->user);
+    $listing = Listing::factory()->for($this->user)->published()->create([
+        'category_id' => $this->category->id,
+        'description' => 'Originele beschrijving met genoeg tekens erin.',
+    ]);
+    ListingPhoto::factory()->for($listing)->create();
+
+    Livewire::test(Wizard::class, ['listing' => $listing])
+        ->set('price_cents', 27500)
+        ->call('next');
+
+    expect($listing->fresh()->state)->toBe('draft');
+});
+
 // Reactief blijft alles staan: afwijzen en offline halen zijn nog steeds de
 // gereedschappen. Alleen de wachtrij vóóraf is weg.
 it('keeps the tools to take a listing down after the fact', function () {

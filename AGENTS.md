@@ -259,13 +259,18 @@ dan de code die hem waarmaakt — of haal de belofte eruit.**
   knop "Offline halen", met `archived → draft` als weg terug. Terug naar `draft`
   en niet naar `published`, zodat moderatie bindend blijft.
 
-**Nog open — `Wizard::saveDraft()` degradeert stilletjes.** De step-1-payload bevat
-`'state' => 'draft'` en gaat via `fill()->save()`, dus buiten de state machine om.
-Bewerkt iemand een *gepubliceerde* advertentie, dan valt die stil offline zonder dat
-de verkoper iets ziet. Op productie staan vijf rijen met `state='draft'` én een
-gevulde `published_at`; vier delen exact `updated_at = 2026-08-19 13:57:29` (een
-bulkactie van Nick), rij 37 niet. De fix vraagt eerst een productbeslissing: blijft
-een bewerkte live advertentie publiek, of gaat hij terug de moderatiewachtrij in?
+- **`Wizard::saveDraft()` degradeerde stilletjes** — opgelost 22-08. De
+  step-1-payload bevatte `'state' => 'draft'` en ging via `fill()->save()`, dus
+  buiten de state machine om: wie een *gepubliceerde* advertentie ging bewerken
+  haalde hem stil offline, en brak hij het bewerken af dan bleef dat zo. Drie
+  rijen stonden zo op `draft` mét een gevulde `published_at`; die zijn
+  teruggezet. Nu krijgt alleen een *nieuwe* advertentie `draft` mee, en een
+  bestaande houdt zijn toestand — tenzij de moderatievlag aan staat, want dan
+  hoort een bewerking wél opnieuw langs een mens.
+
+  Let op de tweede helft: `submit()` slaat de overgang over als de advertentie al
+  `published` is. Zonder die afslag krijgt de verkoper een "state"-fout op een
+  bewerking die gewoon geslaagd is, want `published → pending_review` bestaat niet.
 
 ## Mail
 
