@@ -299,6 +299,14 @@ afzender wordt vermoedelijk geweigerd. Zet daarom `replyTo` op
 verkoper daardoor twee bijna identieke mails. Stem af wie verstuurt vóór je iets de
 deur uit doet.
 
+**Een commando dat mensen mailt, noteert dát ook.** `listings:notify-photo-bug`
+deed dat niet, en op 22-08 was daardoor niet meer vast te stellen of de lichting
+van 14 juli de mail ooit gekregen had — dus ook niet of opnieuw draaien dezelfde
+mensen twee keer zou lastigvallen. Sinds 22-08 stempelt hij
+`photo_bug_notified_at`, ná een geslaagde verzending en nooit tijdens een
+`--dry-run` (stempelen op een proefdraai slaat de echte mail voorgoed over).
+Bouw je een nieuwe eenmalige mailronde, neem die markering dan meteen mee.
+
 Terugkerende mail loopt via `listings:remind-drafts` (dagelijks 10:00, één
 herinnering per concept via `draft_reminded_at`). Draai hem **altijd eerst met
 `--dry-run`**: rommelconcepten zijn niet automatisch te herkennen, daar hoort een
