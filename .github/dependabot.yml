@@ -1,0 +1,46 @@
+# Beveiligingsupdates komen hier binnen als pull request, in plaats van te
+# wachten tot iemand een rode CI-run opmerkt.
+#
+# Aanleiding: `composer audit` faalde vanaf 6 augustus 2026 op twaalf adviezen
+# in guzzle en commonmark. De poort in CI deed precies wat hij moest doen — hij
+# stond rood — maar niemand keek, en dat duurde ruim twee weken. Een gate die
+# alleen op een tabblad staat is geen gate. Dit is dezelfde les als bij de
+# meldingen: het signaal moet naar de plek waar iemand komt.
+version: 2
+
+updates:
+  - package-ecosystem: composer
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    # Eén PR voor de gewone bijwerkbeurt, zodat de wekelijkse ruis één review is
+    # in plaats van tien. Beveiligingsupdates negeren deze groepering en komen
+    # altijd als eigen PR binnen — die wil je los kunnen beoordelen en mergen.
+    groups:
+      composer-minor-en-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Laravel 11 → 12 is een eigen project, geen wekelijkse PR. De drie
+      # openstaande Laravel-adviezen staan met reden genoteerd onder
+      # `config.audit.ignore` in composer.json; zie ook AGENTS.md.
+      - dependency-name: laravel/framework
+        update-types: [version-update:semver-major]
+
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 3
+    groups:
+      npm-minor-en-patch:
+        update-types: [minor, patch]
+
+  # De workflows zelf verouderen ook: de CI-run waarschuwt al dat
+  # actions/checkout@v4 op Node 20 draait en geforceerd naar 24 gaat.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

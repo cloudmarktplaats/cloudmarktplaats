@@ -194,6 +194,23 @@ gemeld dat elke melding er een is om vandaag te bekijken. **Haal dat signaal noo
 weg zolang de moderatievlag uit staat**; dan is "we merken het vanzelf" een lege
 bewering.
 
+## Afhankelijkheden en `composer audit`
+
+De CI-job `security` draait `composer audit` en `npm audit`, en die poort is
+scherp: hij faalt op élk advies. Dat werkte ook — hij stond vanaf 6 augustus
+rood op twaalf adviezen in guzzle en commonmark — maar niemand keek, ruim twee
+weken lang. Sinds 22-08 openen Dependabot-PR's (`.github/dependabot.yml`) die
+updates uit zichzelf, wekelijks en gegroepeerd; beveiligingsupdates komen los.
+
+**Drie Laravel-adviezen staan bewust genegeerd** in `config.audit.ignore` in
+`composer.json`, mét reden per stuk. Ze zijn niet weggepoetst: er bestáát geen
+11.x-fix. De ernstigste is een CRLF-injectie in de standaard e-mailvalidatie
+(CVE-2026-48019, high), en die is alleen opgelost vanaf Laravel **12.60**. Dat
+betekent dat de openstaande blootstelling gelijkstaat aan de upgrade Laravel
+11 → 12, met Filament erbij. **Behandel die ignore-regels als een schuld met een
+naam, niet als opgelost** — verdwijnt de reden (de upgrade landt), dan horen de
+regels er in dezelfde PR uit.
+
 ## Beslissingen die vastliggen
 
 - **Scope van wat er verkocht mag worden**: `docs/scope.md`, gepubliceerd op
