@@ -43,6 +43,13 @@ class IntegrityReport
             'deals_bevestigd' => Transaction::query()->where('status', 'completed')->where('completed_at', '>=', $since)->count(),
             'verkopen_gemeld' => Transaction::query()->where('created_at', '>=', $since)->count(),
             'mislukte_jobs' => DB::table('failed_jobs')->count(),
+            // Sinds moderatie vóóraf eraf ging (22-08) is een melding van een
+            // gebruiker het enige wat ons nog waarschuwt over wat er in het
+            // aanbod staat. Die meldingen zaten alleen in het Filament-paneel,
+            // waar je voor moet inloggen. Hier telt de openstaande voorraad,
+            // niet de aanwas van een dag: een melding die drie dagen blijft
+            // liggen is het probleem, niet de melding zelf.
+            'meldingen_open' => DB::table('reports')->where('status', 'open')->count(),
             'concepten_zonder_foto' => Listing::query()
                 ->where('state', 'draft')
                 ->where('updated_at', '<=', $since)
@@ -58,6 +65,15 @@ class IntegrityReport
         }
         if ($cijfers['mislukte_jobs'] > 0) {
             $signalen[] = sprintf('%d mislukte job(s) in de wachtrij.', $cijfers['mislukte_jobs']);
+        }
+
+        // Vanaf de eerste melding, niet vanaf een drempel: er wordt hier zo
+        // weinig gemeld dat elke melding er een is om vandaag naar te kijken.
+        if ($cijfers['meldingen_open'] > 0) {
+            $signalen[] = sprintf(
+                '%d openstaande melding(en) over advertenties of homelab-posts — sinds moderatie vooraf eraf is, is dit het vangnet.',
+                $cijfers['meldingen_open'],
+            );
         }
 
         // De stiltes. Dit is het deel dat de fotobug had gevangen.

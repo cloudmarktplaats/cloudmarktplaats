@@ -47,6 +47,13 @@ beforeEach(function () {
     Storage::fake('public');
     Notification::fake();
 
+    // Stap 4 van dit scenario is "admin keurt goed in Filament", en dat bestaat
+    // alleen mét wachtrij. Sinds 22-08-2026 staat `features.moderation`
+    // standaard uit; hier zetten we hem aan zodat de volledige gemodereerde
+    // route gedekt blijft voor als iemand hem terugzet. De route zonder
+    // wachtrij staat in tests/Feature/Listings/NoPreModerationTest.php.
+    config()->set('cloudmarktplaats.features.moderation', true);
+
     // Required for register() to attach legal acceptance rows.
     LegalDocument::factory()->tos()->create([
         'locale' => app()->getLocale(),

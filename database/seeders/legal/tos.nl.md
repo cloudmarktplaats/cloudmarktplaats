@@ -33,7 +33,7 @@ Verboden is in het bijzonder:
 - Content die inbreuk maakt op rechten van anderen (auteursrecht, merkrecht, portretrecht) of die onrechtmatig, bedreigend of beledigend is.
 - Het plaatsen van persoonsgegevens van anderen zonder grondslag.
 
-We mogen advertenties vóór publicatie beoordelen (moderatie) en content of accounts weigeren, aanpassen of verwijderen die deze voorwaarden schenden.
+Advertenties worden op dit moment **niet vooraf beoordeeld**: wat je plaatst staat meteen online. We behouden ons wel het recht voor om vooraf te beoordelen, en om content of accounts te weigeren, aan te passen of te verwijderen die deze voorwaarden schenden. Zie je iets dat hier niet hoort, meld het dan via de meldknop bij de advertentie.
 
 ## 6. Contact tussen gebruikers
 

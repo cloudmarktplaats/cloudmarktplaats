@@ -68,7 +68,7 @@
                 <li>Hardware met actieve, voorgeprogrammeerde malware (dual-use security tools mag, mits eerlijk beschreven).</li>
                 <li>Levende dieren, menselijke biomaterialen, of wat verder dan ook in de Telecomwet, Geneesmiddelenwet of Warenwet thuishoort en niet hier.</li>
             </ul>
-            <p class="mt-3">In twijfel? Plaats het, en als het over de schreef is hoor je het van de moderatie. We modereren in dialoog, niet met een hakbijl.</p>'),
+            <p class="mt-3">In twijfel? Plaats het. Je advertentie staat meteen online — er zit geen wachtrij meer tussen. Gaat het over de schreef, dan horen we het via een melding en nemen we contact op. We modereren in dialoog, niet met een hakbijl.</p>'),
         ],
         [
             'q' => __('Hoe haal ik een advertentie weg?'),

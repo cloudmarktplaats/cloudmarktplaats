@@ -116,7 +116,7 @@
         </ol>
 
         <p class="max-w-2xl text-cmp-muted leading-relaxed">
-            {{ __('Twijfel je na drie tests nog steeds? Plaats het. Als het over de schreef is hoor je het van de moderatie — dat kost jou minder moeite dan dat het platform leeg blijft. En deze lijst verandert via een issue op GitHub, in het openbaar: de eerste honderd bepalen de cultuur, dat gold voor de toon en het geldt ook hier.') }}
+            {{ __('Twijfel je na drie tests nog steeds? Plaats het. Je advertentie staat meteen online; gaat het over de schreef, dan horen we het via een melding en nemen we contact op — dat kost jou minder moeite dan dat het platform leeg blijft. En deze lijst verandert via een issue op GitHub, in het openbaar: de eerste honderd bepalen de cultuur, dat gold voor de toon en het geldt ook hier.') }}
         </p>
 
         <div class="mt-14 pt-6 border-t border-cmp-border font-mono text-[11px] text-cmp-muted flex flex-wrap gap-x-6 gap-y-2">

@@ -214,16 +214,27 @@ class Wizard extends Component
             $stateService = app(ListingStateService::class);
             $stateService->transition($listing, 'pending_review');
 
-            // Trusted veterans skip the moderation queue (flag-gated,
-            // sales-gated — see TrustLevelService). A listing with a
-            // rejection history (moderation_notes set) is NEVER auto-
-            // published: the moderator's rejection stays binding.
+            // Zonder moderatie vooraf is `pending_review` een doorgeefluik van
+            // één regel: de advertentie gaat er doorheen zodat de state machine
+            // de enige route naar `published` blijft (en `ListingPublished`
+            // netjes vuurt, inclusief de "je staat online"-mail), maar niemand
+            // wacht erop.
+            //
+            // Een advertentie mét afwijzingsgeschiedenis blijft ook hier staan:
+            // die is ooit door een mens tegengehouden en dat oordeel telt
+            // zwaarder dan de vlag. Zet iemand de wachtrij terug aan, dan is
+            // dit precies het gedrag dat je terugkrijgt.
             $user = auth()->user();
-            if ($user !== null
-                && $listing->moderation_notes === null
-                && app(TrustLevelService::class)->canSkipModeration($user)) {
+            $moderationOff = ! config('cloudmarktplaats.features.moderation');
+
+            if ($listing->moderation_notes === null
+                && ($moderationOff
+                    || ($user !== null && app(TrustLevelService::class)->canSkipModeration($user)))) {
                 $stateService->transition($listing, 'published');
-                AdminActionLogger::log('listing.autopublish', 'listing', $listing->id);
+
+                if (! $moderationOff) {
+                    AdminActionLogger::log('listing.autopublish', 'listing', $listing->id);
+                }
             }
         } catch (InvalidStateTransition $e) {
             $this->addError('state', $e->getMessage());

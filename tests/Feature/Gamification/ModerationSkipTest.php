@@ -11,8 +11,17 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
 
+/*
+ * Dit hele bestand beschrijft gedrag dat alléén bestaat zolang er vooraf
+ * gemodereerd wordt: "de wachtrij overslaan" is betekenisloos als er geen
+ * wachtrij is. Sinds 22-08-2026 staat `features.moderation` standaard uit, dus
+ * die zetten we hier expliciet aan. Blijft dekking houden voor de dag dat de
+ * wachtrij terugkomt — zie tests/Feature/Listings/NoPreModerationTest.php voor
+ * de andere kant.
+ */
 beforeEach(function () {
     Storage::fake('public');
+    config()->set('cloudmarktplaats.features.moderation', true);
     $this->category = Category::factory()->create();
 });
 

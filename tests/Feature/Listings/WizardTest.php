@@ -111,7 +111,12 @@ it('walks step 1 → 2 → 3 and persists a draft listing per step', function ()
     expect($draft->refresh()->description)->toContain('Werkende UltraSPARC');
 });
 
+// Met de wachtrij aan. Sinds 22-08 staat `features.moderation` standaard uit en
+// gaat submit rechtstreeks naar `published`; dat pad staat in
+// tests/Feature/Listings/NoPreModerationTest.php. Hier blijft de wachtrij
+// gedekt voor de dag dat iemand hem terugzet.
 it('submits the wizard: dispatches photo job + transitions to pending_review', function () {
+    config()->set('cloudmarktplaats.features.moderation', true);
     $this->actingAs($this->user);
 
     // Livewire's WithFileUploads accepts an `UploadedFile::fake()` which
@@ -149,6 +154,7 @@ it('submits the wizard: dispatches photo job + transitions to pending_review', f
 });
 
 it('edits a published listing: updates price + description, no new photos needed, back to moderation', function () {
+    config()->set('cloudmarktplaats.features.moderation', true);
     $this->actingAs($this->user);
 
     $listing = Listing::factory()->for($this->user)->published()->create([

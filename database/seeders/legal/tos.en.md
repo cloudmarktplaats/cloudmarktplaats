@@ -33,7 +33,7 @@ Prohibited in particular:
 - Content that infringes others' rights (copyright, trademark, image rights) or that is unlawful, threatening or offensive.
 - Posting other people's personal data without a legal basis.
 
-We may review listings before publication (moderation) and refuse, edit or remove content or accounts that breach these terms.
+Listings are currently **not reviewed before publication**: what you post goes live immediately. We do reserve the right to review beforehand, and to refuse, edit or remove content or accounts that breach these terms. If you see something that does not belong here, report it using the report button on the listing.
 
 ## 6. Contact between users
 

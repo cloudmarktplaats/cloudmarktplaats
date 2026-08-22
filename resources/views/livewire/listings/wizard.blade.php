@@ -1,7 +1,16 @@
 <div class="mx-auto max-w-2xl rounded-sm border border-cmp-border bg-cmp-surface p-6">
     <h1 class="mb-1 text-2xl font-bold">{{ $editing ? __('Advertentie bewerken') : __('Nieuwe advertentie') }}</h1>
+    {{-- De wachtrij is eraf (`features.moderation`), maar de tekst moet
+         meebewegen als iemand hem terugzet: anders belooft de knop iets anders
+         dan er gebeurt. --}}
     @if ($editing)
-        <p class="mb-4 text-sm text-cmp-muted">{{ __('Na opslaan gaat je advertentie opnieuw langs moderatie en is zolang niet zichtbaar in het aanbod.') }}</p>
+        <p class="mb-4 text-sm text-cmp-muted">
+            @if (config('cloudmarktplaats.features.moderation'))
+                {{ __('Na opslaan gaat je advertentie opnieuw langs moderatie en is zolang niet zichtbaar in het aanbod.') }}
+            @else
+                {{ __('Je wijziging staat meteen online. Zolang je hier bezig bent, staat de advertentie even niet in het aanbod.') }}
+            @endif
+        </p>
     @endif
 
     <ol class="mb-6 flex items-center gap-2 text-sm">
@@ -181,7 +190,7 @@
                      is about telling the seller why nothing happens yet. --}}
                 <button x-bind:disabled="bezig"
                         class="rounded bg-green-600 px-4 py-2 text-white disabled:cursor-not-allowed disabled:opacity-50">
-                    <span x-show="! bezig">{{ __('Indienen voor moderatie') }}</span>
+                    <span x-show="! bezig">{{ config('cloudmarktplaats.features.moderation') ? __('Indienen voor moderatie') : __('Plaatsen') }}</span>
                     <span x-show="bezig" x-cloak>{{ __('Bezig met uploaden…') }}</span>
                 </button>
             </div>

@@ -21,6 +21,20 @@ return [
         'stats' => env('FEATURE_STATS', true),
         'trust' => env('FEATURE_TRUST', true),
         'trust_autopublish' => env('FEATURE_TRUST_AUTOPUBLISH', false),
+        // Moderatie vóóraf. Uit sinds 22-08-2026: een advertentie is meteen
+        // zichtbaar en gaat niet eerst door een wachtrij.
+        //
+        // De aanleiding was één verkoper wiens advertentie dagen wachtte
+        // terwijl het product al elders verkocht was — de wachtrij beschermde
+        // tegen rommel die we nog nooit gezien hadden en kostte ondertussen
+        // echte verkopers. Reactief blijft alles staan: melden, afwijzen en
+        // offline halen werken gewoon door.
+        //
+        // Dit is bewust een vlag en geen verwijderd codepad. Loopt het aanbod
+        // vol met scams, dan zet één regel de wachtrij terug zonder deploy.
+        // Het bijbehorende alarm is `meldingen_open` in de dagelijkse check:
+        // zonder wachtrij vooraf is een melding het enige wat ons nog waarschuwt.
+        'moderation' => env('FEATURE_MODERATION', false),
         'deals' => env('FEATURE_DEALS', true),
         'homelab_upvotes' => env('FEATURE_HOMELAB_UPVOTES', true),
         // Close registration once the first-100 founding cohort is full and

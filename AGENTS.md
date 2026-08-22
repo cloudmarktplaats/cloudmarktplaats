@@ -164,6 +164,36 @@ governance.
 
 ---
 
+## Geen moderatie vooraf meer (22-08-2026)
+
+`features.moderation` staat **uit**. Een advertentie is meteen zichtbaar; de
+wachtrij `pending_review` is een doorgeefluik van één regel in `Wizard::submit()`,
+zodat de state machine de enige route naar `published` blijft en
+`ListingPublished` netjes vuurt.
+
+Aanleiding: Rob Turks advertentie stond dagen te wachten terwijl het product al
+elders verkocht was. Bij het omzetten stonden er nog twee in de wachtrij — één
+sinds 30 juli, **23 dagen**. De wachtrij beschermde tegen rommel die we nog nooit
+gezien hadden en kostte ondertussen echte verkopers.
+
+**Wat blijft:** melden, afwijzen, offline halen, bannen. Alleen de poort vóóraf is
+weg, niet het gereedschap erna. Een advertentie met een afwijzingsgeschiedenis
+(`moderation_notes` gevuld) publiceert nooit vanzelf — dat oordeel van een mens
+telt zwaarder dan de vlag.
+
+**Terugdraaien is één configregel**, `FEATURE_MODERATION=true`, geen deploy. Dat is
+met opzet: dit codepad is niet verwijderd. De teksten in de wizard, de FAQ en op
+/wat-mag-erop volgen de vlag, dus ze blijven kloppen als je hem omzet.
+
+**Het vangnet is `meldingen_open` in `platform:daily-check`**, en dat is nieuw. Er
+werd nergens op meldingen gealarmeerd; ze stonden alleen in Filament, waar je voor
+moet inloggen. Zonder poort vooraf is een gebruikersmelding het enige wat ons nog
+waarschuwt, en de dagelijkse mail is de enige zichtbaarheid die dit platform heeft.
+Alarmeert vanaf de eerste melding, niet vanaf een drempel — er wordt hier zo weinig
+gemeld dat elke melding er een is om vandaag te bekijken. **Haal dat signaal nooit
+weg zolang de moderatievlag uit staat**; dan is "we merken het vanzelf" een lege
+bewering.
+
 ## Beslissingen die vastliggen
 
 - **Scope van wat er verkocht mag worden**: `docs/scope.md`, gepubliceerd op
