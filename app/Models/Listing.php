@@ -45,6 +45,7 @@ class Listing extends Model
             'is_trade_allowed' => 'boolean',
             'published_at' => 'datetime',
             'draft_reminded_at' => 'datetime',
+            'photo_bug_notified_at' => 'datetime',
             'sold_at' => 'datetime',
         ];
     }

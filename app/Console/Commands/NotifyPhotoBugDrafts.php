@@ -42,6 +42,9 @@ class NotifyPhotoBugDrafts extends Command
         $stuck = Listing::query()
             ->where('state', 'draft')
             ->whereDoesntHave('photos')
+            // Eén mail per concept, ooit. Zonder deze regel viel op 22-08 niet
+            // meer na te gaan of de lichting van 14 juli al gemaild was.
+            ->whereNull('photo_bug_notified_at')
             ->when($exclude !== [], fn ($q) => $q->whereNotIn('user_id', $exclude))
             ->with('user')
             ->orderBy('user_id')
@@ -81,6 +84,11 @@ class NotifyPhotoBugDrafts extends Command
 
             if (! $dryRun) {
                 Mail::to($user->email)->send(new ListingPhotoBugMail($user, $listings));
+
+                // Stempelen ná het versturen: klapt de mail eruit, dan blijft
+                // het concept in aanmerking komen voor een volgende poging.
+                Listing::query()->whereIn('id', $listings->pluck('id'))
+                    ->update(['photo_bug_notified_at' => now()]);
             }
         }
 

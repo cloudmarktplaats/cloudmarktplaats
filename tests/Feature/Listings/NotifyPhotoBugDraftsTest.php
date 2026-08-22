@@ -84,3 +84,46 @@ it('links each listing straight to its wizard edit page', function () {
         ->toContain("/listings/{$listing->ulid}/edit")
         ->toContain('github.com/cloudmarktplaats/cloudmarktplaats/issues');
 });
+
+/*
+ * Dit commando hield nergens bij wie het gemaild had. Gevolg: op 22-08 was niet
+ * meer vast te stellen of de lichting van 14 juli de mail ooit gekregen had, en
+ * dus of opnieuw draaien dezelfde mensen een tweede keer zou lastigvallen. Een
+ * commando dat mensen mailt en dat niet noteert, kun je maar één keer met een
+ * gerust hart draaien.
+ */
+it('stamps the listings it mailed about', function () {
+    $listing = Listing::factory()->create(['state' => 'draft']);
+
+    $this->artisan('listings:notify-photo-bug')->assertSuccessful();
+
+    expect($listing->fresh()->photo_bug_notified_at)->not->toBeNull();
+});
+
+it('does not mail the same draft twice', function () {
+    Listing::factory()->create(['state' => 'draft', 'photo_bug_notified_at' => now()->subDay()]);
+
+    $this->artisan('listings:notify-photo-bug')->assertSuccessful();
+
+    Mail::assertNothingQueued();
+});
+
+// Stempelen mag niet gebeuren op een proefdraai, anders is de echte mail voor
+// altijd overgeslagen door precies de controle die hem had moeten beschermen.
+it('does not stamp anything during a dry run', function () {
+    $listing = Listing::factory()->create(['state' => 'draft']);
+
+    $this->artisan('listings:notify-photo-bug', ['--dry-run' => true])->assertSuccessful();
+
+    expect($listing->fresh()->photo_bug_notified_at)->toBeNull();
+});
+
+it('tells the seller they can now delete the draft themselves', function () {
+    $listing = Listing::factory()->create(['state' => 'draft']);
+
+    $this->artisan('listings:notify-photo-bug')->assertSuccessful();
+
+    Mail::assertQueued(ListingPhotoBugMail::class, function (ListingPhotoBugMail $mail): bool {
+        return str_contains($mail->render(), '/mijn-advertenties');
+    });
+});
