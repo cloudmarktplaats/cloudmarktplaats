@@ -40,7 +40,11 @@
                 type="text"
                 wire:model="confirmUsername"
                 autocomplete="off"
-                class="cmp-input mt-2 w-full font-mono"
+                {{-- Zelfde klassen als de andere formuliervelden (zie
+                     auth/login.blade.php). Hier stond `cmp-input`, een klasse
+                     die niet bestaat: het veld kwam als kale browser-input op
+                     productie terecht. --}}
+                class="mt-2 w-full rounded-sm border-cmp-border p-2 font-mono focus:border-cmp-signal focus:ring-cmp-signal"
             >
             @error('confirmUsername')
                 <p class="mt-2 text-sm text-cmp-amber">{{ $message }}</p>

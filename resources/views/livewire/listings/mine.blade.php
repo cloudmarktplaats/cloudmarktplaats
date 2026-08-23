@@ -27,17 +27,22 @@
         <ul class="mt-10 flex flex-col gap-3">
             @foreach ($listings as $listing)
                 @php
-                    // House-style state labels + accent token, matching the
-                    // owner-preview banner on the detail page.
+                    // Volledige klassennamen, geen `border-{$token}`. Tailwind
+                    // leest broncode als tekst: een naam die pas bij het renderen
+                    // ontstaat, ziet hij niet en laat hij dus weg. Dat ging hier
+                    // echt mis — `border-cmp-muted` viel uit de stylesheet en de
+                    // chips "Concept" en "Offline" verloren hun rand. Het bleef
+                    // onzichtbaar doordat Tailwind ook de Blade-cache scande en
+                    // die de gerenderde namen toevallig bevatte.
                     $states = [
-                        'draft'          => [__('Concept'), 'cmp-muted'],
-                        'pending_review' => [__('In moderatie'), 'cmp-amber'],
-                        'published'      => [__('Live'), 'cmp-blue'],
-                        'sold'           => [__('Verkocht'), 'cmp-signal'],
-                        'rejected'       => [__('Afgewezen'), 'cmp-amber'],
-                        'archived'       => [__('Offline'), 'cmp-muted'],
+                        'draft'          => [__('Concept'), 'border-cmp-muted text-cmp-muted'],
+                        'pending_review' => [__('In moderatie'), 'border-cmp-amber text-cmp-amber'],
+                        'published'      => [__('Live'), 'border-cmp-blue text-cmp-blue'],
+                        'sold'           => [__('Verkocht'), 'border-cmp-signal text-cmp-signal'],
+                        'rejected'       => [__('Afgewezen'), 'border-cmp-amber text-cmp-amber'],
+                        'archived'       => [__('Offline'), 'border-cmp-muted text-cmp-muted'],
                     ];
-                    [$stateLabel, $stateToken] = $states[$listing->state] ?? [ucfirst($listing->state), 'cmp-muted'];
+                    [$stateLabel, $stateClasses] = $states[$listing->state] ?? [ucfirst($listing->state), 'border-cmp-muted text-cmp-muted'];
                     $photo = $listing->photos->first();
                 @endphp
                 <li
@@ -59,7 +64,7 @@
 
                     <div class="min-w-0 flex-1">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="cmp-label-chip border-{{ $stateToken }} text-{{ $stateToken }}">{{ $stateLabel }}</span>
+                            <span class="cmp-label-chip {{ $stateClasses }}">{{ $stateLabel }}</span>
                             <h2 class="truncate font-medium text-cmp-text" title="{{ $listing->title }}">{{ $listing->title }}</h2>
                         </div>
                         <div class="mt-1 flex items-center gap-3 font-mono text-xs text-cmp-faint">
