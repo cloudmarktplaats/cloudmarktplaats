@@ -9,6 +9,7 @@ use App\Models\Listing;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -87,7 +88,15 @@ class NotifyPhotoBugDrafts extends Command
 
                 // Stempelen ná het versturen: klapt de mail eruit, dan blijft
                 // het concept in aanmerking komen voor een volgende poging.
-                Listing::query()->whereIn('id', $listings->pluck('id'))
+                //
+                // Via de query builder, niet via Eloquent: `Listing::query()
+                // ->update()` zet ook `updated_at`, en dan telt de meting
+                // `concepten_zonder_foto` (alleen concepten ouder dan 24 uur)
+                // het concept een dag lang niet mee. Op 23-08 gingen tien
+                // vastgelopen concepten zo door één mailronde uit de dagelijkse
+                // mail — "Geen signalen", terwijl er niets was opgelost. Een
+                // mail versturen is geen activiteit van de verkoper.
+                DB::table('listings')->whereIn('id', $listings->pluck('id'))
                     ->update(['photo_bug_notified_at' => now()]);
             }
         }

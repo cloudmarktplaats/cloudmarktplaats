@@ -9,6 +9,7 @@ use App\Models\Listing;
 use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 /**
@@ -88,7 +89,11 @@ class RemindDraftListings extends Command
                 Mail::to($user->email)->send(new DraftReminderMail($user, $listings));
                 // Pas markeren ná het versturen: valt de mail om, dan komt dit
                 // concept morgen gewoon opnieuw langs.
-                Listing::query()->whereIn('id', $listings->pluck('id'))->update(['draft_reminded_at' => now()]);
+                // Query builder, niet Eloquent: die zet ook `updated_at` en
+                // dat maakt een blijven liggen concept kunstmatig "vers", zodat
+                // het uit `concepten_zonder_foto` in de dagelijkse mail valt.
+                // Zie NotifyPhotoBugDrafts voor het geval waarin dat echt misging.
+                DB::table('listings')->whereIn('id', $listings->pluck('id'))->update(['draft_reminded_at' => now()]);
             }
 
             $reminded++;

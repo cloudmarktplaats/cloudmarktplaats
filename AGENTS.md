@@ -299,6 +299,14 @@ afzender wordt vermoedelijk geweigerd. Zet daarom `replyTo` op
 verkoper daardoor twee bijna identieke mails. Stem af wie verstuurt vóór je iets de
 deur uit doet.
 
+**Stempelen mag de klok van de rij niet vooruitzetten.** Doe zo'n update via
+`DB::table(...)`, niet via `Listing::query()->update()`: die laatste zet ook
+`updated_at`. Op 23-08 vielen tien vastgelopen concepten daardoor uit de meting
+`concepten_zonder_foto` — die telt alleen concepten ouder dan 24 uur — en meldde
+de dagelijkse mail "Geen signalen" terwijl er niets was opgelost. Een mail
+versturen is geen activiteit van de verkoper. Twee tests in
+`DailyIntegrityCheckTest` houden dit vast.
+
 **Een commando dat mensen mailt, noteert dát ook.** `listings:notify-photo-bug`
 deed dat niet, en op 22-08 was daardoor niet meer vast te stellen of de lichting
 van 14 juli de mail ooit gekregen had — dus ook niet of opnieuw draaien dezelfde

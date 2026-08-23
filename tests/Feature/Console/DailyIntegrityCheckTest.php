@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Mail\DailyIntegrityMail;
 use App\Models\Listing;
 use App\Models\ListingPhoto;
+use App\Services\Ops\IntegrityReport;
 use Illuminate\Support\Facades\Mail;
 
 beforeEach(function () {
@@ -92,4 +93,41 @@ it('sends nothing when no recipient is configured', function () {
     $this->artisan('platform:daily-check')->assertSuccessful();
 
     Mail::assertNothingSent();
+});
+
+/*
+ * Het stempelen van een verstuurde mail zette óók `updated_at`, want
+ * `Listing::query()->update()` doet dat via Eloquent altijd. Gevolg: op 23-08
+ * gingen tien vastgelopen concepten door één mailronde uit de meting
+ * `concepten_zonder_foto`, die alleen concepten ouder dan 24 uur telt. De
+ * dagelijkse mail meldde daarna "Geen signalen" terwijl er niets was opgelost.
+ *
+ * Een mail versturen ís geen activiteit van de verkoper, dus het mag de klok
+ * van zijn concept niet vooruitzetten.
+ */
+it('does not reset a draft\'s age by mailing its owner about it', function () {
+    $listing = Listing::factory()->create([
+        'state' => 'draft',
+        'updated_at' => now()->subDays(5),
+    ]);
+
+    $this->artisan('listings:notify-photo-bug')->assertSuccessful();
+
+    $listing->refresh();
+
+    expect($listing->photo_bug_notified_at)->not->toBeNull()
+        ->and($listing->updated_at->isBefore(now()->subDays(4)))->toBeTrue();
+});
+
+it('keeps a stale draft visible in the daily check after it has been mailed', function () {
+    Listing::factory()->create([
+        'state' => 'draft',
+        'updated_at' => now()->subDays(5),
+    ]);
+
+    $this->artisan('listings:notify-photo-bug')->assertSuccessful();
+
+    $rapport = app(IntegrityReport::class)->build(now());
+
+    expect($rapport['cijfers']['concepten_zonder_foto'])->toBe(1);
 });
