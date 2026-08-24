@@ -131,3 +131,53 @@ it('keeps a stale draft visible in the daily check after it has been mailed', fu
 
     expect($rapport['cijfers']['concepten_zonder_foto'])->toBe(1);
 });
+
+/*
+ * `concepten_zonder_foto` telt een voorraad, geen aanwas: die tien concepten
+ * van juli en augustus dalen alleen als de verkoper zelf terugkomt, en vijf
+ * ervan zijn toetsenbordgeklets dat nooit afkomt. Alarmeren op het totaal zet
+ * dus dezelfde zin elke ochtend in de enige mail die dit platform heeft, en
+ * dan verdwijnt een elfde geval in het ruis: "10 concept(en)" wordt "11" en
+ * niemand ziet het verschil.
+ *
+ * Het alarm hoort daarom op wat er nog te dóen is: een concept waarover de
+ * eigenaar nog niet gemaild is. Het getal blijft staan (de test hierboven),
+ * alleen het signaal zwijgt zodra de bal bij de verkoper ligt.
+ */
+it('stops shouting about stuck drafts whose owner has already been mailed', function () {
+    Listing::factory()->create(['state' => 'draft', 'updated_at' => now()->subDays(5)]);
+
+    $this->artisan('listings:notify-photo-bug')->assertSuccessful();
+
+    $rapport = app(IntegrityReport::class)->build(now());
+
+    expect($rapport['cijfers']['concepten_zonder_foto'])->toBe(1)
+        ->and($rapport['signalen'])->each->not->toContain('blijven hangen zonder foto');
+});
+
+it('still shouts when a stuck draft has had no mail at all', function () {
+    Listing::factory()->create(['state' => 'draft', 'updated_at' => now()->subDays(5)]);
+
+    $rapport = app(IntegrityReport::class)->build(now());
+
+    expect(collect($rapport['signalen'])->contains(fn (string $s) => str_contains($s, 'blijven hangen zonder foto')))->toBeTrue();
+});
+
+/*
+ * De reden dat het signaal überhaupt bestaat: een nieuw geval moet opvallen
+ * naast een berg oude. Telt het signaal het totaal, dan gaat 10 naar 11 en
+ * leest dat als dezelfde ochtend als gisteren.
+ */
+it('counts only the untouched drafts in the signal, not the whole backlog', function () {
+    Listing::factory()->count(3)->create(['state' => 'draft', 'updated_at' => now()->subDays(5)]);
+
+    $this->artisan('listings:notify-photo-bug')->assertSuccessful();
+
+    Listing::factory()->create(['state' => 'draft', 'updated_at' => now()->subDays(2)]);
+
+    $rapport = app(IntegrityReport::class)->build(now());
+
+    expect($rapport['cijfers']['concepten_zonder_foto'])->toBe(4)
+        ->and(collect($rapport['signalen'])->first(fn (string $s) => str_contains($s, 'blijven hangen zonder foto')))
+        ->toContain('1 concept');
+});

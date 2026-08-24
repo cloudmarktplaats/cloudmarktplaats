@@ -8,6 +8,7 @@ use App\Models\Listing;
 use App\Models\ListingPhoto;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -52,11 +53,7 @@ class IntegrityReport
             // niet de aanwas van een dag: een melding die drie dagen blijft
             // liggen is het probleem, niet de melding zelf.
             'meldingen_open' => DB::table('reports')->where('status', 'open')->count(),
-            'concepten_zonder_foto' => Listing::query()
-                ->where('state', 'draft')
-                ->where('updated_at', '<=', $since)
-                ->whereDoesntHave('photos')
-                ->count(),
+            'concepten_zonder_foto' => $this->stuckDrafts($since)->count(),
         ];
 
         $fouten = $this->errorsSince($since);
@@ -85,10 +82,22 @@ class IntegrityReport
         if (! Listing::query()->where('published_at', '>=', $quiet)->exists()) {
             $signalen[] = sprintf('Geen enkele advertentie gepubliceerd in %d dagen.', $silenceDays);
         }
-        if ($cijfers['concepten_zonder_foto'] > 0) {
+        // Alarmeren op het totaal zou hier elke ochtend afgaan: die voorraad
+        // daalt alleen als de verkoper zelf terugkomt, en een deel komt nooit
+        // af. Dan verdwijnt een nieuw geval in de ruis — "10 concept(en)"
+        // wordt "11" en dat leest als dezelfde ochtend als gisteren. Het
+        // signaal telt daarom alleen wat er nog te dóen is: concepten waarvan
+        // de eigenaar nog van niemand iets gehoord heeft. Het getal hierboven
+        // blijft het volledige totaal, dus de voorraad blijft zichtbaar.
+        $onaangeraakt = $this->stuckDrafts($since)
+            ->whereNull('draft_reminded_at')
+            ->whereNull('photo_bug_notified_at')
+            ->count();
+
+        if ($onaangeraakt > 0) {
             $signalen[] = sprintf(
                 '%d concept(en) blijven hangen zonder foto — vaak het teken dat iemand vastliep bij het uploaden.',
-                $cijfers['concepten_zonder_foto'],
+                $onaangeraakt,
             );
         }
 
@@ -143,6 +152,21 @@ class IntegrityReport
         }
 
         return ['cijfers' => $cijfers, 'fouten' => $fouten, 'signalen' => $signalen];
+    }
+
+    /**
+     * Concepten zonder foto die minstens 24 uur stilliggen.
+     *
+     * Ouder dan `$since`, want wie nu bezig is met invullen is geen signaal.
+     *
+     * @return Builder<Listing>
+     */
+    private function stuckDrafts(Carbon $since)
+    {
+        return Listing::query()
+            ->where('state', 'draft')
+            ->where('updated_at', '<=', $since)
+            ->whereDoesntHave('photos');
     }
 
     /**

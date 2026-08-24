@@ -137,6 +137,19 @@ dit platform als enige zichtbaarheid heeft. Legacy-rijen zonder `claim_token`
 (van vóór de claim-link) hebben geen vervaldatum en vallen terug op de oude
 `created_at`/`silence_days`-regel.
 
+**Een voorraad is geen alarm.** `concepten_zonder_foto` telt álle concepten
+zonder foto ouder dan 24 uur, en dat getal daalt alleen als de verkoper zelf
+terugkomt — vijf van de tien zijn toetsenbordgeklets dat nooit afkomt. Het
+alarmeerde daardoor elke ochtend op dezelfde tien rijen van juli en augustus,
+terwijl de fotobug er al sinds 19-08 uit was en de tien verkopers op 22-08
+gemaild waren. Erger dan ruis: een elfde geval zou "10 concept(en)" naar "11"
+laten lopen en dat leest als dezelfde ochtend als gisteren. Sinds 24-08 telt het
+**signaal** alleen concepten waarvan de eigenaar nog van niemand iets gehoord
+heeft (`draft_reminded_at` én `photo_bug_notified_at` allebei leeg); het
+**getal** blijft het volledige totaal, dus de voorraad blijft zichtbaar. Bouw je
+een nieuw signaal, vraag dan eerst of het over aanwas of over voorraad gaat —
+alarmeren op voorraad zonder afhandelmarkering gaat altijd vanzelf staan roepen.
+
 Draai hem met `--show` om het rapport in de terminal te zien zonder te mailen.
 Dat is ook de snelste manier om na een deploy te controleren of je niets hebt
 gebroken — hij las binnen een dag vier 500's uit de log die niemand had gemeld.
