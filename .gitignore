@@ -25,3 +25,7 @@ docker-compose.override.yml
 
 # Private launch material (social posts, playbook) — never publish
 launch/
+
+# Gereedschap van de werkplek, niet van het project
+/.superpowers
+/ascii-art.txt

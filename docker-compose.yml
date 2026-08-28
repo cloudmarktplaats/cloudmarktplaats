@@ -12,7 +12,15 @@ x-logging: &default-logging
 services:
   nginx:
     image: nginx:1.27-alpine
-    ports: ["8080:80"]
+    # Alleen loopback, net als de andere diensten hieronder. De ontwikkelsite
+    # draait met echte-ogende gegevens en zonder de beschermingen van
+    # productie; die hoort niet op wisselende wifi te staan. Wil je hem toch
+    # even vanaf je telefoon zien: `ssh -L 8080:127.0.0.1:8080 <deze machine>`.
+    #
+    # Productie doet dit bewust *niet*: docker-compose.prod.yml publiceert
+    # 8080 op alle interfaces, want de reverse proxy zit op een andere machine
+    # en bereikt LXC 214 over het LAN. Neem deze regel daar niet over.
+    ports: ["127.0.0.1:8080:80"]
     volumes:
       - ./:/app
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf
