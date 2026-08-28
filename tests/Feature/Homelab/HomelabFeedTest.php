@@ -155,30 +155,44 @@ it('links each feed card to its own page', function () {
 
 it('eager-loads photos so the feed is not N+1', function () {
     $author = User::factory()->create();
-    // Drie posts, elk met een eigen foto-rij.
-    collect(range(0, 2))->each(function () use ($author) {
-        $post = HomelabPost::factory()->for($author)->create();
-        HomelabPhoto::factory()->for($post, 'post')->create([
-            'path' => 'homelabs/'.$post->ulid.'/0/card.webp',
-            'position' => 0,
-        ]);
-    });
+
+    $addPosts = function (int $count) use ($author): void {
+        collect(range(1, $count))->each(function () use ($author) {
+            $post = HomelabPost::factory()->for($author)->create();
+            HomelabPhoto::factory()->for($post, 'post')->create([
+                'path' => 'homelabs/'.$post->ulid.'/0/card.webp',
+                'position' => 0,
+            ]);
+        });
+    };
 
     $component = Livewire::test(Feed::class);
 
-    DB::flushQueryLog();
-    DB::enableQueryLog();
-    $posts = $component->instance()->posts();
-    // De render leest photoUrl('card') op elke post — dat mag GEEN extra
-    // query per post doen als photos eager geladen is.
-    $posts->each(fn ($p) => $p->photoUrl('card'));
-    $photoQueries = collect(DB::getQueryLog())
-        ->filter(fn ($q) => str_contains($q['query'], 'homelab_photos'))
-        ->count();
-    DB::disableQueryLog();
+    $photoQueries = function () use ($component): int {
+        DB::flushQueryLog();
+        DB::enableQueryLog();
+        $posts = $component->instance()->posts();
+        // De render leest photoUrl('card') op elke post — dat mag GEEN extra
+        // query per post doen als photos eager geladen is.
+        $posts->each(fn ($p) => $p->photoUrl('card'));
+        $count = collect(DB::getQueryLog())
+            ->filter(fn ($q) => str_contains($q['query'], 'homelab_photos'))
+            ->count();
+        DB::disableQueryLog();
 
-    // Eén eager-load query voor alle drie, niet één per post.
-    expect($photoQueries)->toBe(1);
+        return $count;
+    };
+
+    $addPosts(3);
+    // Twee: de hoofdquery (die `homelab_photos` noemt in de whereHas-subquery
+    // waarmee fotoloze posts eruit vallen) plus één eager-load voor alle drie
+    // samen. Zou photoUrl() per post gaan halen, dan stond hier 4.
+    expect($photoQueries())->toBe(2);
+
+    // En dat getal is het punt: het mag niet meegroeien met het aantal posts.
+    // Dat is de eigenschap die deze test bewaakt, niet het getal zelf.
+    $addPosts(9);
+    expect($photoQueries())->toBe(2);
 });
 
 it('hints on the feed card when a homelab has more than one photo', function () {

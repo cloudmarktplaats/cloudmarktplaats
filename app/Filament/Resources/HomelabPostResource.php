@@ -48,7 +48,12 @@ class HomelabPostResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('photo')
-                    ->state(fn (HomelabPost $record): string => $record->photoUrl('card'))
+                    // Null in plaats van `photoUrl()`, dat gooit als er geen
+                    // foto is. Het publiek krijgt zo'n post niet meer te zien
+                    // (scopeWithPhoto), maar hier moet hij juist wél in de lijst
+                    // staan om opgeruimd te worden — en dan mag de lijst er niet
+                    // op stukvallen. Lege cel is het eerlijke antwoord.
+                    ->state(fn (HomelabPost $record): ?string => $record->photos->first()?->urlFor('card'))
                     ->square(),
                 Tables\Columns\TextColumn::make('body')->limit(60)->searchable(),
                 Tables\Columns\TextColumn::make('user.username')

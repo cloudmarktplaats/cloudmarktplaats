@@ -182,6 +182,7 @@ class Feed extends Component
 
         return HomelabPost::query()
             ->published()
+            ->withPhoto()
             ->withCount('upvotes')
             ->with('photos')
             ->orderByDesc('created_at')
@@ -202,7 +203,9 @@ class Feed extends Component
 
         return view('livewire.homelab.feed', [
             'posts' => $posts,
-            'hasMore' => HomelabPost::query()->published()->count() > $posts->count(),
+            // Zelfde filter als in posts(). Telde je hier ook de fotoloze mee,
+            // dan bleef "meer laden" eeuwig staan terwijl er niets meer bijkomt.
+            'hasMore' => HomelabPost::query()->published()->withPhoto()->count() > $posts->count(),
             'upvotedIds' => $upvotedIds,
         ]);
     }

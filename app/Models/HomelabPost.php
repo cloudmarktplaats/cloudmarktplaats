@@ -62,6 +62,28 @@ class HomelabPost extends Model
     }
 
     /**
+     * Alleen posts die daadwerkelijk een foto hebben.
+     *
+     * Een homelab-post ís de foto: eromheen staat alleen body en tijd. Zonder
+     * foto valt er niets te tonen, en `photoUrl()` gooit dan (bewust, want een
+     * dode URL is erger). Alleen: die uitzondering ontstaat tijdens het
+     * renderen van de lijst, dus 1 zo'n post haalt de hele voorpagina en de
+     * hele feed onderuit in plaats van alleen zijn eigen kaartje. Filteren in
+     * de query is het antwoord: wat niet te tonen is, komt er niet in.
+     *
+     * Niet in `published()` gestopt: dat gaat over publicatiestatus. Deze
+     * hoort bij "kan dit op een lijst". Filament filtert bewust *niet* hierop,
+     * want daar moet je zo'n post juist kunnen zien om hem op te ruimen.
+     *
+     * @param  Builder<HomelabPost>  $query
+     * @return Builder<HomelabPost>
+     */
+    public function scopeWithPhoto(Builder $query): Builder
+    {
+        return $query->whereHas('photos');
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function user(): BelongsTo

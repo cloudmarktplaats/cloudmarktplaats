@@ -26,6 +26,7 @@ class Recent extends Component
 
         return HomelabPost::query()
             ->published()
+            ->withPhoto()
             ->withCount('upvotes')
             ->with('photos')
             ->orderByDesc('created_at')
