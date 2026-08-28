@@ -58,6 +58,17 @@ Aandachtspunten die een keer misgingen:
 - **`storage/` is van uid 82.** Artisan lokaal draaien buiten Docker faalt op de log;
   gebruik `docker compose exec -T php-fpm php artisan ...`.
 
+### Wacht op de eerstvolgende deploy
+
+Omdat deployen een file-sync is, zegt git níét wat er draait. Wat hier staat
+is op `main` en nog niet op productie. Neem het mee met de volgende sync en
+haal het dan uit deze lijst.
+
+- **`7767b83` — fotoloze homelab-posts uit de lijsten** (28-08). Bewust laten
+  wachten: op productie stonden 0 zulke posts, dus er is niets stuk. Bestanden:
+  `app/Models/HomelabPost.php`, `app/Livewire/Homelab/{Feed,Recent}.php`,
+  `app/Filament/Resources/HomelabPostResource.php`.
+
 Kwaliteitspoorten vóór elke deploy, alle drie groen:
 
 ```bash
