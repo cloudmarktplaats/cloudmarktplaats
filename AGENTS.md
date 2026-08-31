@@ -76,7 +76,9 @@ nodig dan een gewone sync:
   bezoekers een 500 krijgen.
 - **`db:seed --class=LegalDocumentSeeder`**, anders staat de nieuwe
   privacytekst (nieuwsbrief, aanbodmail, bewaartermijn) er niet in terwijl de
-  code er wel naar handelt.
+  code er wel naar handelt. **Let op: die seeder staat sinds 31-08 op `1.1.0`,
+  dus deze ronde vraagt élk lid opnieuw om akkoord** zodra het een advertentie
+  wil plaatsen. Dat is met opzet en het gebeurt maar 1 keer, zie hieronder.
 - **`docker/nginx/default.conf` is gewijzigd** (`~^/nieuwsbrief/` als
   `[redacted]`, zodat tokens niet in het access-log komen). Die bind-mount is
   een enkel *bestand*: `nginx -s reload` pakt de oude config, dus dit moet met
@@ -261,9 +263,32 @@ regels er in dezelfde PR uit.
   `/profile/verkopen`, mededeling op de advertentie). Ontwerp in
   `docs/superpowers/specs/2026-08-19-zakelijke-verkoper-design.md`. Het label is een
   feitelijke mededeling, **geen keurmerk** — het KvK-nummer wordt niet geverifieerd,
-  en afwezigheid van het label is evenmin een claim. **Nog open:** de ToS-tekst (die
-  triggert re-acceptatie voor álle leden, dus bundelen met ander ToS-werk) en de
-  btw-weergave.
+  en afwezigheid van het label is evenmin een claim.
+
+  **De ToS-tekst is geschreven op 31-08** en zit in artikel 6 van
+  `tos.nl.md` / `tos.en.md`, gebundeld met de privacywijziging in versie `1.1.0`.
+  Vastgelegd: de prijs die iemand invult is het bedrag dat de koper betaalt (btw dus
+  inbegrepen, geen apart vinkje), en een zakelijke verkoper toont bedrijfsnaam en
+  KvK maar geen adres, want de contact-relay blijft voor iedereen gelijk. Daarmee is
+  de btw-weergave uit de lijst "nog open" af.
+
+  **Waarom "wij verifiëren niet" mag, en tot wanneer.** De DSA legt platforms waar
+  consumenten met handelaren contracten sluiten een verificatieplicht op voor
+  handelaarsgegevens (artikel 30). Artikel 19 DSA stelt micro- en kleine
+  ondernemingen daarvan vrij, en daar valt dit platform onder. Dat is dus geen gat
+  dat we openlaten maar een positie die de wet vandaag toestaat. **Hij vervalt zodra
+  het platform die drempel voorbij groeit**; dan wordt artikel 6 van de ToS onwaar en
+  moet er echte verificatie onder. Niet juridisch getoetst; laat het nakijken vóór de
+  MSP-werving.
+
+  **Schuld met een naam: de aankondigingstermijn van 15 dagen.** Artikel 12 van de ToS
+  belooft zakelijke verkopers dat een wijziging van de voorwaarden minstens 15 dagen
+  van tevoren wordt gemeld (P2B-verordening 2019/1150, artikel 3). **Die code bestaat
+  niet.** Er is geen commando dat zakelijke verkopers mailt bij een versiebump. Vandaag
+  is dat onschadelijk, want op 31-08 stonden alle 296 leden op `private` en is er nul
+  zakelijke verkoper. **Dit moet er zijn vóór de eerste zakelijke verkoper zich
+  aanmeldt**, en dus zeker vóór de MSP-werving. Een belofte in een juridisch document
+  zonder code eronder is een schuld; deze staat hier zodat hij een naam heeft.
 - **DAC7**: er lopen geen betalingen over het platform, dus er valt niets te
   rapporteren. Volledige analyse in `docs/dac7-position.md`. Zakelijke verkopers
   veranderen daar niets aan.

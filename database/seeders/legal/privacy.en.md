@@ -63,7 +63,7 @@ We set only strictly necessary, functional cookies (your session and a CSRF secu
 
 You have the right to access, rectification, erasure, restriction, objection and portability of your data.
 
-Erasure is self-service — no request, no reason required: **Profile → Security → Delete account** removes your account, your listings, your photos and your homelab posts. Individual listings can be removed from **My listings**. For any other request, or if you would rather not press the button yourself, email [privacy@cloudmarktplaats.nl](mailto:privacy@cloudmarktplaats.nl); we respond within the statutory one-month period.
+Erasure is self-service, no request and no reason required: **Profile → Security → Delete account** removes your account, your listings, your photos and your homelab posts. Individual listings can be removed from **My listings**. For any other request, or if you would rather not press the button yourself, email [privacy@cloudmarktplaats.nl](mailto:privacy@cloudmarktplaats.nl); we respond within the statutory one-month period.
 
 You also have the right to lodge a complaint with the Dutch Data Protection Authority (**Autoriteit Persoonsgegevens**, [autoriteitpersoonsgegevens.nl](https://autoriteitpersoonsgegevens.nl)).
 
