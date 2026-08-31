@@ -71,6 +71,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // voordat er een dag overheen gaat. Zie IntegrityReport: dit rapport
         // telt ook wat er níet gebeurde, want daar zat de fotobug.
         $schedule->command('platform:daily-check')->dailyAt('07:30');
+
+        // De wekelijkse aanbodmail. Zaterdagochtend, want dat is wanneer een
+        // homelab-bouwer tijd heeft om ergens iets op te halen. Staat er niets
+        // nieuws in iemands categorieen, dan verstuurt het commando niets: geen
+        // nieuws is geen mail. De vlag `mail_list` is de noodrem.
+        $schedule->command('mail:offers')->weeklyOn(6, '09:00');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
