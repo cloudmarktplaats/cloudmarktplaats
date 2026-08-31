@@ -117,6 +117,15 @@ class MailSubscriptionService
             ? array_intersect_key($sub->pending_changes, array_flip(self::PENDING_FIELDS))
             : [];
 
+        // Een toegepaste geparkeerde wijziging draagt een verse `consent_text`
+        // en `consent_given_at`, bewezen door de klik uit die mailbox: dat is
+        // een nieuwe toestemming, dus een eerdere intrekking is geschiedenis.
+        // Een kale dubbele opt-in (leeg vak) zegt niets nieuws over toestemming
+        // en laat dat moment daarom staan.
+        if ($pending !== []) {
+            $pending['unsubscribed_at'] = null;
+        }
+
         $sub->forceFill(array_merge($pending, [
             'confirmed_at' => now(),
             'confirm_token' => null,
@@ -157,6 +166,13 @@ class MailSubscriptionService
             // klik op die oudere bevestigingslink de zojuist afgemelde
             // voorkeuren weer aan.
             'pending_changes' => null,
+            // Het bewijs van de oude toestemming blijft staan, want dat is wat
+            // er destijds is afgesproken. Zonder dit moment ernaast wijst dat
+            // bewijs naar een toestemming die niet meer bestaat en is nergens
+            // vastgelegd dat iemand nee zei. Ook een half afmelden (`$what`)
+            // zet hem: dat is het intrekken van een echte toestemming, en dit
+            // is de enige plek waar dat een spoor achterlaat.
+            'unsubscribed_at' => now(),
             // Alleen bij een bevestigde rij hoort dat token bij die wachtrij.
             // Op een nog onbevestigde rij is het de gewone dubbele opt-in uit
             // de aanmeldmail; dat wissen zou die link slopen en de aanmelding
@@ -201,6 +217,9 @@ class MailSubscriptionService
             },
             'consent_given_at' => now(),
             'consent_source' => 'herstelknop',
+            // Er ligt een verse toestemming, dus de intrekking ervoor is
+            // geschiedenis en niet meer de stand van nu.
+            'unsubscribed_at' => null,
         ])->save();
 
         return $sub;
@@ -210,9 +229,24 @@ class MailSubscriptionService
      * Koppelt een losse inschrijving aan het account dat later met dat adres
      * registreert. Alleen rijen zonder koppeling komen in aanmerking: een rij
      * die al aan een ander account hangt, hoort daar te blijven hangen.
+     *
+     * Aanroepen hoort bij het bewijzen van het adres (het `Verified`-event),
+     * niet bij het aanmaken van het account. Een vers account is namelijk niet
+     * meer dan een claim op een adres, en de wiscascade op `user_id` maakt die
+     * koppeling gevaarlijk: koppelen op een claim geeft een vreemde die op jouw
+     * adres registreert jouw bevestigde inschrijving in handen, en hij gooit hem
+     * weg zodra hij zijn eigen account laat wissen.
+     *
+     * De toets staat hier en niet alleen bij de aanroepers, want dit is de
+     * laatste plek waar een pad dat het vergeet nog tegengehouden kan worden.
+     * Zelfde maatstaf als in `subscribe()`: `email_verified_at` is het bewijs.
      */
     public function linkToUser(User $user): void
     {
+        if ($user->email_verified_at === null) {
+            return;
+        }
+
         MailSubscription::query()
             ->whereNull('user_id')
             ->where('email', self::normalise((string) $user->email))
@@ -269,6 +303,12 @@ class MailSubscriptionService
             'confirmed_at' => $owner !== null ? now() : $sub->confirmed_at,
             'confirm_token' => $owner !== null ? null : Str::random(48),
             'pending_changes' => null,
+            // Hier ligt een verse toestemming (`$wanted` draagt een nieuwe
+            // `consent_text` en `consent_given_at`), dus een eerdere intrekking
+            // is geschiedenis. Geval 4 komt hier niet: een geparkeerde
+            // wijziging van een vreemde is geen toestemming van de eigenaar en
+            // laat het moment van intrekking dus staan.
+            'unsubscribed_at' => null,
         ]))->save();
 
         return $sub;

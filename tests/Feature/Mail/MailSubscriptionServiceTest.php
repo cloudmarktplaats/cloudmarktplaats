@@ -601,3 +601,107 @@ it('keeps the unsubscribe link working after subscribing again on the same addre
 
     expect($second->unsubscribe_token)->toBe($first->unsubscribe_token);
 });
+
+/*
+ * Na een afmelding wijzen `consent_text`, `consent_given_at` en
+ * `consent_source` nog naar de toestemming die zojuist is ingetrokken. Zonder
+ * een moment van intrekking ernaast bewijst de rij dus een toestemming die niet
+ * meer bestaat, en dat is onder art. 7 lid 1 AVG erger dan geen bewijs. Dat is
+ * dezelfde redenering die `resubscribe()` al volgt.
+ */
+it('records the moment a consent was withdrawn', function () {
+    $sub = MailSubscription::factory()->create(['wants_offers' => true, 'wants_updates' => true]);
+
+    $this->service->unsubscribe((string) $sub->unsubscribe_token);
+
+    expect($sub->fresh()?->unsubscribed_at?->toDateString())->toBe(now()->toDateString());
+});
+
+/* Ook een halve afmelding is het intrekken van een toestemming. */
+it('records the moment even when only one kind of mail is switched off', function () {
+    $sub = MailSubscription::factory()->create(['wants_offers' => true, 'wants_updates' => true]);
+
+    $this->service->unsubscribe((string) $sub->unsubscribe_token, 'offers');
+
+    expect($sub->fresh()?->unsubscribed_at)->not->toBeNull();
+});
+
+/* Nieuwe toestemming, dus de intrekking ervoor is geschiedenis en geen stand. */
+it('clears the withdrawal moment when the herstelknop gives a fresh consent', function () {
+    $sub = MailSubscription::factory()->create([
+        'wants_offers' => false,
+        'wants_updates' => false,
+        'unsubscribed_at' => now()->subDay(),
+    ]);
+
+    $this->service->resubscribe((string) $sub->unsubscribe_token);
+
+    expect($sub->fresh()?->unsubscribed_at)->toBeNull();
+});
+
+it('clears the withdrawal moment when the same address signs up again', function () {
+    $sub = MailSubscription::factory()->create([
+        'email' => 'terug@example.test',
+        'confirmed_at' => null,
+        'unsubscribed_at' => now()->subDay(),
+    ]);
+
+    $this->service->subscribe(
+        email: 'terug@example.test',
+        wantsOffers: true,
+        wantsUpdates: false,
+        categories: ['networking'],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'formulier',
+    );
+
+    expect($sub->fresh()?->unsubscribed_at)->toBeNull();
+});
+
+/*
+ * Een geparkeerde wijziging van een vreemde is geen toestemming van de
+ * eigenaar, dus die mag een vastgelegde intrekking niet wegpoetsen.
+ */
+it('keeps the withdrawal moment when a stranger only parks a change', function () {
+    $sub = MailSubscription::factory()->create([
+        'email' => 'afgemeld@example.test',
+        'confirmed_at' => now(),
+        'unsubscribed_at' => now()->subDay(),
+    ]);
+
+    $this->service->subscribe(
+        email: 'afgemeld@example.test',
+        wantsOffers: true,
+        wantsUpdates: false,
+        categories: ['networking'],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'formulier',
+    );
+
+    expect($sub->fresh()?->unsubscribed_at)->not->toBeNull();
+});
+
+/*
+ * Wordt die geparkeerde wijziging alsnog bevestigd met de klik uit de eigen
+ * mailbox, dan is dat wel een nieuwe toestemming en vervalt de intrekking.
+ */
+it('clears the withdrawal moment once a parked change is confirmed from the mailbox', function () {
+    $sub = MailSubscription::factory()->create([
+        'email' => 'weerterug@example.test',
+        'confirmed_at' => now(),
+        'unsubscribed_at' => now()->subDay(),
+    ]);
+
+    $this->service->subscribe(
+        email: 'weerterug@example.test',
+        wantsOffers: true,
+        wantsUpdates: false,
+        categories: ['networking'],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'formulier',
+    );
+
+    $this->service->confirm((string) $sub->fresh()?->confirm_token);
+
+    expect($sub->fresh()?->unsubscribed_at)->toBeNull();
+});

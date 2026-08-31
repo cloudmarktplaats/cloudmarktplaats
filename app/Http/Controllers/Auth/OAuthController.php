@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Models\UserIdentity;
 use App\Services\Auth\OAuthProviderRegistry;
 use App\Services\FoundingCohort;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -162,8 +163,16 @@ class OAuthController extends Controller
             // No address means the uid@provider.local placeholder above: mail
             // there goes nowhere, so leave it unverified — claiming otherwise
             // would be a lie.
+            //
+            // Het Verified-event hoort erbij: markEmailAsVerified() vuurt het
+            // zelf niet (dat doet EmailVerificationRequest::fulfill()), dus
+            // zonder deze regel is dit het enige pad waar een adres bewezen
+            // wordt zonder dat de rest van de applicatie het hoort. De
+            // mailinglijst hangt haar koppeling aan dit event, en die koppeling
+            // is wat de inschrijving meeneemt als het account gewist wordt.
             if ($oauthUser->getEmail()) {
                 $u->markEmailAsVerified();
+                event(new Verified($u));
             }
 
             UserIdentity::firstOrCreate(

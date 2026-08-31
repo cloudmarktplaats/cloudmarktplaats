@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Events\Listings\ListingPublished;
 use App\Listeners\Gamification\AwardInviteKarmaOnFirstListing;
 use App\Listeners\Listings\SendListingPublishedMail;
+use App\Listeners\Mail\LinkMailSubscriptionToUser;
 use App\Models\HomelabPost;
 use App\Models\Listing;
 use App\Models\User;
@@ -13,6 +14,7 @@ use App\Services\Search\PostgresSearchService;
 use App\Services\Search\SearchInterface;
 use App\Services\Storage\StorageInterface;
 use App\Services\Storage\StorageManager;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
@@ -71,6 +73,16 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             ListingPublished::class,
             SendListingPublishedMail::class,
+        );
+
+        // Een losse inschrijving op de mailinglijst hoort aan het account te
+        // hangen zodra dat account het adres bewijst — niet eerder, want de
+        // wiscascade op `user_id` zou een vreemde dan de inschrijving van een
+        // ander laten meenemen. Dit is het enige moment dat alle drie de
+        // registratiepaden delen.
+        Event::listen(
+            Verified::class,
+            LinkMailSubscriptionToUser::class,
         );
 
         // Morph map for polymorphic relations. Keeping aliases stable

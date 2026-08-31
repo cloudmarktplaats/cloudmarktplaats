@@ -6,6 +6,7 @@ use App\Livewire\Profile\MailPreferences;
 use App\Models\MailSubscription;
 use App\Models\User;
 use App\Services\Mail\MailSubscriptionService;
+use Illuminate\Support\Facades\DB;
 use Livewire\Livewire;
 
 beforeEach(function () {
@@ -138,4 +139,70 @@ it('refuses a save from a profile page that was already open when the flag went 
     $form->call('save')->assertNotFound();
 
     expect(MailSubscription::query()->count())->toBe(0);
+});
+
+/*
+ * Zonder aanbodvinkje worden die categorieen nergens meer voor gebruikt, maar
+ * ze blijven wel op de rij staan. De rij zegt dan iets anders dan de bezoeker
+ * aanvinkte, en dat is precies het soort verschil dat later als "hij had toch
+ * storage aangevinkt" terugkomt.
+ */
+it('clears the categories when the offers box goes off', function () {
+    $user = User::factory()->create(['email_verified_at' => now(), 'email' => 'schoon@example.test']);
+    MailSubscription::factory()->create([
+        'email' => 'schoon@example.test',
+        'user_id' => $user->id,
+        'wants_offers' => true,
+        'wants_updates' => true,
+        'categories' => ['storage', 'compute'],
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(MailPreferences::class)
+        ->set('wants_offers', false)
+        ->call('save');
+
+    expect(MailSubscription::query()->where('email', 'schoon@example.test')->first()?->categories)->toBe([]);
+});
+
+/*
+ * De rij wordt genormaliseerd opgeslagen (kleine letters, geen spaties), dus
+ * opzoeken hoort dat ook te doen. Vandaag dekt de mutator op User dat af, maar
+ * dan hangt een afmelding af van een mutator elders: sneuvelt die, dan vindt
+ * deze tak de rij niet meer en is een uitgezet vinkje stil geen afmelding. Het
+ * update-statement hieronder zet het adres met hoofdletters in de tabel, buiten
+ * de mutator om, en bootst dat na.
+ */
+it('finds the row to unsubscribe even when the account email is not stored normalised', function () {
+    $user = User::factory()->create(['email_verified_at' => now(), 'email' => 'hoofdletter@example.test']);
+    DB::table('users')->where('id', $user->id)->update(['email' => 'HoofdLetter@Example.test']);
+
+    MailSubscription::factory()->create([
+        'email' => 'hoofdletter@example.test',
+        'user_id' => $user->id,
+        'wants_offers' => true,
+        'wants_updates' => true,
+    ]);
+
+    Livewire::actingAs($user->fresh())
+        ->test(MailPreferences::class)
+        ->set('wants_offers', false)
+        ->set('wants_updates', false)
+        ->call('save');
+
+    expect(MailSubscription::query()->where('email', 'hoofdletter@example.test')->first()?->wants_offers)->toBeFalse();
+});
+
+/* Een pagina die nergens vandaan te vinden is, bestaat voor een lid niet. */
+it('offers the mail preferences from the account menu', function () {
+    $user = User::factory()->create(['email_verified_at' => now()]);
+
+    $this->actingAs($user)->get('/listings')->assertSee(route('profile.mail'));
+});
+
+it('keeps the mail preferences out of the account menu while the flag is off', function () {
+    config()->set('cloudmarktplaats.features.mail_list', false);
+    $user = User::factory()->create(['email_verified_at' => now()]);
+
+    $this->actingAs($user)->get('/listings')->assertDontSee(route('profile.mail'));
 });

@@ -42,13 +42,13 @@ class MailSubscription extends Model
         'email', 'user_id', 'wants_offers', 'wants_updates', 'categories',
         'confirm_token', 'confirmed_at', 'unsubscribe_token',
         'consent_text', 'consent_given_at', 'consent_source',
-        'offers_sent_at', 'updates_sent_at',
+        'offers_sent_at', 'updates_sent_at', 'unsubscribed_at',
     ];
 
     /**
      * Larastan leest de Laravel-11-vorm niet, vandaar de expliciete shape.
      *
-     * @return array{categories: 'array', pending_changes: 'array', wants_offers: 'boolean', wants_updates: 'boolean', confirmed_at: 'datetime', consent_given_at: 'datetime', offers_sent_at: 'datetime', updates_sent_at: 'datetime'}
+     * @return array{categories: 'array', pending_changes: 'array', wants_offers: 'boolean', wants_updates: 'boolean', confirmed_at: 'datetime', consent_given_at: 'datetime', offers_sent_at: 'datetime', updates_sent_at: 'datetime', unsubscribed_at: 'datetime'}
      */
     protected function casts(): array
     {
@@ -61,6 +61,7 @@ class MailSubscription extends Model
             'consent_given_at' => 'datetime',
             'offers_sent_at' => 'datetime',
             'updates_sent_at' => 'datetime',
+            'unsubscribed_at' => 'datetime',
         ];
     }
 

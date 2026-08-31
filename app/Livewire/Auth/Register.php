@@ -10,7 +10,6 @@ use App\Models\UserIdentity;
 use App\Models\WaitlistEntry;
 use App\Services\FoundingCohort;
 use App\Services\Gamification\InviteService;
-use App\Services\Mail\MailSubscriptionService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -106,13 +105,6 @@ class Register extends Component
                     'invite_credits' => $startingCredits,
                     'is_founding_member' => $foundingMember,
                 ]);
-
-                // Iemand kan zich hebben aangemeld voor de mailinglijst voordat
-                // hij een account had. Registreert hij later met datzelfde
-                // adres, dan hoort die losse inschrijving aan dit account te
-                // hangen, want de wisverplichting uit taak 1 werkt via die
-                // koppeling.
-                app(MailSubscriptionService::class)->linkToUser($u);
 
                 UserIdentity::create([
                     'user_id' => $u->id,

@@ -8,6 +8,7 @@ use App\Livewire\Mail\Subscribe;
 use App\Models\MailSubscription;
 use App\Models\User;
 use App\Services\Mail\MailSubscriptionService;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
@@ -79,6 +80,12 @@ class MailPreferences extends Component
             'categories.*.in' => __('Kies alleen categorieen uit de lijst.'),
         ]);
 
+        // Geen aanbodmail, dan zeggen die categorieen niets meer. Laten staan
+        // zou de rij iets anders laten zeggen dan wat de bezoeker aanvinkte.
+        if (! $this->wants_offers) {
+            $this->categories = [];
+        }
+
         if (! $this->wants_offers && ! $this->wants_updates) {
             $this->unsubscribeExisting();
             $this->saved = true;
@@ -102,12 +109,20 @@ class MailPreferences extends Component
         $this->saved = true;
     }
 
+    /**
+     * Genormaliseerd zoeken, want zo staat het adres in de tabel. Vertrouwen op
+     * de mutator van User zou deze afmeldtak laten afhangen van code elders:
+     * sneuvelt die mutator, dan vindt dit de rij niet meer en is een uitgezet
+     * vinkje stil geen afmelding.
+     */
     private function existingSubscription(): ?MailSubscription
     {
         /** @var User $user */
         $user = auth()->user();
 
-        return MailSubscription::query()->where('email', $user->email)->first();
+        return MailSubscription::query()
+            ->where('email', Str::lower(trim((string) $user->email)))
+            ->first();
     }
 
     /** Geen inschrijving, geen afmelding: er is dan niets om in te trekken. */
