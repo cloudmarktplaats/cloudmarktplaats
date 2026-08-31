@@ -149,6 +149,21 @@ dit platform als enige zichtbaarheid heeft. Legacy-rijen zonder `claim_token`
 (van vóór de claim-link) hebben geen vervaldatum en vallen terug op de oude
 `created_at`/`silence_days`-regel.
 
+**Onbeantwoorde GitHub-issues komen sinds 31-08 ook langs.** Rob Turks melding
+bleef 29 dagen liggen; meldingen op het platform komen sinds 22-08 in deze mail
+terecht, issues nog niet, en dat was hetzelfde gat. `UnansweredIssues` haalt ze
+ongeauthenticeerd op (de repo is publiek, 60 verzoeken per uur is ruim genoeg
+voor 1 keer per dag). Drempel staat op 3 dagen, in `ops.issue_days`.
+
+Dit is bewust **wel** een voorraadsignaal, in tegenstelling tot de regel
+hieronder. Het mag hier omdat de knop bij ons ligt: antwoorden maakt het stil.
+Bij `concepten_zonder_foto` lag die knop bij de verkoper, en daar ging het
+daarom staan roepen. Eruit gefilterd: pull requests (het issues-endpoint geeft
+die ook terug, anders alarmeert het elke week op Dependabot), issues die de
+beheerder zelf opende, en issues waar hij al op gereageerd heeft. Onbereikbaar
+GitHub geeft `null` en niet een lege lijst, zodat de mail "kon het niet
+vaststellen" zegt in plaats van "alles in orde".
+
 **Een voorraad is geen alarm.** `concepten_zonder_foto` telt álle concepten
 zonder foto ouder dan 24 uur, en dat getal daalt alleen als de verkoper zelf
 terugkomt — vijf van de tien zijn toetsenbordgeklets dat nooit afkomt. Het
