@@ -6,6 +6,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\Listings\ReportController;
 use App\Http\Controllers\Listings\SearchController;
+use App\Http\Controllers\MailSubscriptionController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\SetLocale;
 use App\Livewire\Auth\ForgotPassword;
@@ -190,6 +191,15 @@ Route::get('/legal/accept', LegalAccept::class)
 Route::get('/legal/{type}', [LegalController::class, 'show'])
     ->where('type', 'tos|privacy')
     ->name('legal.show');
+
+// Bevestigen en afmelden gaan zonder login: art. 11.7 lid 4 Tw eist een
+// makkelijke afmeldmogelijkheid, en abonnees zonder account hebben geen login.
+Route::get('/nieuwsbrief/bevestigen/{token}', [MailSubscriptionController::class, 'confirm'])
+    ->name('mail.confirm');
+Route::get('/nieuwsbrief/afmelden/{token}', [MailSubscriptionController::class, 'unsubscribe'])
+    ->name('mail.unsubscribe');
+Route::post('/nieuwsbrief/opnieuw/{token}', [MailSubscriptionController::class, 'resubscribe'])
+    ->name('mail.resubscribe');
 
 // Listing wizard — auth + verified + legal guard. Drafts are persisted
 // after every step so users can resume via /listings/{ulid}/edit. The
