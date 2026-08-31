@@ -257,6 +257,16 @@ regels er in dezelfde PR uit.
   /wat-mag-erop, gelinkt vanuit de wizard en de FAQ. De categorieboom in
   `database/seeders/CategorySeeder.php` is de bron; die pagina is de leesbare versie.
   Wijzigen gaat via een openbaar issue, niet stilletjes.
+
+  **Open sinds 31-08, in issue #36:** RAID/HBA-controllers hangen onder `storage`,
+  maar de eerste verkoper die er een plaatste (een Dell PERC H200) zocht in de
+  Servers-tak en week uit naar de bovenliggende categorie `servers`. Logisch vanuit
+  wat de kaart aanstuurt, onlogisch vanuit waar hij zit. Drie mogelijke antwoorden
+  met verschillende bijwerkingen: verplaatsen, op twee plekken laten staan, of de
+  keuzelijst doorzoekbaar maken. **Nog niet gekozen**, en niet stilletjes kiezen:
+  dit hoort in dat issue. Let op het bredere effect: verkeerd ingedeelde
+  advertenties versnipperen het aanbod verder, en dichtheid is de bottleneck uit de
+  OKR.
 - **Zakelijke verkopers**: gebouwd op 20-08 (`seller_type` op `users`, instelling op
   `/profile/verkopen`, mededeling op de advertentie). Ontwerp in
   `docs/superpowers/specs/2026-08-19-zakelijke-verkoper-design.md`. Het label is een
