@@ -64,10 +64,7 @@ Omdat deployen een file-sync is, zegt git níét wat er draait. Wat hier staat
 is op `main` en nog niet op productie. Neem het mee met de volgende sync en
 haal het dan uit deze lijst.
 
-- **`7767b83` — fotoloze homelab-posts uit de lijsten** (28-08). Bewust laten
-  wachten: op productie stonden 0 zulke posts, dus er is niets stuk. Bestanden:
-  `app/Models/HomelabPost.php`, `app/Livewire/Homelab/{Feed,Recent}.php`,
-  `app/Filament/Resources/HomelabPostResource.php`.
+- *(leeg op 31-08-2026: `7767b83` is meegegaan met de fotobewerking-deploy)*
 
 Kwaliteitspoorten vóór elke deploy, alle drie groen:
 
