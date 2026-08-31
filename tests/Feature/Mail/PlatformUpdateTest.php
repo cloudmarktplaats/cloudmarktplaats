@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Mail\PlatformUpdateMail;
 use App\Models\MailSubscription;
+use App\Models\User;
+use App\Services\Profile\AccountRemovalService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Storage;
@@ -36,21 +38,62 @@ it('leaves the offers-only subscribers alone', function () {
  * De rem staat in code en niet in een voornemen. Dit platform verkoopt dat elke
  * claim in code te controleren is, dus "ik ga niet spammen" hoort hier te staan
  * en niet alleen in een gesprek.
+ *
+ * Elke remtest hieronder stuurt eerst een echte editie en reist daarna in de
+ * tijd. Dat is met opzet: de test zegt niets over wáár de datum staat, alleen
+ * dat er iets uitging. Verhuist die datum ooit naar een andere plek, dan blijft
+ * de test het gedrag bewaken in plaats van de plek.
  */
 it('refuses to send again within 30 days', function () {
-    MailSubscription::factory()->create(['wants_updates' => true, 'updates_sent_at' => now()->subDays(10)]);
+    MailSubscription::factory()->create(['wants_updates' => true]);
+
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+    $this->travel(10)->days();
 
     $this->artisan('mail:update update.md')->assertExitCode(1);
 
-    Mail::assertNothingQueued();
+    Mail::assertQueuedCount(1);
 });
 
 it('sends again once 30 days have passed', function () {
-    MailSubscription::factory()->create(['wants_updates' => true, 'updates_sent_at' => now()->subDays(31)]);
+    MailSubscription::factory()->create(['wants_updates' => true]);
+
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+    $this->travel(31)->days();
 
     $this->artisan('mail:update update.md')->assertExitCode(0);
 
-    Mail::assertQueued(PlatformUpdateMail::class);
+    Mail::assertQueuedCount(2);
+});
+
+/*
+ * De grens zelf, in twee richtingen. Zonder deze twee is `<=` versus `<` een
+ * vrije keuze: het verslag claimt dat precies 30 dagen mag, en dan hoort die
+ * seconde ervoor en erna in een test te staan. De klok gaat eerst naar een hele
+ * seconde, want de kolom bewaart geen microseconden en zou anders afronden.
+ */
+it('allows the next edition at exactly 30 days', function () {
+    $this->travelTo(now()->startOfSecond());
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+
+    $this->travelTo(now()->addDays(30));
+
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+
+    Mail::assertQueuedCount(2);
+});
+
+it('refuses the next edition 1 second before 30 days', function () {
+    $this->travelTo(now()->startOfSecond());
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+
+    $this->travelTo(now()->addDays(30)->subSecond());
+
+    $this->artisan('mail:update update.md')->assertExitCode(1);
+
+    Mail::assertQueuedCount(1);
 });
 
 it('sends nothing on a dry run', function () {
@@ -63,9 +106,28 @@ it('sends nothing on a dry run', function () {
 
 /* Hoeveel dagen er nog te gaan zijn, want anders is de rem een dichte deur. */
 it('says how many days are left', function () {
-    MailSubscription::factory()->create(['wants_updates' => true, 'updates_sent_at' => now()->subDays(10)]);
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+    $this->travel(10)->days();
 
     $this->artisan('mail:update update.md')->expectsOutputToContain('20 dagen');
+});
+
+/*
+ * Een proefdraai verstuurt niets en stempelt niets, dus er is geen reden hem te
+ * weigeren. Stond de rem ervóór, dan moest je --force typen om de volgende
+ * editie na te lezen, en dat is precies de vlag die nooit routine mag worden.
+ */
+it('runs a dry run while the brake is still shut', function () {
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+    $this->travel(10)->days();
+
+    $this->artisan('mail:update update.md --dry-run')
+        ->expectsOutputToContain('20 dagen')
+        ->assertExitCode(0);
+
+    Mail::assertQueuedCount(1);
 });
 
 /*
@@ -75,30 +137,100 @@ it('says how many days are left', function () {
  * Hij wacht op de volgende editie, en die komt vanzelf.
  */
 it('makes a fresh subscriber wait for the next edition', function () {
-    MailSubscription::factory()->create(['wants_updates' => true, 'updates_sent_at' => now()->subDays(10)]);
-    MailSubscription::factory()->create(['wants_updates' => true, 'updates_sent_at' => null]);
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+    $this->travel(10)->days();
+    MailSubscription::factory()->create(['wants_updates' => true]);
 
     $this->artisan('mail:update update.md')->assertExitCode(1);
 
-    Mail::assertNothingQueued();
+    Mail::assertQueuedCount(1);
 });
 
 /*
- * De rem kijkt naar alle rijen, ook naar wie zich daarna afmeldde. Zijn stempel
- * zegt wanneer de vorige editie uitging, en dat feit verandert niet doordat hij
- * weg is. Zou de rem alleen naar de huidige ontvangers kijken, dan opent een
- * lijst die zich massaal afmeldt de deur voor een tweede mail in dezelfde week.
+ * De vier aanvallen van de review. Ze delen 1 vorm: de editie ging uit, daarna
+ * verdwijnen de rijen die eraan meededen, en dan komt er iemand nieuw bij. Leest
+ * de rem uit de abonneetabel, dan opent hij zichzelf en gaat er binnen 30 dagen
+ * een tweede mail uit. De datum van een editie hoort dus niet aan een abonnee te
+ * hangen: wie er op de lijst staat is een andere vraag dan wat er verstuurd is.
  */
-it('counts the stamp of someone who has since unsubscribed', function () {
-    MailSubscription::factory()->create([
-        'wants_updates' => false, 'wants_offers' => false,
-        'unsubscribed_at' => now(), 'updates_sent_at' => now()->subDays(10),
-    ]);
-    MailSubscription::factory()->create(['wants_updates' => true, 'updates_sent_at' => null]);
+it('keeps the brake shut after the stamped row is deleted', function () {
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+
+    MailSubscription::query()->delete();
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->travel(10)->days();
 
     $this->artisan('mail:update update.md')->assertExitCode(1);
 
-    Mail::assertNothingQueued();
+    Mail::assertQueuedCount(1);
+});
+
+it('keeps the brake shut when a member deletes their account', function () {
+    $user = User::factory()->create();
+    MailSubscription::factory()->create(['user_id' => $user->id, 'wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+
+    // De inschrijving hangt met ON DELETE CASCADE aan het account, dus dit wist
+    // de rij hard, niet zacht.
+    app(AccountRemovalService::class)->remove($user);
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->travel(10)->days();
+
+    $this->artisan('mail:update update.md')->assertExitCode(1);
+
+    Mail::assertQueuedCount(1);
+});
+
+it('keeps the brake shut when someone deletes their account and signs up again', function () {
+    $user = User::factory()->create(['email' => 'lid@example.test']);
+    MailSubscription::factory()->create([
+        'user_id' => $user->id, 'email' => 'lid@example.test', 'wants_updates' => true,
+    ]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+
+    app(AccountRemovalService::class)->remove($user);
+    MailSubscription::factory()->create(['email' => 'lid@example.test', 'wants_updates' => true]);
+    $this->travel(3)->days();
+
+    $this->artisan('mail:update update.md')->assertExitCode(1);
+
+    Mail::assertQueuedCount(1);
+});
+
+it('keeps the brake shut when the list is emptied and a fresh subscriber arrives', function () {
+    MailSubscription::factory()->count(3)->create(['wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+
+    DB::table('mail_subscriptions')->delete();
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->travel(20)->days();
+
+    $this->artisan('mail:update update.md')->assertExitCode(1);
+
+    Mail::assertQueuedCount(3);
+});
+
+/*
+ * Afmelden wist de rij niet, maar het antwoord hoort hetzelfde te zijn: de
+ * editie ging uit, en dat feit verandert niet doordat iemand weg is. Zou de rem
+ * alleen naar de huidige ontvangers kijken, dan opent een lijst die zich massaal
+ * afmeldt de deur voor een tweede mail in dezelfde week.
+ */
+it('keeps the brake shut when everyone has since unsubscribed', function () {
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+
+    MailSubscription::query()->update([
+        'wants_updates' => false, 'wants_offers' => false, 'unsubscribed_at' => now(),
+    ]);
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->travel(10)->days();
+
+    $this->artisan('mail:update update.md')->assertExitCode(1);
+
+    Mail::assertQueuedCount(1);
 });
 
 /*
@@ -107,13 +239,15 @@ it('counts the stamp of someone who has since unsubscribed', function () {
  * mensen kort geleden al iets kregen.
  */
 it('sends within 30 days when forced, and says how many were mailed recently', function () {
-    MailSubscription::factory()->create(['wants_updates' => true, 'updates_sent_at' => now()->subDays(10)]);
+    MailSubscription::factory()->create(['wants_updates' => true]);
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+    $this->travel(10)->days();
 
     $this->artisan('mail:update update.md --force')
         ->expectsOutputToContain('afgelopen 30 dagen')
         ->assertExitCode(0);
 
-    Mail::assertQueued(PlatformUpdateMail::class);
+    Mail::assertQueuedCount(2);
 });
 
 /* De vlag is de noodrem. Dit commando draait met de hand, dus een uitgezette
@@ -128,9 +262,16 @@ it('sends nothing while the feature flag is off', function () {
     Mail::assertNothingQueued();
 });
 
-it('stops on a file that is not there', function () {
+/*
+ * Het hele pad in de melding, niet alleen de bestandsnaam. De local-disk is
+ * storage/app/private en dat is nergens aan af te lezen; wie het commando draait
+ * hoort te weten waar hij het bestand had moeten neerzetten.
+ */
+it('stops on a file that is not there, and names the path', function () {
+    // Eén stuk tekst, geen twee: twee verwachtingen op dezelfde regel kan
+    // Mockery niet los van elkaar afvinken en dan slaagt de test op de helft.
     $this->artisan('mail:update bestaatniet.md')
-        ->expectsOutputToContain('niet gevonden')
+        ->expectsOutputToContain('niet gevonden: '.Storage::disk('local')->path('bestaatniet.md'))
         ->assertExitCode(1);
 
     Mail::assertNothingQueued();
@@ -189,6 +330,32 @@ it('stamps the send without touching updated_at', function () {
     $na = DB::table('mail_subscriptions')->where('id', $sub->id)->first();
     expect($na?->updated_at)->toBe($voor)
         ->and($na?->updates_sent_at)->toBeGreaterThan($voor);
+});
+
+/*
+ * Het logboek van de edities: wanneer ging er iets uit, naar hoeveel mensen, uit
+ * welk bestand. Het aantal en het bestand zitten er niet in om te meten maar om
+ * achteraf te kunnen nalezen wat er precies verstuurd is; zonder die twee is een
+ * regel in dit logboek een datum zonder inhoud.
+ */
+it('logs the edition with the recipient count and the file', function () {
+    MailSubscription::factory()->count(2)->create(['wants_updates' => true]);
+
+    $this->artisan('mail:update update.md')->assertExitCode(0);
+
+    $editie = DB::table('mail_editions')->first();
+    expect(DB::table('mail_editions')->count())->toBe(1)
+        ->and($editie?->recipient_count)->toBe(2)
+        ->and($editie?->source_file)->toBe('update.md')
+        ->and($editie?->sent_at)->not->toBeNull();
+});
+
+it('logs no edition on a dry run', function () {
+    MailSubscription::factory()->create(['wants_updates' => true]);
+
+    $this->artisan('mail:update update.md --dry-run')->assertExitCode(0);
+
+    expect(DB::table('mail_editions')->count())->toBe(0);
 });
 
 it('leaves the stamp alone on a dry run', function () {

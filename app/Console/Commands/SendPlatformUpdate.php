@@ -53,7 +53,9 @@ class SendPlatformUpdate extends Command
 
         $bestand = (string) $this->argument('bestand');
         if (! Storage::disk('local')->exists($bestand)) {
-            $this->error(sprintf('Bestand niet gevonden op de local-disk: %s', $bestand));
+            // Het hele pad, niet alleen de naam die je zelf typte. De local-disk
+            // is storage/app/private en dat is nergens aan af te lezen.
+            $this->error(sprintf('Bestand niet gevonden: %s', Storage::disk('local')->path($bestand)));
 
             return self::FAILURE;
         }
@@ -65,7 +67,13 @@ class SendPlatformUpdate extends Command
             return self::FAILURE;
         }
 
-        if (! $this->remIsOpen()) {
+        $dryRun = (bool) $this->option('dry-run');
+
+        // De rem staat na de dry-run-keuze, want een proefdraai verstuurt niets
+        // en stempelt niets. Stond hij ervóór, dan moest je --force typen om de
+        // volgende editie na te lezen, en dat is precies de vlag die nooit
+        // routine mag worden.
+        if (! $this->remLaatDoor($dryRun)) {
             return self::FAILURE;
         }
 
@@ -84,8 +92,6 @@ class SendPlatformUpdate extends Command
 
             return self::SUCCESS;
         }
-
-        $dryRun = (bool) $this->option('dry-run');
 
         $this->newLine();
         $this->line($dryRun ? '<comment>DRY RUN — er wordt niets verstuurd</comment>' : '<info>VERSTUREN</info>');
@@ -107,6 +113,10 @@ class SendPlatformUpdate extends Command
         }
 
         if (! $dryRun) {
+            // 1 moment voor de hele ronde: de regel in het logboek en de stempels
+            // op de rijen horen dezelfde editie te beschrijven.
+            $moment = now();
+
             foreach ($subscriptions as $sub) {
                 Mail::to($sub->email)->queue(new PlatformUpdateMail($sub, $tekst));
 
@@ -119,8 +129,17 @@ class SendPlatformUpdate extends Command
                 // bij de aanbodmail. Loopt de aflevering daarna alsnog stuk, dan
                 // blijft de stempel staan: dit commando weet niets van de
                 // afloop, en de herstelweg is een ronde met --force.
-                DB::table('mail_subscriptions')->where('id', $sub->id)->update(['updates_sent_at' => now()]);
+                DB::table('mail_subscriptions')->where('id', $sub->id)->update(['updates_sent_at' => $moment]);
             }
+
+            // De editie zelf, los van wie hem kreeg. Dit is de bron van de rem:
+            // deze regel blijft staan als de hele lijst zich morgen afmeldt of
+            // zijn account wist.
+            DB::table('mail_editions')->insert([
+                'sent_at' => $moment,
+                'recipient_count' => $subscriptions->count(),
+                'source_file' => $bestand,
+            ]);
         }
 
         $this->info(sprintf(
@@ -134,21 +153,47 @@ class SendPlatformUpdate extends Command
     }
 
     /**
-     * De rem. Hij kijkt naar `max(updates_sent_at)` over alle rijen, ook die van
-     * wie zich daarna afmeldde: die stempel zegt wanneer de vorige editie
-     * uitging, en dat feit verandert niet doordat iemand weg is.
+     * De rem. Hij leest `max(sent_at)` uit `mail_editions`: het logboek van wat
+     * er uitging, los van wie er op de lijst staat.
      *
-     * De rem geldt dus per editie en niet per ontvanger. Wie zich vorige week
+     * Niet uit `mail_subscriptions.updates_sent_at`, hoe verleidelijk ook. Die
+     * kolom hangt aan een persoon, en een inschrijving hangt met ON DELETE
+     * CASCADE aan het account. Eén lid dat zijn account wist, wiste daarmee de
+     * datum van de laatste nieuwsbrief, en de rem ging vanzelf open. Een rem die
+     * zichzelf opent doordat iemand anders vertrekt is geen rem.
+     *
+     * De rem geldt per editie en niet per ontvanger. Wie zich vorige week
      * aanmeldde krijgt de mail van vorige week niet alsnog, maar wacht op de
      * volgende. Anders zou 1 verse abonnee de deur openen en zou de grens geen
      * grens meer zijn maar een gemiddelde.
      */
-    private function remIsOpen(): bool
+    private function remLaatDoor(bool $dryRun): bool
     {
-        $laatste = MailSubscription::query()->max('updates_sent_at');
-        $laatste = $laatste === null ? null : Carbon::parse((string) $laatste);
+        $laatste = DB::table('mail_editions')->max('sent_at');
 
-        if ($laatste === null || $laatste->lte(now()->subDays(self::REM_IN_DAGEN))) {
+        if ($laatste === null) {
+            return true;
+        }
+
+        $laatste = Carbon::parse((string) $laatste);
+        $teGaan = $this->dagenTeGaan($laatste);
+
+        if ($teGaan === 0) {
+            return true;
+        }
+
+        $dagen = sprintf('%d %s', $teGaan, $teGaan === 1 ? 'dag' : 'dagen');
+
+        // Een proefdraai verstuurt niets en stempelt niets, dus hij mag altijd
+        // draaien. Wel met de stand van de rem erbij: je leest een editie na die
+        // pas over zoveel dagen uit kan.
+        if ($dryRun) {
+            $this->warn(sprintf(
+                'De rem zit nog %s dicht; de vorige nieuwsbrief ging %s uit. Deze proefdraai verstuurt niets.',
+                $dagen,
+                $laatste->format('d-m-Y'),
+            ));
+
             return true;
         }
 
@@ -168,13 +213,35 @@ class SendPlatformUpdate extends Command
             return true;
         }
 
-        $teGaan = (int) ceil((float) now()->diffInDays($laatste->copy()->addDays(self::REM_IN_DAGEN), false));
         $this->error(sprintf(
-            'De vorige nieuwsbrief ging %s uit. Nog %d dagen te gaan; hooguit 1 mail per 30 dagen.',
+            'De vorige nieuwsbrief ging %s uit. Nog %s te gaan; hooguit 1 mail per 30 dagen.',
             $laatste->format('d-m-Y'),
-            max($teGaan, 0),
+            $dagen,
         ));
 
         return false;
+    }
+
+    /**
+     * Dagen tot de rem opengaat, naar boven afgerond; 0 betekent open.
+     *
+     * Precies 30 dagen mag (`lte`), 1 seconde eerder niet. Een datum in de
+     * toekomst (een klok die verkeerd liep, handwerk in de database) blokkeert,
+     * en dat is de veilige kant: liever een editie te laat dan 2 te vroeg.
+     *
+     * De ondergrens van 1 is er omdat 0 hier "open" betekent: een rest van 3
+     * seconden rondt af op 0 dagen en zou de rem dus stilletjes openzetten. Hij
+     * houdt bovendien de melding eerlijk, want "nog 0 dagen te gaan" bij een
+     * dichte deur is geen mededeling maar een raadsel.
+     */
+    private function dagenTeGaan(Carbon $laatste): int
+    {
+        $opent = $laatste->copy()->addDays(self::REM_IN_DAGEN);
+
+        if ($opent->lte(now())) {
+            return 0;
+        }
+
+        return max(1, (int) ceil((float) now()->diffInDays($opent, false)));
     }
 }
