@@ -150,6 +150,57 @@ class MailSubscriptionService
         $sub?->forceFill([
             'wants_offers' => $what === 'updates' && $sub->wants_offers,
             'wants_updates' => $what === 'offers' && $sub->wants_updates,
+            // Afmelden trekt de toestemming voor dit adres in, dus alles wat er
+            // voor dit adres nog in de wachtrij staat vervalt mee. Zonder deze
+            // regel blijft een door een vreemde geparkeerde wijziging (geval 4
+            // in `write()`) staan met een levend `confirm_token`, en zet één
+            // klik op die oudere bevestigingslink de zojuist afgemelde
+            // voorkeuren weer aan.
+            'pending_changes' => null,
+            // Alleen bij een bevestigde rij hoort dat token bij die wachtrij.
+            // Op een nog onbevestigde rij is het de gewone dubbele opt-in uit
+            // de aanmeldmail; dat wissen zou die link slopen en de aanmelding
+            // onafmaakbaar maken.
+            'confirm_token' => $sub->confirmed_at !== null ? null : $sub->confirm_token,
+        ])->save();
+
+        return $sub;
+    }
+
+    /**
+     * De ongedaan-maken-knop op het afmeldscherm: zet één soort mail (of allebei)
+     * weer aan voor het adres achter dit afmeldtoken.
+     *
+     * Dit is een nieuwe toestemming, geen voortzetting van de oude: die was
+     * zojuist ingetrokken. Zou `consent_text` naar het oude moment blijven
+     * wijzen, dan bewijst het vak een toestemming die op dat moment niet meer
+     * bestond, en dat is onder art. 7 lid 1 AVG erger dan geen bewijs.
+     *
+     * @param  string|null  $what  'offers', 'updates', of null voor allebei.
+     */
+    public function resubscribe(string $token, ?string $what = null): ?MailSubscription
+    {
+        // Symmetrisch met `unsubscribe()`: onzin is een fout in de link die wij
+        // zelf versturen, geen keuze van de bezoeker. Stil "Hersteld" melden
+        // terwijl er niets hersteld is, verbergt die fout.
+        if ($what !== null && ! in_array($what, ['offers', 'updates'], true)) {
+            throw new InvalidArgumentException("Onbekend hersteldoel: {$what}");
+        }
+
+        $sub = MailSubscription::query()->where('unsubscribe_token', $token)->first();
+
+        // Spiegelbeeld van `unsubscribe()`: het gevraagde doel gaat aan, het
+        // andere houdt zijn huidige waarde. Bij `null` gaan beide aan.
+        $sub?->forceFill([
+            'wants_offers' => $sub->wants_offers || $what !== 'updates',
+            'wants_updates' => $sub->wants_updates || $what !== 'offers',
+            'consent_text' => match ($what) {
+                'offers' => 'Toch nieuw aanbod, hersteld na een afmelding.',
+                'updates' => 'Toch updates, hersteld na een afmelding.',
+                default => 'Toch mail, hersteld na een afmelding.',
+            },
+            'consent_given_at' => now(),
+            'consent_source' => 'herstelknop',
         ])->save();
 
         return $sub;

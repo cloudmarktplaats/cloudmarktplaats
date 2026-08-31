@@ -2,3 +2,4 @@ Sitemap: https://cloudmarktplaats.nl/sitemap.xml
 
 User-agent: *
 Disallow: /deal/
+Disallow: /nieuwsbrief/

@@ -381,6 +381,93 @@ it('returns null for an unsubscribe token that does not exist', function () {
     expect($this->service->unsubscribe('onzin'))->toBeNull();
 });
 
+/*
+ * Afmelden is het intrekken van toestemming voor dít adres, en dat moet ook
+ * gelden voor wat er nog in de wachtrij staat. Een vreemde kan via het publieke
+ * formulier een wijziging parkeren (geval 4 in `write()`) met een vers
+ * `confirm_token`. Blijft dat vak staan, dan zet één klik op die oude
+ * bevestigingslink de zojuist afgemelde voorkeuren weer aan. Een ingetrokken
+ * toestemming mag nooit vanzelf terugkomen.
+ */
+it('throws away a parked change and its token when a confirmed address unsubscribes', function () {
+    $sub = MailSubscription::factory()->create(['wants_offers' => true, 'wants_updates' => true]);
+    $sub->forceFill([
+        'pending_changes' => ['wants_offers' => true, 'wants_updates' => true],
+        'confirm_token' => 'geparkeerd-door-een-vreemde',
+    ])->save();
+
+    $this->service->unsubscribe((string) $sub->unsubscribe_token);
+
+    expect($sub->fresh()?->pending_changes)->toBeNull()
+        ->and($sub->fresh()?->confirm_token)->toBeNull();
+});
+
+/*
+ * Spiegelbeeld: bij een nog onbevestigde rij is `confirm_token` geen sleutel
+ * naar een geparkeerde wijziging maar de gewone dubbele opt-in. Dat token ook
+ * wissen zou de bevestigingslink uit de aanmeldmail slopen, en dan kan niemand
+ * zijn aanmelding meer afmaken. De wachtrij mag wél leeg.
+ */
+it('keeps the double opt in token when an unconfirmed row unsubscribes', function () {
+    $sub = MailSubscription::factory()->unconfirmed()->create(['wants_offers' => true]);
+    $token = $sub->confirm_token;
+
+    $this->service->unsubscribe((string) $sub->unsubscribe_token);
+
+    expect($sub->fresh()?->confirm_token)->toBe($token)
+        ->and($sub->fresh()?->pending_changes)->toBeNull();
+});
+
+/*
+ * Herstel na een afmelding is geen voortzetting van de oude toestemming: die
+ * was ingetrokken. Blijven `consent_text` en `consent_given_at` naar dat oude
+ * moment wijzen, dan bewijst het vak precies het verkeerde, namelijk een
+ * toestemming die intussen was opgezegd. Er hoort dus een nieuw moment te
+ * staan, met de zin die op de knop stond.
+ */
+it('records a fresh consent moment when a preference is restored', function () {
+    $sub = MailSubscription::factory()->create([
+        'wants_offers' => false,
+        'wants_updates' => false,
+        'consent_text' => 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        'consent_given_at' => now()->subMonths(2),
+        'consent_source' => 'formulier',
+    ]);
+
+    $hersteld = $this->service->resubscribe((string) $sub->unsubscribe_token, 'offers');
+
+    expect($hersteld?->wants_offers)->toBeTrue()
+        ->and($hersteld?->wants_updates)->toBeFalse()
+        ->and($hersteld?->consent_text)->toContain('hersteld na een afmelding')
+        ->and($hersteld?->consent_given_at?->toDateString())->toBe(now()->toDateString())
+        ->and($hersteld?->consent_source)->toBe('herstelknop');
+});
+
+/** Zonder doel is het spiegelbeeld van `unsubscribe()` zonder doel: alles. */
+it('restores both preferences when no target is given', function () {
+    $sub = MailSubscription::factory()->create(['wants_offers' => false, 'wants_updates' => false]);
+
+    $this->service->resubscribe((string) $sub->unsubscribe_token);
+
+    expect($sub->fresh()?->wants_offers)->toBeTrue()
+        ->and($sub->fresh()?->wants_updates)->toBeTrue();
+});
+
+/** Symmetrisch met `unsubscribe()`: onzin is onzin, niet "en dan maar alles". */
+it('refuses a resubscribe target it does not know', function () {
+    $sub = MailSubscription::factory()->create(['wants_offers' => false, 'wants_updates' => false]);
+
+    expect(fn () => $this->service->resubscribe((string) $sub->unsubscribe_token, 'rommel'))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect($sub->fresh()?->wants_offers)->toBeFalse()
+        ->and($sub->fresh()?->wants_updates)->toBeFalse();
+});
+
+it('returns null for a resubscribe token that does not exist', function () {
+    expect($this->service->resubscribe('onzin'))->toBeNull();
+});
+
 it('records the literal sentence that was agreed to', function () {
     $sub = $this->service->subscribe(
         email: 'bewijs@example.test',

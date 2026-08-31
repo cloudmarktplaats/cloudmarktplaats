@@ -194,11 +194,27 @@ Route::get('/legal/{type}', [LegalController::class, 'show'])
 
 // Bevestigen en afmelden gaan zonder login: art. 11.7 lid 4 Tw eist een
 // makkelijke afmeldmogelijkheid, en abonnees zonder account hebben geen login.
+//
+// Bevestigen kost twee stappen: de GET toont alleen wat er staat te gebeuren,
+// pas de POST legt het bewijs vast. `confirmed_at` is het bewijsstuk onder
+// art. 7 lid 1 AVG, en een linkscanner of een prefetch van een mailclient mag
+// dat bewijs niet kunnen fabriceren. Afmelden blijft één GET: dat valt de
+// veilige kant op en is bovendien wat elke mailclient verwacht.
+//
+// De tokens zijn 48 alfanumerieke tekens; dezelfde constraint als bij
+// `/deal/{token}` houdt ruimte voor een verminkte plak-actie zonder dat elk
+// willekeurig pad de controller en de database in loopt.
 Route::get('/nieuwsbrief/bevestigen/{token}', [MailSubscriptionController::class, 'confirm'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
     ->name('mail.confirm');
+Route::post('/nieuwsbrief/bevestigen/{token}', [MailSubscriptionController::class, 'applyConfirmation'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
+    ->name('mail.confirm.apply');
 Route::get('/nieuwsbrief/afmelden/{token}', [MailSubscriptionController::class, 'unsubscribe'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
     ->name('mail.unsubscribe');
 Route::post('/nieuwsbrief/opnieuw/{token}', [MailSubscriptionController::class, 'resubscribe'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
     ->name('mail.resubscribe');
 
 // Listing wizard — auth + verified + legal guard. Drafts are persisted

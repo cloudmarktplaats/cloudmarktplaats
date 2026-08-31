@@ -20,7 +20,30 @@ class MailSubscriptionController extends Controller
 {
     public function __construct(private MailSubscriptionService $subscriptions) {}
 
+    /**
+     * Alleen tonen wat er bevestigd gaat worden. Deze GET schrijft niets.
+     *
+     * `confirmed_at` is het bewijsstuk onder art. 7 lid 1 AVG: het zegt dat
+     * iemand zélf op de link in zijn eigen mailbox heeft geklikt. Een
+     * linkscanner van een spamfilter of een prefetch van een mailclient doet
+     * exact dezelfde GET zonder dat er een mens bij is; zou die het bewijs
+     * aanmaken, dan bewijst het niets meer. Erger nog: een geparkeerde
+     * wijziging kan van een vreemde komen, en die zou dan zonder klik van de
+     * eigenaar worden doorgevoerd.
+     *
+     * Lezen mag hier wel rechtstreeks: de service is de enige plek die
+     * inschrijvingen schrijft, niet de enige die ze mag opzoeken.
+     */
     public function confirm(string $token): View
+    {
+        $sub = MailSubscription::query()->where('confirm_token', $token)->first();
+        abort_if($sub === null, 404);
+
+        return view('pages.mail-subscription-result', ['actie' => 'bevestigen', 'abonnement' => $sub]);
+    }
+
+    /** De knop op dat tussenscherm. Pas hier ontstaat het bewijs. */
+    public function applyConfirmation(string $token): View
     {
         $sub = $this->subscriptions->confirm($token);
         abort_if($sub === null, 404);
@@ -53,7 +76,9 @@ class MailSubscriptionController extends Controller
 
         abort_if($sub === null, 404);
 
-        return view('pages.mail-subscription-result', ['actie' => 'afgemeld', 'abonnement' => $sub->fresh()]);
+        // Geen `fresh()`: de service heeft precies deze instantie net opgeslagen,
+        // dus een tweede SELECT levert dezelfde rij op.
+        return view('pages.mail-subscription-result', ['actie' => 'afgemeld', 'abonnement' => $sub]);
     }
 
     /**
@@ -62,14 +87,20 @@ class MailSubscriptionController extends Controller
      */
     public function resubscribe(Request $request, string $token): View
     {
-        $sub = MailSubscription::query()->where('unsubscribe_token', $token)->first();
-        abort_if($sub === null, 404);
-
         $wat = $request->input('wat');
-        $sub->forceFill([
-            'wants_offers' => $sub->wants_offers || $wat === 'offers',
-            'wants_updates' => $sub->wants_updates || $wat === 'updates',
-        ])->save();
+
+        abort_if($wat !== null && ! is_string($wat), 400);
+
+        // Zelfde afspraak als bij afmelden: de whitelist staat in de service,
+        // de route maakt er een 400 van. Het schrijven zelf hoort daar ook
+        // thuis, want daar wordt het nieuwe toestemmingsmoment vastgelegd.
+        try {
+            $sub = $this->subscriptions->resubscribe($token, $wat);
+        } catch (InvalidArgumentException) {
+            abort(400);
+        }
+
+        abort_if($sub === null, 404);
 
         return view('pages.mail-subscription-result', ['actie' => 'hersteld', 'abonnement' => $sub]);
     }
