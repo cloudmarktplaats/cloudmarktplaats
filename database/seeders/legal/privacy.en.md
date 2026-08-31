@@ -12,6 +12,8 @@ The data controller is **Aldewereld Consultancy**, postal address Nieuwe Hemweg 
 
 **Listings and homelab posts:** the text, category and photos you post. When you upload a photo, its metadata (EXIF, including any GPS location) is **automatically stripped** before the photo is stored.
 
+**Mailing list:** if you sign up for the newsletter or the offer digest: your email address, the categories you ticked, and the record of your consent (see 4).
+
 **Usage and abuse prevention:** technical logs. IP addresses are **automatically erased within 24 hours**. For relaying messages and reporting listings we keep only minimal data (see below).
 
 ## 3. What we deliberately don't do
@@ -30,6 +32,11 @@ The data controller is **Aldewereld Consultancy**, postal address Nieuwe Hemweg 
 | Security, abuse and fraud prevention, rate limiting | Legitimate interest |
 | Email verification and account security (2FA) | Performance of the contract |
 | Complying with legal obligations | Legal obligation |
+| Newsletter and messages about new listings | Consent (art. 6(1)(a) GDPR) |
+
+### Newsletter and offer digest
+
+You only get email if you signed up for it yourself and then clicked the confirmation link in your own mailbox. As a record of that consent we keep the timestamp, the form you signed up on, the exact sentence you said yes to, and the moment of that confirmation. **No IP address is included**: we do not record one on signup, and the IPs in our technical logs are erased within 24 hours anyway. Every message carries an unsubscribe link at the bottom that works immediately, without logging in and without giving a reason. If you delete your account, your subscription goes with it.
 
 ## 5. Retention
 
@@ -37,6 +44,7 @@ The data controller is **Aldewereld Consultancy**, postal address Nieuwe Hemweg 
 - **Account:** for as long as you have an account. On deletion we erase your account data; some data may be kept briefly where needed for abuse prevention or a legal obligation.
 - **Listings and homelab posts:** until you delete them or close your account.
 - **Reports:** for as long as needed to handle them and prevent repeat abuse.
+- **Mailing list subscription:** for as long as you are subscribed. If you unsubscribe, the email stops immediately and your subscription stays on record with the moment you unsubscribed, as evidence that consent was withdrawn. If you delete your account, the whole subscription goes with it. A signup you never confirm is deleted automatically after 7 days.
 
 ## 6. Recipients and hosting
 

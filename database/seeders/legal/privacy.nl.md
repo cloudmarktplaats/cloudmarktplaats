@@ -12,6 +12,8 @@ De verwerkingsverantwoordelijke is **Aldewereld Consultancy**, postadres Nieuwe 
 
 **Advertenties en homelab-posts:** de tekst, categorie en foto's die je plaatst. Bij het uploaden van een foto worden de metadata (EXIF, inclusief eventuele GPS-locatie) **automatisch verwijderd** voordat de foto wordt opgeslagen.
 
+**Mailinglijst:** als je je aanmeldt voor de nieuwsbrief of de aanbodmail: je e-mailadres, de categorieën die je aanvinkte, en het bewijs van je toestemming (zie 4).
+
 **Gebruik en misbruikbestrijding:** technische logs. IP-adressen worden **uiterlijk na 24 uur automatisch gewist**. Voor het doorsturen van berichten en het melden van advertenties bewaren we alleen minimale gegevens (zie hieronder).
 
 ## 3. Wat we bewust níet doen
@@ -30,6 +32,11 @@ De verwerkingsverantwoordelijke is **Aldewereld Consultancy**, postadres Nieuwe 
 | Beveiliging, misbruik- en fraudebestrijding, rate-limiting | Gerechtvaardigd belang |
 | E-mailverificatie en accountbeveiliging (2FA) | Uitvoering van de overeenkomst |
 | Voldoen aan wettelijke verplichtingen | Wettelijke plicht |
+| Nieuwsbrief en berichten over nieuw aanbod | Toestemming (art. 6 lid 1 sub a AVG) |
+
+### Nieuwsbrief en aanbodmail
+
+Je krijgt alleen mail als je je daar zelf voor hebt aangemeld en daarna op de bevestigingslink in je eigen mailbox hebt geklikt. Als bewijs van die toestemming bewaren we het tijdstip, het formulier waar je je aanmeldde, de letterlijke zin waarop je ja zei, en het moment van die bevestiging. **Er zit geen IP-adres bij**: dat leggen we bij een aanmelding niet vast, en de IP's in onze technische logs wissen we sowieso binnen 24 uur. Onderaan elk bericht staat een afmeldlink die het meteen doet, zonder inloggen en zonder reden op te geven. Verwijder je je account, dan gaat je inschrijving mee.
 
 ## 5. Bewaartermijnen
 
@@ -37,6 +44,7 @@ De verwerkingsverantwoordelijke is **Aldewereld Consultancy**, postadres Nieuwe 
 - **Account:** zolang je een account hebt. Bij verwijdering wissen we je accountgegevens; sommige gegevens kunnen korter bewaard blijven voor zover nodig voor misbruikbestrijding of een wettelijke plicht.
 - **Advertenties en homelab-posts:** tot je ze verwijdert of je account beëindigt.
 - **Meldingen (reports):** zolang nodig voor de afhandeling en het voorkomen van herhaald misbruik.
+- **Inschrijving op de mailinglijst:** zolang je ingeschreven staat. Meld je je af, dan stopt de mail meteen en blijft je inschrijving staan met het moment van die afmelding erbij, als vastlegging dat je toestemming is ingetrokken. Verwijder je je account, dan gaat de hele inschrijving mee. Een aanmelding die je nooit bevestigt, verwijderen we automatisch na 7 dagen.
 
 ## 6. Ontvangers en hosting
 

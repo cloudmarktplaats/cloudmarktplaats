@@ -88,6 +88,12 @@ return Application::configure(basePath: dirname(__DIR__))
         // nieuws in iemands categorieen, dan verstuurt het commando niets: geen
         // nieuws is geen mail. De vlag `mail_list` is de noodrem.
         $schedule->command('mail:offers')->weeklyOn(6, '09:00');
+
+        // Onbevestigde aanmeldingen zijn geen toestemming, dus die blijven niet
+        // staan. Nachtelijk, want niemand hoeft dit te zien gebeuren, en ruim
+        // voor de dagelijkse check van 07:30 zodat het getal in die mail de
+        // stand na het opruimen is.
+        $schedule->command('mail:purge-unconfirmed')->dailyAt('03:30');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
