@@ -27,6 +27,18 @@ use InvalidArgumentException;
 class MailSubscriptionService
 {
     /**
+     * Precies de sleutels die `subscribe()` in `$wanted` zet, en dus de enige
+     * die ooit legitiem in `pending_changes` mogen staan. `confirm()` filtert
+     * hierop voordat hij het vak in de rij terugschrijft.
+     *
+     * @var list<string>
+     */
+    private const PENDING_FIELDS = [
+        'wants_offers', 'wants_updates', 'categories',
+        'consent_text', 'consent_given_at', 'consent_source',
+    ];
+
+    /**
      * Vier gevallen, in deze volgorde:
      *
      * 1. Geen rij: aanmaken, onbevestigd.
@@ -95,7 +107,15 @@ class MailSubscriptionService
         // De klik komt uit de mailbox zelf en is daarmee het bewijs dat een
         // geparkeerde wijziging mocht. Het vak moet daarna leeg, anders past een
         // volgende bevestiging diezelfde wijziging nog een keer toe.
-        $pending = is_array($sub->pending_changes) ? $sub->pending_changes : [];
+        //
+        // `array_intersect_key` filtert op de velden die `subscribe()` er ooit
+        // in zet (zie `$wanted`). Vandaag komt `pending_changes` alleen uit de
+        // service zelf, dus dit filter verandert nu niets, maar zonder filter
+        // is dit `forceFill(array_merge(...))` mass-assignment op `email`,
+        // `user_id` en `confirmed_at` zodra dat vak ooit een ander veld bevat.
+        $pending = is_array($sub->pending_changes)
+            ? array_intersect_key($sub->pending_changes, array_flip(self::PENDING_FIELDS))
+            : [];
 
         $sub->forceFill(array_merge($pending, [
             'confirmed_at' => now(),
@@ -169,6 +189,12 @@ class MailSubscriptionService
 
         $sub->forceFill(array_merge($wanted, [
             'email' => $email,
+            // `purgeUnconfirmed()` rekent vanaf `created_at`. Hier wordt de
+            // toestemming echt ververst (nieuwe rij, of een niet-bewezen
+            // aanmelder die opnieuw ja zegt op een onbevestigde rij, of de
+            // bewezen eigenaar), dus het opruimvenster hoort vanaf nu te
+            // lopen, niet vanaf de eerste, misschien in spam beland aanmelding.
+            'created_at' => now(),
             // Dit token zit al in elke verstuurde mail; een nieuw token zou de
             // afmeldlink daarin met terugwerkende kracht breken.
             'unsubscribe_token' => $sub->unsubscribe_token ?? Str::random(48),

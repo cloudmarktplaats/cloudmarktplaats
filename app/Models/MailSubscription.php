@@ -19,6 +19,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * Bewaar hier nooit een IP-adres. Dit platform wist IP's na 24 uur en dat is
  * een architectuurbelofte; het bewijs van toestemming bestaat uit
  * `consent_text`, `consent_given_at` en de bevestigingsklik in `confirmed_at`.
+ *
+ * Invariant: een rij kan tegelijk bevestigd zijn (`confirmed_at` gezet) én een
+ * levend `confirm_token` dragen. Dat is geen inconsistentie maar het geval
+ * waarin er een wijziging in `pending_changes` geparkeerd staat: de eigenaar
+ * heeft nog niet op die bevestigingslink geklikt. Alleen `confirmed_at` is
+ * dus gezaghebbend voor de vraag of iemand mail mag krijgen; lees
+ * `confirm_token !== null` nooit als "nog niet bevestigd".
  */
 class MailSubscription extends Model
 {

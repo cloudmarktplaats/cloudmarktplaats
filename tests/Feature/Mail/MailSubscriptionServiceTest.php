@@ -104,6 +104,7 @@ it('keeps a confirmed subscription alive when a stranger enters the same address
     MailSubscription::factory()->create([
         'email' => 'bewezen@example.test',
         'created_at' => now()->subDays(30),
+        'consent_text' => 'Ja, mail mij nieuw aanbod in deze categorieen.',
     ]);
 
     $this->service->subscribe(
@@ -111,7 +112,7 @@ it('keeps a confirmed subscription alive when a stranger enters the same address
         wantsOffers: true,
         wantsUpdates: true,
         categories: [],
-        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        consentText: 'Ja, stuur mij updates over het platform.',
         source: 'formulier',
     );
 
@@ -119,8 +120,15 @@ it('keeps a confirmed subscription alive when a stranger enters the same address
 
     $sub = MailSubscription::query()->where('email', 'bewezen@example.test')->first();
 
+    // Zonder deze twee blijft de test groen als de hele parkeertak wordt
+    // uitgeschakeld: `confirmed_at` staat dan toevallig nog, maar de
+    // vreemde heeft dan gewoon het bewijs overschreven. `consent_text` moet
+    // het origineel blijven en de gevraagde wijziging moet echt geparkeerd
+    // staan, anders toetst deze test het mechanisme niet.
     expect($sub)->not->toBeNull()
-        ->and($sub?->confirmed_at)->not->toBeNull();
+        ->and($sub?->confirmed_at)->not->toBeNull()
+        ->and($sub?->consent_text)->toBe('Ja, mail mij nieuw aanbod in deze categorieen.')
+        ->and($sub?->pending_changes)->not->toBeNull();
 });
 
 /*
@@ -270,6 +278,39 @@ it('returns null for a confirm token that does not exist', function () {
     expect($this->service->confirm('onzin'))->toBeNull();
 });
 
+/*
+ * Vandaag vult alleen de service `pending_changes`, en alleen met de zes
+ * velden uit `$wanted`. Maar `confirm()` doet `forceFill(array_merge($pending,
+ * ...))` zonder de sleutels te filteren, dus zodra `pending_changes` ooit een
+ * ander veld bevat, is dit mass-assignment op alles wat in het vak staat. Deze
+ * test zet dat scenario rechtstreeks in de database neer (buiten de service
+ * om) om te bewijzen dat het filter er echt is, niet dat de service toevallig
+ * nette invoer geeft.
+ */
+it('only applies the allowed fields from a pending change, even if the column holds more', function () {
+    $sub = MailSubscription::factory()->create([
+        'email' => 'origineel@example.test',
+        'user_id' => null,
+        'wants_offers' => true,
+    ]);
+    $sub->forceFill([
+        'confirm_token' => 'token-voor-mass-assignment-test',
+        'pending_changes' => [
+            'wants_offers' => false,
+            'email' => 'gekaapt@example.test',
+            'user_id' => 999999,
+            'confirmed_at' => '1970-01-01',
+        ],
+    ])->save();
+
+    $confirmed = $this->service->confirm('token-voor-mass-assignment-test');
+
+    expect($confirmed?->email)->toBe('origineel@example.test')
+        ->and($confirmed?->user_id)->toBeNull()
+        ->and($confirmed?->wants_offers)->toBeFalse()
+        ->and($confirmed?->confirmed_at?->toDateString())->toBe(now()->toDateString());
+});
+
 it('unsubscribes everything with one click', function () {
     $sub = MailSubscription::factory()->create(['wants_offers' => true, 'wants_updates' => true]);
 
@@ -363,6 +404,86 @@ it('throws away signups that were never confirmed', function () {
 
     expect($purged)->toBe(1)
         ->and(MailSubscription::query()->count())->toBe(2);
+});
+
+/*
+ * Het scenario dat de reviewer bewees: iemand meldt zich aan, de mail
+ * verdwijnt in spam, en hij meldt zich dertig dagen later opnieuw aan op
+ * hetzelfde adres. `purgeUnconfirmed(7)` kijkt naar `created_at`; blijft dat
+ * op de eerste aanmelding staan, dan is de rij diezelfde nacht ouder dan het
+ * venster en verdwijnt de zojuist verstuurde, nog levende bevestigingslink.
+ * Het venster hoort te lopen vanaf de laatste aanmelding.
+ */
+it('refreshes the purge window when someone signs up again before confirming', function () {
+    MailSubscription::factory()->unconfirmed()->create([
+        'email' => 'spam-map@example.test',
+        'created_at' => now()->subDays(30),
+    ]);
+
+    $this->service->subscribe(
+        email: 'spam-map@example.test',
+        wantsOffers: true,
+        wantsUpdates: false,
+        categories: [],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'formulier',
+    );
+
+    $this->service->purgeUnconfirmed(7);
+
+    expect(MailSubscription::query()->where('email', 'spam-map@example.test')->exists())->toBeTrue();
+});
+
+/*
+ * Geval 4 (parkeren) verandert de toestemming van de eigenaar juist niet, dus
+ * `created_at` van de bevestigde rij hoort ook niet mee te bewegen met een
+ * vreemde die het adres invult. Zou dat wel gebeuren, dan verbergt dat straks
+ * een reëel probleem: een oude, bevestigde inschrijving lijkt dan vers.
+ */
+it('leaves created_at untouched when a stranger only parks a change', function () {
+    $sub = MailSubscription::factory()->create([
+        'email' => 'bewezen@example.test',
+        'created_at' => now()->subDays(30),
+    ]);
+    $originalCreatedAt = $sub->created_at;
+
+    $this->service->subscribe(
+        email: 'bewezen@example.test',
+        wantsOffers: false,
+        wantsUpdates: true,
+        categories: [],
+        consentText: 'Ja, stuur mij updates over het platform.',
+        source: 'formulier',
+    );
+
+    expect($sub->fresh()?->created_at?->equalTo($originalCreatedAt))->toBeTrue();
+});
+
+/*
+ * De reviewer wees erop dat de `user_id`-bewaking geen enkele test had: de
+ * regel `$owner?->id ?? $sub->user_id` kan teruggedraaid worden naar
+ * `$owner?->id` zonder dat een van de bestaande tests rood wordt. Een
+ * onbevestigde rij die al aan een account hangt, verliest dan bij een
+ * anonieme `subscribe()` zijn koppeling, en de wiscascade uit taak 1 grijpt
+ * dan niet meer bij accountverwijdering.
+ */
+it('keeps an existing account link when someone else subscribes anonymously to the same address', function () {
+    $user = User::factory()->create(['email' => 'lid@example.test']);
+    MailSubscription::factory()->unconfirmed()->create([
+        'email' => 'lid@example.test',
+        'user_id' => $user->id,
+    ]);
+
+    $sub = $this->service->subscribe(
+        email: 'lid@example.test',
+        wantsOffers: true,
+        wantsUpdates: true,
+        categories: [],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'formulier',
+    );
+
+    expect($sub->user_id)->toBe($user->id);
 });
 
 /*
