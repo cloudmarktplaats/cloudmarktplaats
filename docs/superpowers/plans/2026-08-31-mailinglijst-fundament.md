@@ -21,6 +21,7 @@
 - Kwaliteitspoorten vóór elke commit: `docker compose exec -T php-fpm ./vendor/bin/pest`, `./vendor/bin/pint --test`, `./vendor/bin/phpstan analyse --memory-limit=512M`.
 - De 12 hoofdcategorieën zijn de ltree-rootlabels: `compute`, `networking`, `servers`, `av`, `misc`, `power`, `fabrication`, `kabels`, `storage`, `books`, `licenses`, `meet`.
 - `storage/` en `bootstrap/cache` zijn van uid 82. Artisan draait via `docker compose exec -T php-fpm`.
+- **Commitconventie van deze repo: Engelse imperatieve onderwerpsregel, Nederlandse body.** Alle 365 bestaande commits volgen dat. Code- en testcommentaar blijft Nederlands.
 
 ---
 
@@ -253,7 +254,7 @@ docker compose exec -T php-fpm ./vendor/bin/pest
 docker compose exec -T php-fpm ./vendor/bin/pint
 docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 git add database/migrations app/Models/MailSubscription.php database/factories/MailSubscriptionFactory.php tests/Feature/Mail
-git commit -m "Geef de mailinglijst een tabel die meegaat als het account weggaat"
+git commit -m "Give the mailing list a table that leaves with the account"
 ```
 
 ---
@@ -484,7 +485,7 @@ docker compose exec -T php-fpm ./vendor/bin/pest
 docker compose exec -T php-fpm ./vendor/bin/pint
 docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 git add app/Services/Mail tests/Feature/Mail/MailSubscriptionServiceTest.php
-git commit -m "Leg toestemming vast als tekst en klik, niet als vinkje"
+git commit -m "Record consent as a sentence and a click, not a checkbox"
 ```
 
 ---
@@ -686,7 +687,7 @@ docker compose exec -T php-fpm ./vendor/bin/pest
 docker compose exec -T php-fpm ./vendor/bin/pint
 docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 git add routes/web.php app/Http/Controllers/MailSubscriptionController.php resources/views/pages/mail-subscription-result.blade.php lang/en.json tests/Feature/Mail/MailSubscriptionRoutesTest.php
-git commit -m "Laat afmelden werken zonder login, met 1 klik"
+git commit -m "Make unsubscribing work in one click, without a login"
 ```
 
 **Let op bij deployen:** `routes/web.php` is gewijzigd, dus `route:cache` moet mee in de sync, anders geeft de nieuwe route een 404.
@@ -955,7 +956,7 @@ docker compose exec -T php-fpm ./vendor/bin/pest
 docker compose exec -T php-fpm ./vendor/bin/pint
 docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 git add config/cloudmarktplaats.php app/Livewire/Mail app/Mail/MailSubscriptionConfirmMail.php resources/views/livewire/mail resources/views/emails/mail-subscription-confirm.blade.php routes/web.php lang/en.json tests/Feature/Mail/SubscribeFormTest.php
-git commit -m "Zet het aanmeldformulier klaar achter een vlag"
+git commit -m "Put the signup form behind a flag"
 ```
 
 ---
@@ -1073,7 +1074,7 @@ docker compose exec -T php-fpm ./vendor/bin/pest
 docker compose exec -T php-fpm ./vendor/bin/pint
 docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 git add app/Livewire/Profile/MailPreferences.php resources/views/livewire/profile app/Livewire/Auth/Register.php app/Services/Mail routes/web.php lang/en.json tests/Feature/Mail/MailPreferencesTest.php
-git commit -m "Geef leden dezelfde schakelaars in hun profiel"
+git commit -m "Give members the same switches in their profile"
 ```
 
 ---
@@ -1222,7 +1223,7 @@ docker compose exec -T php-fpm ./vendor/bin/pest
 docker compose exec -T php-fpm ./vendor/bin/pint
 docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 git add app/Console/Commands/SendOfferDigest.php app/Mail/OfferDigestMail.php resources/views/emails/offer-digest.blade.php routes/console.php lang/en.json tests/Feature/Mail/OfferDigestTest.php
-git commit -m "Stuur de aanbodmail alleen als er echt iets nieuws is"
+git commit -m "Send the offer digest only when there is something new"
 ```
 
 ---
@@ -1340,7 +1341,7 @@ docker compose exec -T php-fpm ./vendor/bin/pest
 docker compose exec -T php-fpm ./vendor/bin/pint
 docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 git add app/Console/Commands/SendPlatformUpdate.php app/Mail/PlatformUpdateMail.php resources/views/emails/platform-update.blade.php lang/en.json tests/Feature/Mail/PlatformUpdateTest.php
-git commit -m "Zet de rem op de nieuwsbrief in het commando zelf"
+git commit -m "Put the newsletter brake in the command itself"
 ```
 
 ---
@@ -1441,7 +1442,7 @@ docker compose exec -T php-fpm ./vendor/bin/pest
 docker compose exec -T php-fpm ./vendor/bin/pint
 docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 git add database/seeders app/Console/Commands routes/console.php tests/Feature/Mail
-git commit -m "Zet het doel in de privacyverklaring voordat de code het uitvoert"
+git commit -m "State the purpose in the privacy statement before the code acts on it"
 ```
 
 ---
