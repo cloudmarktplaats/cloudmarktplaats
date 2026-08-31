@@ -28,6 +28,7 @@ use App\Livewire\Mail\Subscribe as MailSubscribe;
 use App\Livewire\Profile\Deals as ProfileDeals;
 use App\Livewire\Profile\DeleteAccount;
 use App\Livewire\Profile\Invites as ProfileInvites;
+use App\Livewire\Profile\MailPreferences;
 use App\Livewire\Profile\Security as ProfileSecurity;
 use App\Livewire\Profile\SellerType as ProfileSellerType;
 use App\Livewire\Profile\Stats as ProfileStats;
@@ -155,6 +156,17 @@ Route::get('/profile/invites', ProfileInvites::class)
 Route::get('/profile/verkopen', ProfileSellerType::class)
     ->middleware('auth')
     ->name('profile.seller-type');
+
+// Mailvoorkeuren voor leden met een account. `verified` naast `auth`: de
+// service zet een vinkje hier alleen meteen op bevestigd als het adres van dit
+// account geverifieerd is (dat bewijst de mailbox), dus zonder deze poort zou
+// een lid hier voorkeuren instellen die alsnog op de dubbele opt-in wachten.
+// Dezelfde vlag als het publieke aanmeldformulier (mail_list), gecontroleerd
+// in boot() van het component en niet hier in de route — zie MailPreferences
+// voor de reden.
+Route::get('/profile/mail', MailPreferences::class)
+    ->middleware(['auth', 'verified'])
+    ->name('profile.mail');
 
 Route::get('/profile/stats', ProfileStats::class)
     ->middleware('auth')

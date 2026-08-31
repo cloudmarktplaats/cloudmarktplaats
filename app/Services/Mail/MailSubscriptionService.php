@@ -206,6 +206,19 @@ class MailSubscriptionService
         return $sub;
     }
 
+    /**
+     * Koppelt een losse inschrijving aan het account dat later met dat adres
+     * registreert. Alleen rijen zonder koppeling komen in aanmerking: een rij
+     * die al aan een ander account hangt, hoort daar te blijven hangen.
+     */
+    public function linkToUser(User $user): void
+    {
+        MailSubscription::query()
+            ->whereNull('user_id')
+            ->where('email', self::normalise((string) $user->email))
+            ->update(['user_id' => $user->id]);
+    }
+
     /** Onbevestigde aanmeldingen zijn geen toestemming, dus die blijven niet staan. */
     public function purgeUnconfirmed(int $days = 7): int
     {
