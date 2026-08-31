@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use App\Models\MailSubscription;
 use App\Services\Mail\MailSubscriptionService;
+use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Http\Request;
 
 /*
  * Art. 11.7 lid 4 Telecommunicatiewet eist een makkelijke, gratis
@@ -228,4 +230,36 @@ it('does not let an old confirmation link resurrect an unsubscribe', function ()
 
     expect($sub->fresh()?->wants_offers)->toBeFalse()
         ->and($sub->fresh()?->wants_updates)->toBeFalse();
+});
+
+/*
+ * RFC 8058: staat `List-Unsubscribe-Post: List-Unsubscribe=One-Click` in de
+ * mail, dan doet de mailclient een POST op de URL uit `List-Unsubscribe`.
+ * Bestond alleen de GET, dan gaf die POST een 405 en mislukte het afmelden in
+ * Gmail en Yahoo stil, en bij bulkmail is dat ook een afleverprobleem: die twee
+ * meten of hun eigen afmeldknop werkt.
+ */
+it('unsubscribes on the one-click POST a mail client sends', function () {
+    $sub = MailSubscription::factory()->create(['wants_offers' => true, 'wants_updates' => true]);
+
+    $this->post('/nieuwsbrief/afmelden/'.$sub->unsubscribe_token)->assertOk();
+
+    expect($sub->fresh()->wants_offers)->toBeFalse()
+        ->and($sub->fresh()->wants_updates)->toBeFalse();
+});
+
+/*
+ * De mailclient heeft geen sessie en dus geen CSRF-token; RFC 8058 schrijft
+ * daarom voor dat dit pad buiten de tokencontrole valt. Laravel zet die
+ * controle in de testomgeving zelf al uit (`runningUnitTests()`), dus een POST
+ * in een test bewijst hier niets. Deze test kijkt daarom naar de uitzondering
+ * zelf, want anders staat de vrijstelling alleen in productie op de proef.
+ */
+it('leaves the one-click unsubscribe out of the CSRF check', function () {
+    $sub = MailSubscription::factory()->create();
+    $middleware = app(ValidateCsrfToken::class);
+    $inExceptArray = new ReflectionMethod($middleware, 'inExceptArray');
+
+    expect($inExceptArray->invoke($middleware, Request::create('/nieuwsbrief/afmelden/'.$sub->unsubscribe_token, 'POST')))->toBeTrue()
+        ->and($inExceptArray->invoke($middleware, Request::create('/nieuwsbrief/bevestigen/'.$sub->unsubscribe_token, 'POST')))->toBeFalse();
 });

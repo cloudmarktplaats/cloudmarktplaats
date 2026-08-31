@@ -29,7 +29,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // The SIWE verify endpoint is called from a wallet adapter (MetaMask /
         // WalletConnect) which doesn't carry a Laravel session token. Replay
         // protection is provided by the single-use nonce in `auth_nonces`.
-        $middleware->validateCsrfTokens(except: ['/auth/web3/verify']);
+        //
+        // Afmelden in 1 klik (RFC 8058) komt als POST binnen vanuit Gmail of
+        // Yahoo zelf, buiten elke sessie om. Een CSRF-token bestaat daar niet,
+        // dus de standaard is hier een gegarandeerde TokenMismatch. Het risico
+        // dat de controle afdekt is hier bovendien nagenoeg leeg: het token in
+        // de URL is het geheim, en het ergste wat een vervalst verzoek bereikt
+        // is dat iemand géén reclame meer krijgt. Het herstelscherm biedt de
+        // keuze terug aan.
+        $middleware->validateCsrfTokens(except: [
+            '/auth/web3/verify',
+            'nieuwsbrief/afmelden/*',
+        ]);
 
         // Production sits behind a Caddy reverse proxy on a separate host;
         // trust X-Forwarded-* so request scheme/host/IP reflect the public

@@ -17,13 +17,24 @@ beforeEach(function () {
     $this->networking = Category::factory()->create(['path' => 'networking.switches']);
 });
 
-/* Geen nieuws is geen mail. Dat is de hele spamrem. */
+/*
+ * Geen nieuws is geen mail. Dat is de hele spamrem.
+ *
+ * En een lege ronde stempelt niet: schuift `offers_sent_at` toch op, dan valt
+ * alles wat er die week bij kwam de week erna buiten het venster en verdwijnt
+ * stil. Meten gaat via `DB::table()`, want een model dat zijn eigen waarde uit
+ * de cache teruggeeft bewijst niets over wat er in de rij staat.
+ */
 it('sends nothing when there is nothing new in the categories', function () {
-    MailSubscription::factory()->create(['wants_offers' => true, 'categories' => ['networking']]);
+    $sub = MailSubscription::factory()->create([
+        'wants_offers' => true, 'categories' => ['networking'], 'offers_sent_at' => now()->subWeek(),
+    ]);
+    $voor = DB::table('mail_subscriptions')->where('id', $sub->id)->value('offers_sent_at');
 
     $this->artisan('mail:offers')->assertExitCode(0);
 
     Mail::assertNothingQueued();
+    expect(DB::table('mail_subscriptions')->where('id', $sub->id)->value('offers_sent_at'))->toBe($voor);
 });
 
 it('mails the new listings in the categories someone picked', function () {
@@ -36,6 +47,33 @@ it('mails the new listings in the categories someone picked', function () {
 
     Mail::assertQueued(OfferDigestMail::class);
     expect($sub->fresh()->offers_sent_at)->not->toBeNull();
+});
+
+/*
+ * Stempelen mag de klok van de rij niet vooruitzetten. `updated_at` zegt hier
+ * wanneer de vóórkeuren wijzigden, en een mail versturen is geen wijziging van
+ * de voorkeuren. Op 23-08 vielen tien vastgelopen concepten uit de meting
+ * `concepten_zonder_foto` omdat een modelupdate hun `updated_at` vooruitzette;
+ * dezelfde fout hier maakt "sinds wanneer koos jij dit" onbruikbaar.
+ *
+ * Beide metingen gaan langs `DB::table()`: Eloquent zou zijn eigen zojuist
+ * geschreven waarde teruggeven en dat is precies de fout die we zoeken.
+ */
+it('stamps the send without touching updated_at', function () {
+    $sub = MailSubscription::factory()->create([
+        'wants_offers' => true, 'categories' => ['networking'], 'offers_sent_at' => now()->subWeek(),
+    ]);
+    // Een week terug, anders valt een modelupdate binnen dezelfde seconde en
+    // ziet de vergelijking het verschil niet.
+    DB::table('mail_subscriptions')->where('id', $sub->id)->update(['updated_at' => now()->subWeek()]);
+    $voor = DB::table('mail_subscriptions')->where('id', $sub->id)->value('updated_at');
+    Listing::factory()->published()->create(['category_id' => $this->networking->id]);
+
+    $this->artisan('mail:offers');
+
+    $na = DB::table('mail_subscriptions')->where('id', $sub->id)->first();
+    expect($na?->updated_at)->toBe($voor)
+        ->and($na?->offers_sent_at)->toBeGreaterThan($voor);
 });
 
 it('skips a category the subscriber did not pick', function () {
@@ -188,6 +226,88 @@ it('carries the unsubscribe link and the one-click headers', function () {
         return $headers['List-Unsubscribe'] === '<'.route('mail.unsubscribe', $sub->unsubscribe_token).'>'
             && $headers['List-Unsubscribe-Post'] === 'List-Unsubscribe=One-Click';
     });
+});
+
+/*
+ * De openingszin noemt alleen de categorieën waar echt iets in staat. Wie
+ * Networking en Storage aanvinkte en 1 switch krijgt, leest anders "in de
+ * categorieën die je hebt aangevinkt: Networking, Storage" met niets uit
+ * Storage eronder. Dat leest als een gemiste advertentie.
+ */
+it('names only the categories that actually carry something', function () {
+    Category::factory()->create(['path' => 'storage.disks']);
+    MailSubscription::factory()->create([
+        'wants_offers' => true, 'categories' => ['networking', 'storage'], 'offers_sent_at' => now()->subWeek(),
+    ]);
+    Listing::factory()->published()->create(['category_id' => $this->networking->id]);
+
+    $this->artisan('mail:offers');
+
+    Mail::assertQueued(OfferDigestMail::class, function (OfferDigestMail $mail) {
+        $mail->assertSeeInHtml('Networking');
+        $mail->assertDontSeeInHtml('Storage');
+
+        return true;
+    });
+});
+
+/* Dezelfde spelling als de rest van de site: `faq` en `scope` schrijven trema. */
+it('writes categorieen with the trema, like the rest of the site', function () {
+    MailSubscription::factory()->create([
+        'wants_offers' => true, 'categories' => ['networking'], 'offers_sent_at' => now()->subWeek(),
+    ]);
+    Listing::factory()->published()->create(['category_id' => $this->networking->id]);
+
+    $this->artisan('mail:offers');
+
+    Mail::assertQueued(OfferDigestMail::class, function (OfferDigestMail $mail) {
+        $mail->assertSeeInHtml('categorieën');
+        $mail->assertDontSeeInHtml('categorieen');
+
+        return true;
+    });
+});
+
+/*
+ * Een echte ronde draait in de scheduler en die uitvoer landt in een logbestand.
+ * E-mailadressen horen daar niet in: dat is een lijst persoonsgegevens die
+ * niemand daar zocht en die buiten de bewaartermijn van de tabel valt. Bij
+ * `--dry-run` kijkt er een mens mee die juist wil zien wie er aan de beurt is.
+ */
+it('keeps addresses out of the output of a real run', function () {
+    MailSubscription::factory()->create([
+        'email' => 'abonnee@example.test',
+        'wants_offers' => true, 'categories' => ['networking'], 'offers_sent_at' => now()->subWeek(),
+    ]);
+    Listing::factory()->published()->create(['category_id' => $this->networking->id]);
+
+    // De proefdraai eerst: die stempelt niet, dus daarna is er nog steeds iets
+    // nieuws te melden. Andersom zou de tweede ronde leeg zijn en niets meten.
+    $this->artisan('mail:offers --dry-run')->expectsOutputToContain('abonnee@example.test');
+    $this->artisan('mail:offers')->doesntExpectOutputToContain('abonnee@example.test');
+});
+
+/*
+ * Een gepubliceerde advertentie zonder `published_at` valt buiten `published_at
+ * > ijkpunt` en komt dus nooit in een aanbodmail. Op productie bestaat zo'n rij
+ * niet (0 van 52 op 31-08) en de state machine stempelt bij elke overgang naar
+ * `published`, maar op de ontwikkeldatabase staan er 3 uit juli. De uitkomst
+ * blijft dus de veilige kant (liever missen dan oude voorraad als nieuw
+ * versturen), maar hij hoort geteld te worden in plaats van stil te blijven.
+ */
+it('reports a published listing that has no publication date', function () {
+    MailSubscription::factory()->create([
+        'wants_offers' => true, 'categories' => ['networking'], 'offers_sent_at' => now()->subWeek(),
+    ]);
+    Listing::factory()->create([
+        'category_id' => $this->networking->id, 'state' => 'published', 'published_at' => null,
+    ]);
+
+    $this->artisan('mail:offers')
+        ->expectsOutputToContain('zonder publicatiedatum')
+        ->assertExitCode(0);
+
+    Mail::assertNothingQueued();
 });
 
 it('shows the title, the price and a link to each listing', function () {

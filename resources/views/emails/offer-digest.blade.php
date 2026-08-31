@@ -3,7 +3,19 @@
     // te staan. Een slug die niet meer in de lijst voorkomt valt terug op
     // zichzelf, zodat een oude keuze de mail niet stukmaakt.
     $labels = \App\Livewire\Mail\Subscribe::categoryLabels();
-    $gekozen = array_map(fn ($slug) => $labels[$slug] ?? $slug, $subscription->categories ?? []);
+
+    // Alleen de categorieën waar deze mail echt iets uit toont. Alle aangevinkte
+    // categorieën opsommen leest als een gemiste advertentie: "1 nieuwe
+    // advertentie in Networking, Storage" met niets uit Storage eronder.
+    // `subltree(path,0,1)` in de query snijdt hetzelfde bovenste label eraf.
+    $aanwezig = $listings
+        ->map(fn ($listing) => explode('.', (string) $listing->category?->path)[0])
+        ->unique()
+        ->all();
+    $gekozen = array_map(
+        fn ($slug) => $labels[$slug] ?? $slug,
+        array_values(array_intersect($subscription->categories ?? [], $aanwezig)),
+    );
 
     // Zonder `wat` zou deze link ook de updates afzetten, en daar gaat deze mail
     // niet over.
@@ -33,8 +45,8 @@
                 @else
                     Er staan {{ $listings->count() }} nieuwe advertenties in
                 @endif
-                {{ count($gekozen) === 1 ? 'de categorie' : 'de categorieen' }}
-                die je hebt aangevinkt: {{ implode(', ', $gekozen) }}.
+                {{ count($gekozen) === 1 ? 'de categorie' : 'de categorieën' }}
+                die je hebt aangevinkt{{ $gekozen === [] ? '.' : ': '.implode(', ', $gekozen).'.' }}
             </p>
 
             @foreach ($listings as $listing)
@@ -72,7 +84,7 @@
         </div>
 
         <p style="margin:24px 0 0;font-size:13px;color:#5C6166;">
-            Je krijgt deze mail omdat je je hebt aangemeld voor nieuw aanbod in deze categorieen.
+            Je krijgt deze mail omdat je je hebt aangemeld voor nieuw aanbod in deze categorieën.
             Is er niets nieuws, dan sturen we niets.
             <a href="{{ $afmeldUrl }}" style="color:#D9480F;">Afmelden</a> kan altijd, in 1 klik.
         </p>

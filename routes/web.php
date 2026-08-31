@@ -231,6 +231,16 @@ Route::post('/nieuwsbrief/bevestigen/{token}', [MailSubscriptionController::clas
 Route::get('/nieuwsbrief/afmelden/{token}', [MailSubscriptionController::class, 'unsubscribe'])
     ->where('token', '[A-Za-z0-9]{8,64}')
     ->name('mail.unsubscribe');
+
+// Dezelfde afmelding, maar dan zoals de mailclient hem doet. De header
+// `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058) belooft dat
+// een POST op deze URL werkt; bestond alleen de GET, dan gaf Gmails eigen
+// afmeldknop een 405 en mislukte het afmelden stil. De vrijstelling van de
+// CSRF-controle staat in `bootstrap/app.php` en hoort erbij: een mailclient
+// heeft geen sessie en dus geen token.
+Route::post('/nieuwsbrief/afmelden/{token}', [MailSubscriptionController::class, 'unsubscribe'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
+    ->name('mail.unsubscribe.oneclick');
 Route::post('/nieuwsbrief/opnieuw/{token}', [MailSubscriptionController::class, 'resubscribe'])
     ->where('token', '[A-Za-z0-9]{8,64}')
     ->name('mail.resubscribe');

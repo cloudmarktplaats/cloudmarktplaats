@@ -50,6 +50,22 @@ class SendOfferDigest extends Command
 
         $dryRun = (bool) $this->option('dry-run');
 
+        // `published_at` is het ijkpunt van "nieuw", dus een gepubliceerde rij
+        // zonder die datum valt buiten elke selectie hieronder. Dat is de
+        // veilige kant (liever missen dan oude voorraad als nieuw versturen) en
+        // via de state machine kan het niet ontstaan: `transition()` stempelt
+        // `published_at` in dezelfde save. Gemeten op 31-08: productie 0 van 52,
+        // de ontwikkeldatabase 3 van 12 uit juli. Handwerk in de database kan
+        // zo'n rij dus wel maken, en dan hoort hij geteld te worden in plaats
+        // van stil te verdwijnen; dit commando is de enige plek die er kijkt.
+        $zonderDatum = Listing::query()->where('state', 'published')->whereNull('published_at')->count();
+        if ($zonderDatum > 0) {
+            $this->warn(sprintf(
+                '%d gepubliceerde advertentie(s) zonder publicatiedatum; die vallen buiten deze mail.',
+                $zonderDatum,
+            ));
+        }
+
         // `confirmed()` is het enige gezaghebbende filter op bevestiging: een
         // bevestigde rij kan tegelijk een levend `confirm_token` dragen als er
         // een wijziging geparkeerd staat. En `wants_offers` staat er los naast,
@@ -63,6 +79,7 @@ class SendOfferDigest extends Command
 
         $rows = [];
         $mailed = 0;
+        $advertenties = 0;
         foreach ($subscriptions as $sub) {
             $listings = $this->newListingsFor($sub);
 
@@ -72,12 +89,21 @@ class SendOfferDigest extends Command
                 continue;
             }
 
-            $rows[] = [
-                $sub->email,
-                $sub->user_id === null ? 'geen account' : 'account',
-                $listings->count(),
-                $dryRun ? 'zou mailen' : 'gemaild',
-            ];
+            // Adressen alleen bij een proefdraai. Een echte ronde draait in de
+            // scheduler en die uitvoer landt in een logbestand: een lijst
+            // e-mailadressen hoort daar niet in, want dat is een tweede kopie
+            // van de tabel buiten elk bewaarbeleid om. Bij --dry-run kijkt er
+            // een mens mee die juist wil zien wie er aan de beurt is.
+            if ($dryRun) {
+                $rows[] = [
+                    $sub->email,
+                    $sub->user_id === null ? 'geen account' : 'account',
+                    $listings->count(),
+                    'zou mailen',
+                ];
+            }
+
+            $advertenties += $listings->count();
 
             if (! $dryRun) {
                 Mail::to($sub->email)->queue(new OfferDigestMail($sub, $listings));
@@ -91,7 +117,7 @@ class SendOfferDigest extends Command
             $mailed++;
         }
 
-        if ($rows === []) {
+        if ($mailed === 0) {
             $this->info('Geen nieuw aanbod voor wie op de lijst staat. Er gaat niets uit.');
 
             return self::SUCCESS;
@@ -100,11 +126,16 @@ class SendOfferDigest extends Command
         $this->newLine();
         $this->line($dryRun ? '<comment>DRY RUN — er wordt niets verstuurd</comment>' : '<info>VERSTUREN</info>');
         $this->newLine();
-        $this->table(['e-mail', 'segment', 'advertenties', 'status'], $rows);
+
+        if ($dryRun) {
+            $this->table(['e-mail', 'segment', 'advertenties', 'status'], $rows);
+        }
+
         $this->info(sprintf(
-            '%d van %d abonnees. %s',
+            '%d van %d abonnees, %d advertenties. %s',
             $mailed,
             $subscriptions->count(),
+            $advertenties,
             $dryRun ? 'Draai zonder --dry-run om te versturen.' : 'Verstuurd (via de queue).',
         ));
 
