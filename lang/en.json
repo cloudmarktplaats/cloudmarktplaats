@@ -719,5 +719,18 @@
     "Je krijgt geen updates meer op dit adres. Nieuw aanbod blijft wel komen. Was dat een vergissing?": "You'll get no more updates at this address. New listings will still come. Was that a mistake?",
     "Er gaat geen mail meer naar dit adres. Was dat een vergissing?": "No more mail will go to this address. Was that a mistake?",
     "Toch nieuw aanbod": "New listings after all",
-    "Toch updates": "Updates after all"
+    "Toch updates": "Updates after all",
+    "Kijk in je mail.": "Check your mail.",
+    "Er staat een link klaar. Zolang je daar niet op klikt, sturen we niets.": "There is a link waiting for you. Until you click it, we send nothing.",
+    "Mail als er iets voor je bij zit.": "Mail when something is there for you.",
+    "Geen account nodig. Je krijgt alleen waar je hieronder ja op zegt, en afmelden kan met de link onderaan elk bericht.": "No account needed. You only get what you say yes to below, and you can unsubscribe with the link at the bottom of every message.",
+    "Je e-mailadres": "Your email address",
+    "Waar wil je mail over?": "What do you want mail about?",
+    "Over welk aanbod?": "About which listings?",
+    "Meld me aan": "Sign me up",
+    "Bezig…": "Working…",
+    "We gebruiken je adres alleen hiervoor en geven het aan niemand door. Zo gaan we met je gegevens om: <a href=\":url\" class=\"underline\">privacyverklaring</a>.": "We use your address for this only and pass it on to no one. This is how we handle your data: <a href=\":url\" class=\"underline\">privacy statement</a>.",
+    "Vink aan waar je mail over wilt krijgen.": "Tick what you want to get mail about.",
+    "Kies minstens 1 categorie.": "Pick at least 1 category.",
+    "Er zijn al genoeg mails naar dit adres onderweg. Probeer het later opnieuw.": "Enough mail is already on its way to this address. Try again later."
 }

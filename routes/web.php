@@ -24,6 +24,7 @@ use App\Livewire\Listings\Browse as ListingsBrowse;
 use App\Livewire\Listings\Detail as ListingDetail;
 use App\Livewire\Listings\Mine as ListingsMine;
 use App\Livewire\Listings\Wizard as ListingWizard;
+use App\Livewire\Mail\Subscribe as MailSubscribe;
 use App\Livewire\Profile\Deals as ProfileDeals;
 use App\Livewire\Profile\DeleteAccount;
 use App\Livewire\Profile\Invites as ProfileInvites;
@@ -191,6 +192,11 @@ Route::get('/legal/accept', LegalAccept::class)
 Route::get('/legal/{type}', [LegalController::class, 'show'])
     ->where('type', 'tos|privacy')
     ->name('legal.show');
+
+// Het aanmeldformulier zelf. De 404 bij een uitgezette vlag komt uit boot()
+// van het component en niet uit de route: vervolgacties gaan naar
+// /livewire/update en komen hier dus niet langs.
+Route::get('/nieuwsbrief', MailSubscribe::class)->name('mail.subscribe');
 
 // Bevestigen en afmelden gaan zonder login: art. 11.7 lid 4 Tw eist een
 // makkelijke afmeldmogelijkheid, en abonnees zonder account hebben geen login.
