@@ -47,6 +47,216 @@ it('confirms straight away for a verified account holder', function () {
         ->and($sub->user_id)->toBe($user->id);
 });
 
+/*
+ * `email_verified_at` bewijst één mailbox: die van het account zelf. Zonder de
+ * vergelijking met `$user->email` kan elk ingelogd lid een willekeurig adres
+ * meteen op bevestigd zetten en dat adres daarmee zonder klik van de eigenaar
+ * op de lijst zetten. Dat is precies de toestemming die niet gegeven is.
+ */
+it('does not confirm an address the logged in member cannot prove', function () {
+    $user = User::factory()->create(['email_verified_at' => now(), 'email' => 'lid@example.test']);
+
+    $sub = $this->service->subscribe(
+        email: 'iemand-anders@example.test',
+        wantsOffers: true,
+        wantsUpdates: false,
+        categories: [],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'formulier',
+        user: $user,
+    );
+
+    expect($sub->confirmed_at)->toBeNull()
+        ->and($sub->confirm_token)->not->toBeNull()
+        ->and($sub->user_id)->toBeNull();
+});
+
+/*
+ * Adressen worden genormaliseerd opgeslagen, dus de vergelijking met het adres
+ * van het account moet dat ook doen. Anders zakt een lid dat zijn eigen adres
+ * met hoofdletters intypt onnodig terug naar de dubbele opt-in.
+ */
+it('recognises the members own address regardless of case and spacing', function () {
+    $user = User::factory()->create(['email_verified_at' => now(), 'email' => 'lid@example.test']);
+
+    $sub = $this->service->subscribe(
+        email: '  LID@Example.test ',
+        wantsOffers: true,
+        wantsUpdates: false,
+        categories: [],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'profiel',
+        user: $user,
+    );
+
+    expect($sub->confirmed_at)->not->toBeNull()
+        ->and($sub->user_id)->toBe($user->id);
+});
+
+/*
+ * Het scenario dat de review aantoonde: een vreemde vult op het publieke
+ * formulier het adres van een ander in. Zou die aanmelding de bestaande rij
+ * terugzetten naar onbevestigd, dan is de rij ouder dan zeven dagen én
+ * onbevestigd, en gooit de opruiming van diezelfde nacht een bewezen
+ * inschrijving definitief weg.
+ */
+it('keeps a confirmed subscription alive when a stranger enters the same address', function () {
+    MailSubscription::factory()->create([
+        'email' => 'bewezen@example.test',
+        'created_at' => now()->subDays(30),
+    ]);
+
+    $this->service->subscribe(
+        email: 'bewezen@example.test',
+        wantsOffers: true,
+        wantsUpdates: true,
+        categories: [],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'formulier',
+    );
+
+    $this->service->purgeUnconfirmed(7);
+
+    $sub = MailSubscription::query()->where('email', 'bewezen@example.test')->first();
+
+    expect($sub)->not->toBeNull()
+        ->and($sub?->confirmed_at)->not->toBeNull();
+});
+
+/*
+ * Een bevestigde rij is bewijs van toestemming. Een aanroeper die niet kan
+ * aantonen dat het adres van hem is, mag daar niets aan veranderen: niet de
+ * voorkeuren, niet het toestemmingsbewijs en niet de koppeling met het account
+ * (die koppeling draagt de wisverplichting uit taak 1).
+ */
+it('parks a strangers changes as pending instead of applying them', function () {
+    $user = User::factory()->create(['email' => 'eigenaar@example.test']);
+    $sub = MailSubscription::factory()->create([
+        'email' => 'eigenaar@example.test',
+        'user_id' => $user->id,
+        'wants_offers' => true,
+        'wants_updates' => false,
+        'categories' => ['networking'],
+        'consent_text' => 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        'consent_source' => 'profiel',
+    ]);
+
+    $this->service->subscribe(
+        email: 'eigenaar@example.test',
+        wantsOffers: false,
+        wantsUpdates: true,
+        categories: ['storage'],
+        consentText: 'Ja, stuur mij updates over het platform.',
+        source: 'formulier',
+    );
+
+    $fresh = $sub->fresh();
+
+    expect($fresh?->wants_offers)->toBeTrue()
+        ->and($fresh?->wants_updates)->toBeFalse()
+        ->and($fresh?->categories)->toBe(['networking'])
+        ->and($fresh?->consent_text)->toBe('Ja, mail mij nieuw aanbod in deze categorieen.')
+        ->and($fresh?->consent_source)->toBe('profiel')
+        ->and($fresh?->user_id)->toBe($user->id)
+        ->and($fresh?->confirmed_at)->not->toBeNull()
+        ->and($fresh?->confirm_token)->not->toBeNull()
+        ->and($fresh?->pending_changes)->not->toBeNull();
+});
+
+/*
+ * De geparkeerde wijziging is pas een wijziging als de eigenaar van de mailbox
+ * op de link klikt. Daarna moet het parkeervak leeg zijn, anders zou een
+ * volgende bevestiging hem een tweede keer toepassen.
+ */
+it('applies the pending changes only when the link is clicked', function () {
+    MailSubscription::factory()->create([
+        'email' => 'eigenaar@example.test',
+        'wants_offers' => true,
+        'wants_updates' => false,
+        'categories' => ['networking'],
+    ]);
+
+    $parked = $this->service->subscribe(
+        email: 'eigenaar@example.test',
+        wantsOffers: false,
+        wantsUpdates: true,
+        categories: ['storage'],
+        consentText: 'Ja, stuur mij updates over het platform.',
+        source: 'formulier',
+    );
+
+    // Vóór de klik staat de rij er nog precies zo bij als daarvoor.
+    expect($parked->fresh()?->wants_updates)->toBeFalse();
+
+    $confirmed = $this->service->confirm((string) $parked->confirm_token);
+
+    expect($confirmed?->wants_offers)->toBeFalse()
+        ->and($confirmed?->wants_updates)->toBeTrue()
+        ->and($confirmed?->categories)->toBe(['storage'])
+        ->and($confirmed?->consent_text)->toBe('Ja, stuur mij updates over het platform.')
+        ->and($confirmed?->consent_source)->toBe('formulier')
+        ->and($confirmed?->confirm_token)->toBeNull()
+        ->and($confirmed?->pending_changes)->toBeNull()
+        ->and($confirmed?->fresh()?->wants_updates)->toBeTrue()
+        // Het parkeervak is jsonb, dus de datum reist als tekst; na de klik moet
+        // het weer een datum zijn en niet een string die stilletjes op 1970 valt.
+        ->and($confirmed?->fresh()?->consent_given_at?->toDateString())->toBe(now()->toDateString());
+});
+
+/*
+ * Zolang een rij nog niet bevestigd is, is er geen bewijs om te beschermen: een
+ * tweede poging op hetzelfde adres mag die rij gewoon overschrijven en blijft
+ * onbevestigd.
+ */
+it('overwrites an unconfirmed signup in place', function () {
+    MailSubscription::factory()->unconfirmed()->create([
+        'email' => 'nog-niet@example.test',
+        'wants_updates' => false,
+    ]);
+
+    $sub = $this->service->subscribe(
+        email: 'nog-niet@example.test',
+        wantsOffers: true,
+        wantsUpdates: true,
+        categories: ['storage'],
+        consentText: 'Ja, stuur mij updates over het platform.',
+        source: 'formulier',
+    );
+
+    expect($sub->wants_updates)->toBeTrue()
+        ->and($sub->confirmed_at)->toBeNull()
+        ->and($sub->pending_changes)->toBeNull();
+});
+
+/*
+ * De eigenaar zelf hoeft niet door het parkeervak: hij heeft de mailbox al
+ * bewezen, dus zijn wijziging geldt meteen.
+ */
+it('lets the verified owner change a confirmed subscription straight away', function () {
+    $user = User::factory()->create(['email_verified_at' => now(), 'email' => 'lid@example.test']);
+    MailSubscription::factory()->create([
+        'email' => 'lid@example.test',
+        'wants_offers' => true,
+        'wants_updates' => false,
+    ]);
+
+    $sub = $this->service->subscribe(
+        email: 'lid@example.test',
+        wantsOffers: false,
+        wantsUpdates: true,
+        categories: [],
+        consentText: 'Ja, stuur mij updates over het platform.',
+        source: 'profiel',
+        user: $user,
+    );
+
+    expect($sub->wants_offers)->toBeFalse()
+        ->and($sub->wants_updates)->toBeTrue()
+        ->and($sub->user_id)->toBe($user->id)
+        ->and($sub->pending_changes)->toBeNull()
+        ->and($sub->confirm_token)->toBeNull();
+});
+
 it('confirms a subscription with its token and burns the token', function () {
     $sub = MailSubscription::factory()->unconfirmed()->create();
 
@@ -85,6 +295,49 @@ it('unsubscribes from updates only and leaves offers standing', function () {
 
     expect($sub->fresh()->wants_offers)->toBeTrue()
         ->and($sub->fresh()->wants_updates)->toBeFalse();
+});
+
+/*
+ * Afmelden mag nooit iets áánzetten. Zonder de `&& $sub->wants_offers`-bewaking
+ * krijgt iemand die aanbod al had uitgezet dat aanbod terug zodra hij zich van
+ * updates afmeldt — mail sturen na een afmelding is precies wat niet mag.
+ */
+it('leaves an already switched off offers preference off when unsubscribing from updates', function () {
+    $sub = MailSubscription::factory()->create(['wants_offers' => false, 'wants_updates' => true]);
+
+    $this->service->unsubscribe((string) $sub->unsubscribe_token, 'updates');
+
+    expect($sub->fresh()?->wants_offers)->toBeFalse()
+        ->and($sub->fresh()?->wants_updates)->toBeFalse();
+});
+
+/** Spiegelbeeld van hierboven, voor de bewaking op `wants_updates`. */
+it('leaves an already switched off updates preference off when unsubscribing from offers', function () {
+    $sub = MailSubscription::factory()->create(['wants_offers' => true, 'wants_updates' => false]);
+
+    $this->service->unsubscribe((string) $sub->unsubscribe_token, 'offers');
+
+    expect($sub->fresh()?->wants_offers)->toBeFalse()
+        ->and($sub->fresh()?->wants_updates)->toBeFalse();
+});
+
+/*
+ * Een onbekende `$what` is een fout in de afmeldlink die wij zelf versturen,
+ * geen keuze van de bezoeker. Stil alles afmelden zou die fout verbergen én
+ * meer afmelden dan gevraagd.
+ */
+it('refuses an unsubscribe target it does not know', function () {
+    $sub = MailSubscription::factory()->create(['wants_offers' => true, 'wants_updates' => true]);
+
+    expect(fn () => $this->service->unsubscribe((string) $sub->unsubscribe_token, 'rommel'))
+        ->toThrow(InvalidArgumentException::class);
+
+    expect($sub->fresh()?->wants_offers)->toBeTrue()
+        ->and($sub->fresh()?->wants_updates)->toBeTrue();
+});
+
+it('returns null for an unsubscribe token that does not exist', function () {
+    expect($this->service->unsubscribe('onzin'))->toBeNull();
 });
 
 it('records the literal sentence that was agreed to', function () {

@@ -25,7 +25,12 @@ class MailSubscription extends Model
     /** @use HasFactory<MailSubscriptionFactory> */
     use HasFactory;
 
-    /** @var list<string> */
+    /**
+     * `pending_changes` staat er bewust niet bij: dat vak vult de service zelf
+     * met `forceFill`, en het mag nooit rechtstreeks uit een request komen.
+     *
+     * @var list<string>
+     */
     protected $fillable = [
         'email', 'user_id', 'wants_offers', 'wants_updates', 'categories',
         'confirm_token', 'confirmed_at', 'unsubscribe_token',
@@ -36,12 +41,13 @@ class MailSubscription extends Model
     /**
      * Larastan leest de Laravel-11-vorm niet, vandaar de expliciete shape.
      *
-     * @return array{categories: 'array', wants_offers: 'boolean', wants_updates: 'boolean', confirmed_at: 'datetime', consent_given_at: 'datetime', offers_sent_at: 'datetime', updates_sent_at: 'datetime'}
+     * @return array{categories: 'array', pending_changes: 'array', wants_offers: 'boolean', wants_updates: 'boolean', confirmed_at: 'datetime', consent_given_at: 'datetime', offers_sent_at: 'datetime', updates_sent_at: 'datetime'}
      */
     protected function casts(): array
     {
         return [
             'categories' => 'array',
+            'pending_changes' => 'array',
             'wants_offers' => 'boolean',
             'wants_updates' => 'boolean',
             'confirmed_at' => 'datetime',

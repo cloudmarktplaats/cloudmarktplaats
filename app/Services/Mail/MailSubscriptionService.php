@@ -6,7 +6,10 @@ namespace App\Services\Mail;
 
 use App\Models\MailSubscription;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 /**
  * De enige plek waar inschrijvingen ontstaan, bevestigd worden en verdwijnen.
@@ -14,10 +17,31 @@ use Illuminate\Support\Str;
  * Toestemming moet aantoonbaar zijn (art. 7 lid 1 AVG) en dit platform bewaart
  * geen IP's, dus het bewijs bestaat uit de letterlijke zin waarop iemand ja
  * zei plus de bevestigingsklik uit zijn eigen mailbox.
+ *
+ * Daaruit volgt de harde regel van deze service: een bevestigde inschrijving
+ * wordt nooit aangeraakt door iemand die niet kan aantonen dat het adres van
+ * hem is. Het aanmeldformulier is publiek, dus anders kan een vreemde het
+ * bewijs van een ander overschrijven en de rij bovendien terugzetten naar
+ * onbevestigd — waarna `purgeUnconfirmed()` hem diezelfde nacht opruimt.
  */
 class MailSubscriptionService
 {
-    /** @param list<string> $categories */
+    /**
+     * Vier gevallen, in deze volgorde:
+     *
+     * 1. Geen rij: aanmaken, onbevestigd.
+     * 2. Rij bestaat maar is onbevestigd: bijwerken, blijft onbevestigd. Er is
+     *    nog geen bewijs, dus er valt ook niets te beschermen.
+     * 3. De aanroeper is de bewezen eigenaar van dit adres (ingelogd,
+     *    geverifieerd, en `$user->email` is precies dit adres): meteen
+     *    bijwerken en bevestigd zetten.
+     * 4. Rij bestaat, is bevestigd, en de aanroeper is niet die eigenaar: de
+     *    rij blijft zoals hij is. De gevraagde wijziging wordt geparkeerd in
+     *    `pending_changes` met een vers `confirm_token`; `confirm()` past hem
+     *    pas toe als er op de link in díé mailbox is geklikt.
+     *
+     * @param  list<string>  $categories
+     */
     public function subscribe(
         string $email,
         bool $wantsOffers,
@@ -27,50 +51,82 @@ class MailSubscriptionService
         string $source,
         ?User $user = null,
     ): MailSubscription {
-        // Een geverifieerd account heeft de mailbox al bewezen; daar voegt een
-        // tweede klik niets aan bewijskracht toe.
-        $alreadyProven = $user !== null && $user->email_verified_at !== null;
-        $normalizedEmail = Str::lower(trim($email));
+        $normalizedEmail = self::normalise($email);
 
-        // Een bestaand `unsubscribe_token` blijft staan bij een hernieuwde
-        // aanmelding op hetzelfde adres: dat token zit al in elke mail die ooit
-        // verstuurd is, en een nieuw token zou de afmeldlink daarin met
-        // terugwerkende kracht breken.
-        $existingToken = MailSubscription::query()
-            ->where('email', $normalizedEmail)
-            ->value('unsubscribe_token');
+        // `email_verified_at` bewijst één mailbox: die van het account zelf.
+        // Zonder de vergelijking met het adres van het account zou elk ingelogd
+        // lid een willekeurig adres direct op bevestigd kunnen zetten.
+        // Genormaliseerd vergelijken, want zo staat het ook in de tabel.
+        $owner = $user !== null
+            && $user->email_verified_at !== null
+            && self::normalise($user->email) === $normalizedEmail
+            ? $user
+            : null;
 
-        return MailSubscription::query()->updateOrCreate(
-            ['email' => $normalizedEmail],
-            [
-                'user_id' => $user?->id,
-                'wants_offers' => $wantsOffers,
-                'wants_updates' => $wantsUpdates,
-                'categories' => array_values($categories),
-                'consent_text' => $consentText,
-                'consent_given_at' => now(),
-                'consent_source' => $source,
-                'confirmed_at' => $alreadyProven ? now() : null,
-                'confirm_token' => $alreadyProven ? null : Str::random(48),
-                'unsubscribe_token' => $existingToken ?? Str::random(48),
-            ],
-        );
+        $wanted = [
+            'wants_offers' => $wantsOffers,
+            'wants_updates' => $wantsUpdates,
+            'categories' => array_values($categories),
+            'consent_text' => $consentText,
+            'consent_given_at' => now(),
+            'consent_source' => $source,
+        ];
+
+        try {
+            return DB::transaction(fn () => $this->write($normalizedEmail, $wanted, $owner));
+        } catch (UniqueConstraintViolationException) {
+            // Twee bezoekers die op hetzelfde moment hetzelfde verse adres
+            // invoeren, lezen allebei "bestaat nog niet" en proberen allebei te
+            // inserten. De unieke index laat er één door; de ander zou een 500
+            // op een publiek formulier geven. Eén herkansing is genoeg: de rij
+            // bestaat nu wel, dus de tweede poging werkt hem gewoon bij.
+            return DB::transaction(fn () => $this->write($normalizedEmail, $wanted, $owner));
+        }
     }
 
     public function confirm(string $token): ?MailSubscription
     {
         $sub = MailSubscription::query()->where('confirm_token', $token)->first();
 
-        $sub?->forceFill(['confirmed_at' => now(), 'confirm_token' => null])->save();
+        if ($sub === null) {
+            return null;
+        }
+
+        // De klik komt uit de mailbox zelf en is daarmee het bewijs dat een
+        // geparkeerde wijziging mocht. Het vak moet daarna leeg, anders past een
+        // volgende bevestiging diezelfde wijziging nog een keer toe.
+        $pending = is_array($sub->pending_changes) ? $sub->pending_changes : [];
+
+        $sub->forceFill(array_merge($pending, [
+            'confirmed_at' => now(),
+            'confirm_token' => null,
+            'pending_changes' => null,
+        ]))->save();
 
         return $sub;
     }
 
-    /** @param  'offers'|'updates'|null  $what */
+    /** @param  string|null  $what  'offers', 'updates', of null voor alles. */
     public function unsubscribe(string $token, ?string $what = null): ?MailSubscription
     {
+        // Een onbekende waarde komt uit een afmeldlink die wij zelf opstellen,
+        // dus is het een fout van ons en geen keuze van de bezoeker. Stil alles
+        // afmelden zou die fout verbergen én meer uitzetten dan gevraagd, en dat
+        // merk je pas als iemand klaagt dat hij niets meer krijgt. Liever hard
+        // stuk in de tests dan stil verkeerd in productie; de route die dit
+        // aanroept hoort de parameter dus zelf te valideren.
+        if ($what !== null && ! in_array($what, ['offers', 'updates'], true)) {
+            throw new InvalidArgumentException("Onbekend afmelddoel: {$what}");
+        }
+
         $sub = MailSubscription::query()->where('unsubscribe_token', $token)->first();
 
+        // Omgekeerd te lezen: het gevraagde doel wordt altijd `false`, en het
+        // andere doel houdt zijn huidige waarde doordat de vergelijking daar
+        // waar is. Bij `$what === null` zijn beide vergelijkingen onwaar en
+        // gaan dus beide uit. De `&&`-bewaking is er zodat afmelden nooit iets
+        // aanzet dat al uit stond — mail sturen ná een afmelding is precies wat
+        // niet mag.
         $sub?->forceFill([
             'wants_offers' => $what === 'updates' && $sub->wants_offers,
             'wants_updates' => $what === 'offers' && $sub->wants_updates,
@@ -86,5 +142,50 @@ class MailSubscriptionService
             ->whereNull('confirmed_at')
             ->where('created_at', '<', now()->subDays($days))
             ->delete();
+    }
+
+    /**
+     * Schrijft de vier gevallen weg. `$owner` is alleen gevuld als de aanroeper
+     * bewezen eigenaar van dit adres is.
+     *
+     * @param  array<string, mixed>  $wanted
+     */
+    private function write(string $email, array $wanted, ?User $owner): MailSubscription
+    {
+        $sub = MailSubscription::query()->where('email', $email)->first();
+
+        // Geval 4.
+        if ($sub !== null && $sub->confirmed_at !== null && $owner === null) {
+            $sub->forceFill([
+                'pending_changes' => $wanted,
+                'confirm_token' => Str::random(48),
+            ])->save();
+
+            return $sub;
+        }
+
+        // Gevallen 1 tot en met 3.
+        $sub ??= new MailSubscription;
+
+        $sub->forceFill(array_merge($wanted, [
+            'email' => $email,
+            // Dit token zit al in elke verstuurde mail; een nieuw token zou de
+            // afmeldlink daarin met terugwerkende kracht breken.
+            'unsubscribe_token' => $sub->unsubscribe_token ?? Str::random(48),
+            // Een bestaande koppeling met een account blijft staan: die draagt
+            // de wisverplichting uit taak 1. Er komt er alleen een bij als het
+            // adres bewezen van dat account is.
+            'user_id' => $owner?->id ?? $sub->user_id,
+            'confirmed_at' => $owner !== null ? now() : $sub->confirmed_at,
+            'confirm_token' => $owner !== null ? null : Str::random(48),
+            'pending_changes' => null,
+        ]))->save();
+
+        return $sub;
+    }
+
+    private static function normalise(string $email): string
+    {
+        return Str::lower(trim($email));
     }
 }
