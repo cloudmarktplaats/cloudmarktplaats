@@ -28,7 +28,10 @@ class IntegrityReport
     /** Hoeveel bytes van de staart van de log we lezen. */
     private const LOG_TAIL_BYTES = 400_000;
 
-    public function __construct(private SecurityAdvisories $advisories) {}
+    public function __construct(
+        private SecurityAdvisories $advisories,
+        private UnansweredIssues $issues,
+    ) {}
 
     /** @return array{cijfers: array<string, int>, fouten: list<array{aantal: int, regel: string}>, signalen: list<string>} */
     public function build(Carbon $now): array
@@ -154,6 +157,26 @@ class IntegrityReport
         // het antwoord kan "onbekend" zijn, en dat is geen getal. Een nul die
         // in werkelijkheid "de controle is stuk" betekent, is het gevaarlijkste
         // antwoord dat deze mail kan geven.
+        // Rob Turks melding bleef 29 dagen liggen en hij zegde er zijn account
+        // om op, met als zwaarste verwijt dat er nergens stond dat hier 1
+        // onbetaalde maintainer zit. Meldingen op het platform komen sinds
+        // 22-08 hier langs; issues niet, en dat was het gat waar hij in
+        // verdween. Dit is bewust voorraad en geen aanwas: antwoorden maakt het
+        // stil, en die knop ligt bij ons.
+        $onbeantwoord = $this->issues->find();
+        if ($onbeantwoord === null) {
+            $signalen[] = 'Kon GitHub niet bereiken, dus geen uitspraak over onbeantwoorde issues.';
+        } else {
+            foreach ($onbeantwoord as $issue) {
+                $signalen[] = sprintf(
+                    'Issue #%d ligt %d dagen zonder antwoord: %s',
+                    $issue['number'],
+                    $issue['days'],
+                    $issue['title'],
+                );
+            }
+        }
+
         $adviezen = config('cloudmarktplaats.ops.audit_check')
             ? $this->advisories->count()
             : 0;

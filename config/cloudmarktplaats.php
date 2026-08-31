@@ -94,6 +94,14 @@ return [
         // testsuite (zie phpunit.xml): het is een netwerkcall naar packagist,
         // en die hoort niet in een test die over meldingen of stiltes gaat.
         'audit_check' => env('OPS_AUDIT_CHECK', true),
+        // Onbeantwoorde GitHub-issues meedraaien. Uit in de testsuite (zie
+        // phpunit.xml): het is een netwerkcall naar github.com. De repo is
+        // publiek, dus dit werkt zonder token.
+        'issue_check' => env('OPS_ISSUE_CHECK', true),
+        'issue_repo' => env('OPS_ISSUE_REPO', 'cloudmarktplaats/cloudmarktplaats'),
+        'issue_maintainer' => env('OPS_ISSUE_MAINTAINER', 'NickAldewereld'),
+        // Hoeveel dagen een melding mag liggen voordat hij in de mail komt.
+        'issue_days' => env('OPS_ISSUE_DAYS', 3),
     ],
     'gamification' => [
         'starting_invite_credits' => 3,
