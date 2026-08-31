@@ -2,3 +2,6 @@ Sitemap: https://cloudmarktplaats.nl/sitemap.xml
 
 User-agent: *
 Disallow: /deal/
+# De schuine streep is bewust: de tokenpaden eronder (bevestigen, afmelden)
+# horen uit elke index, /nieuwsbrief zelf is de publieke aanmeldpagina.
+Disallow: /nieuwsbrief/

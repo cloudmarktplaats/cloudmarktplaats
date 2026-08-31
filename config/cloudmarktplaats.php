@@ -40,6 +40,11 @@ return [
         // Close registration once the first-100 founding cohort is full and
         // collect emails on a waitlist instead. Set false to keep signups open.
         'waitlist' => env('FEATURE_WAITLIST', true),
+        // Het publieke aanmeldformulier, de mailvoorkeuren in het profiel en de
+        // verzendcommando's. Staat uit tot de LinkedIn-poll over gevraagd/gezocht
+        // gesloten is: de tekst naast het vinkje belooft een mail die dan pas
+        // bestaat.
+        'mail_list' => env('FEATURE_MAIL_LIST', false),
     ],
     'photos' => [
         /*

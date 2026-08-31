@@ -6,6 +6,7 @@ namespace App\Services\Ops;
 
 use App\Models\Listing;
 use App\Models\ListingPhoto;
+use App\Models\MailSubscription;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
@@ -54,6 +55,20 @@ class IntegrityReport
             // liggen is het probleem, niet de melding zelf.
             'meldingen_open' => DB::table('reports')->where('status', 'open')->count(),
             'concepten_zonder_foto' => $this->stuckDrafts($since)->count(),
+            // Een getal, geen signaal. De lijst groeit langzaam en de voorraad
+            // daalt zelden, dus alarmeren zou hier hetzelfde worden als bij
+            // `concepten_zonder_foto`: elke ochtend dezelfde zin over dezelfde
+            // rijen, waarna een echte verandering in de ruis verdwijnt.
+            'nieuwsbrief_abonnees' => MailSubscription::query()->confirmed()->count(),
+            // Afmeldingen als aanwas over een week, niet als totaal: een totaal
+            // loopt alleen op en zegt over vandaag niets meer. Een week is
+            // precies één verzendcyclus (`mail:offers` draait wekelijks), dus
+            // de reactie op een editie past er nog helemaal in. Ook dit is een
+            // getal zonder drempel: bij deze lijstgrootte is elk percentage
+            // ruis, en een drempel die je nu verzint klopt straks niet meer.
+            'afmeldingen_afgelopen_week' => MailSubscription::query()
+                ->where('unsubscribed_at', '>=', $now->copy()->subWeek())
+                ->count(),
         ];
 
         $fouten = $this->errorsSince($since);

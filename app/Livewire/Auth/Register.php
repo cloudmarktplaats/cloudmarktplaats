@@ -105,6 +105,7 @@ class Register extends Component
                     'invite_credits' => $startingCredits,
                     'is_founding_member' => $foundingMember,
                 ]);
+
                 UserIdentity::create([
                     'user_id' => $u->id,
                     'provider' => 'password',

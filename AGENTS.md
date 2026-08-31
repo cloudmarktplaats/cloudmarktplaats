@@ -64,7 +64,28 @@ Omdat deployen een file-sync is, zegt git níét wat er draait. Wat hier staat
 is op `main` en nog niet op productie. Neem het mee met de volgende sync en
 haal het dan uit deze lijst.
 
-- *(leeg op 31-08-2026: `7767b83` is meegegaan met de fotobewerking-deploy)*
+De mailinglijst (`feature/mailinglijst`, 31-08-2026) staat klaar en heeft meer
+nodig dan een gewone sync:
+
+- **Vier migraties.** `create_mail_subscriptions`, `add_pending_changes`,
+  `add_unsubscribed_at` en `create_mail_editions`. Ze horen bij elkaar: de
+  laatste draagt de rem op de nieuwsbrief.
+- **`route:cache` moet mee**, want `routes/web.php` is gewijzigd (`/nieuwsbrief`
+  en vier tokenroutes). Zonder die stap geeft elke nieuwe route een 404. Zie de
+  aandachtspunten hierboven, inclusief het venster van twee seconden waarin
+  bezoekers een 500 krijgen.
+- **`db:seed --class=LegalDocumentSeeder`**, anders staat de nieuwe
+  privacytekst (nieuwsbrief, aanbodmail, bewaartermijn) er niet in terwijl de
+  code er wel naar handelt. **Let op: die seeder staat sinds 31-08 op `1.1.0`,
+  dus deze ronde vraagt élk lid opnieuw om akkoord** zodra het een advertentie
+  wil plaatsen. Dat is met opzet en het gebeurt maar 1 keer, zie hieronder.
+- **`docker/nginx/default.conf` is gewijzigd** (`~^/nieuwsbrief/` als
+  `[redacted]`, zodat tokens niet in het access-log komen). Die bind-mount is
+  een enkel *bestand*: `nginx -s reload` pakt de oude config, dus dit moet met
+  `up -d --force-recreate nginx`. De volledige uitleg staat hierboven bij de
+  aandachtspunten; controleer erna ín de container of de regel er echt staat.
+- Zet **`FEATURE_MAIL_LIST` niet aan** met deze deploy. Zie de reden verderop
+  onder "De mailinglijst".
 
 Kwaliteitspoorten vóór elke deploy, alle drie groen:
 
@@ -242,9 +263,32 @@ regels er in dezelfde PR uit.
   `/profile/verkopen`, mededeling op de advertentie). Ontwerp in
   `docs/superpowers/specs/2026-08-19-zakelijke-verkoper-design.md`. Het label is een
   feitelijke mededeling, **geen keurmerk** — het KvK-nummer wordt niet geverifieerd,
-  en afwezigheid van het label is evenmin een claim. **Nog open:** de ToS-tekst (die
-  triggert re-acceptatie voor álle leden, dus bundelen met ander ToS-werk) en de
-  btw-weergave.
+  en afwezigheid van het label is evenmin een claim.
+
+  **De ToS-tekst is geschreven op 31-08** en zit in artikel 6 van
+  `tos.nl.md` / `tos.en.md`, gebundeld met de privacywijziging in versie `1.1.0`.
+  Vastgelegd: de prijs die iemand invult is het bedrag dat de koper betaalt (btw dus
+  inbegrepen, geen apart vinkje), en een zakelijke verkoper toont bedrijfsnaam en
+  KvK maar geen adres, want de contact-relay blijft voor iedereen gelijk. Daarmee is
+  de btw-weergave uit de lijst "nog open" af.
+
+  **Waarom "wij verifiëren niet" mag, en tot wanneer.** De DSA legt platforms waar
+  consumenten met handelaren contracten sluiten een verificatieplicht op voor
+  handelaarsgegevens (artikel 30). Artikel 19 DSA stelt micro- en kleine
+  ondernemingen daarvan vrij, en daar valt dit platform onder. Dat is dus geen gat
+  dat we openlaten maar een positie die de wet vandaag toestaat. **Hij vervalt zodra
+  het platform die drempel voorbij groeit**; dan wordt artikel 6 van de ToS onwaar en
+  moet er echte verificatie onder. Niet juridisch getoetst; laat het nakijken vóór de
+  MSP-werving.
+
+  **Schuld met een naam: de aankondigingstermijn van 15 dagen.** Artikel 12 van de ToS
+  belooft zakelijke verkopers dat een wijziging van de voorwaarden minstens 15 dagen
+  van tevoren wordt gemeld (P2B-verordening 2019/1150, artikel 3). **Die code bestaat
+  niet.** Er is geen commando dat zakelijke verkopers mailt bij een versiebump. Vandaag
+  is dat onschadelijk, want op 31-08 stonden alle 296 leden op `private` en is er nul
+  zakelijke verkoper. **Dit moet er zijn vóór de eerste zakelijke verkoper zich
+  aanmeldt**, en dus zeker vóór de MSP-werving. Een belofte in een juridisch document
+  zonder code eronder is een schuld; deze staat hier zodat hij een naam heeft.
 - **DAC7**: er lopen geen betalingen over het platform, dus er valt niets te
   rapporteren. Volledige analyse in `docs/dac7-position.md`. Zakelijke verkopers
   veranderen daar niets aan.
@@ -359,6 +403,65 @@ Terugkerende mail loopt via `listings:remind-drafts` (dagelijks 10:00, één
 herinnering per concept via `draft_reminded_at`). Draai hem **altijd eerst met
 `--dry-run`**: rommelconcepten zijn niet automatisch te herkennen, daar hoort een
 mens naar te kijken. `--exclude=<user-id>` slaat iemand over.
+
+## De mailinglijst
+
+Ontwerp: `docs/superpowers/specs/2026-08-31-mailinglijst-design.md`. Wat hier
+staat volgt niet uit de code.
+
+**`confirmed_at` is het enige gezaghebbende veld.** Een rij kan tegelijk
+bevestigd zijn én een levend `confirm_token` dragen: dat is een wijziging die
+in `pending_changes` staat te wachten op de klik van de eigenaar. Lees
+`confirm_token !== null` dus nooit als "nog niet bevestigd"; filter altijd op
+`confirmed_at` (de scope `confirmed()`). Wie dat verwart, houdt mail tegen bij
+iemand die er gewoon op staat, of stuurt hem juist naar iemand die nooit
+klikte.
+
+**Wie zich afmeldde, blijft afgemeld.** Een bevestigde rij met een gevulde
+`unsubscribed_at` wordt door `subscribe()` niet meer aangeraakt: geen
+geparkeerde wijziging, geen vers token, dus ook geen bevestigingsmail. Anders
+kan een vreemde die het adres intikt ons laten mailen naar iemand van wie is
+vastgelegd dat hij nee zei. Terugkomen kan langs de herstelknop of via het
+profiel van een geverifieerd lid. Bouw geen pad dat daar omheen gaat.
+
+**De rem op de nieuwsbrief staat in `mail_editions`, niet op de abonneerij.**
+Eerder las hij `max(updates_sent_at)` over de abonnees, en die rijen verdwijnen
+hard: `AccountRemovalService` doet `forceDelete()` en de FK cascadeert. Eén lid
+dat zijn account wiste, wiste zo de stempel van de hele nieuwsbrief mee en
+zette de rem weer open. `updates_sent_at` blijft "wanneer kreeg deze persoon
+iets", maar is niet meer de bron van de rem. Elke volgende
+verzendbeperking hoort in een eigen tabel te staan, niet in een kolom die met
+een gebruiker mee kan verdwijnen.
+
+**`offers_sent_at` is het ijkpunt van het venster, niet alleen een
+ontvangstbewijs.** `mail:offers` rekent vanaf `offers_sent_at ?? created_at`.
+Geeft iemand opnieuw toestemming voor aanbod (herstelknop of profiel), dan
+wordt dat ijkpunt ververst, anders komt de hele achterstand in 1 mail, en dat
+is een catalogus in plaats van een nieuwsbericht. Alleen bij de overgang van
+uit naar aan: verversen bij elke wijziging laat een week stil verdwijnen.
+
+**`features.mail_list` (`FEATURE_MAIL_LIST`) staat uit tot de LinkedIn-poll
+over gevraagd/gezocht gesloten is.** De tekst naast het vinkje belooft mail
+over nieuw aanbod in je categorieën, en dat *is* de zoekalert waar die poll
+over gaat; er staat publiek dat eerst de beste van de 2 gebouwd wordt. De vlag
+stopt het formulier, het profielscherm en beide verzendcommando's. Afmelden
+blijft er bewust buiten: art. 11.7 lid 4 Tw geldt ook voor mail die al
+verstuurd is toen de vlag nog aan stond.
+
+**De versiebump van de privacyverklaring is bewust nog niet gedaan.** De
+nieuwe tekst gaat mee als inhoud van de bestaande versie 1.0.0: de seeder
+ververst de markdown en laat `published_at` staan, dus er komt geen nieuw
+akkoordverzoek. Een echte bump (1.0.0 → 1.1.0, via het Filament-paneel) zet bij
+elk lid wél zo'n verzoek klaar, en dat wil je 1 keer doen. Hij hoort daarom
+gebundeld te worden met de nog openstaande ToS-tekst voor zakelijke verkopers.
+Dat is Nicks beslissing, niet die van de volgende bouwer.
+
+**`OAuthController` vuurt sinds deze branch een `Verified`-event** dat hij
+eerder niet vuurde: hij zette `markEmailAsVerified()` en zweeg, dus de rest van
+de app hoorde nooit dat het adres bewezen was. Let op wat dat betekent voor een
+toekomstige listener: een listener die aanneemt "`Verified` betekent dat iemand
+op een link in zijn mail klikte" heeft het bij OAuth mis. Daar komt het bewijs
+van de identiteitsprovider, zonder klik van de gebruiker in onze mail.
 
 ## Waar de strategie ligt
 

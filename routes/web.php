@@ -6,6 +6,7 @@ use App\Http\Controllers\HealthController;
 use App\Http\Controllers\LegalController;
 use App\Http\Controllers\Listings\ReportController;
 use App\Http\Controllers\Listings\SearchController;
+use App\Http\Controllers\MailSubscriptionController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Middleware\SetLocale;
 use App\Livewire\Auth\ForgotPassword;
@@ -23,9 +24,11 @@ use App\Livewire\Listings\Browse as ListingsBrowse;
 use App\Livewire\Listings\Detail as ListingDetail;
 use App\Livewire\Listings\Mine as ListingsMine;
 use App\Livewire\Listings\Wizard as ListingWizard;
+use App\Livewire\Mail\Subscribe as MailSubscribe;
 use App\Livewire\Profile\Deals as ProfileDeals;
 use App\Livewire\Profile\DeleteAccount;
 use App\Livewire\Profile\Invites as ProfileInvites;
+use App\Livewire\Profile\MailPreferences;
 use App\Livewire\Profile\Security as ProfileSecurity;
 use App\Livewire\Profile\SellerType as ProfileSellerType;
 use App\Livewire\Profile\Stats as ProfileStats;
@@ -154,6 +157,17 @@ Route::get('/profile/verkopen', ProfileSellerType::class)
     ->middleware('auth')
     ->name('profile.seller-type');
 
+// Mailvoorkeuren voor leden met een account. `verified` naast `auth`: de
+// service zet een vinkje hier alleen meteen op bevestigd als het adres van dit
+// account geverifieerd is (dat bewijst de mailbox), dus zonder deze poort zou
+// een lid hier voorkeuren instellen die alsnog op de dubbele opt-in wachten.
+// Dezelfde vlag als het publieke aanmeldformulier (mail_list), gecontroleerd
+// in boot() van het component en niet hier in de route — zie MailPreferences
+// voor de reden.
+Route::get('/profile/mail', MailPreferences::class)
+    ->middleware(['auth', 'verified'])
+    ->name('profile.mail');
+
 Route::get('/profile/stats', ProfileStats::class)
     ->middleware('auth')
     ->name('profile.stats');
@@ -190,6 +204,46 @@ Route::get('/legal/accept', LegalAccept::class)
 Route::get('/legal/{type}', [LegalController::class, 'show'])
     ->where('type', 'tos|privacy')
     ->name('legal.show');
+
+// Het aanmeldformulier zelf. De 404 bij een uitgezette vlag komt uit boot()
+// van het component en niet uit de route: vervolgacties gaan naar
+// /livewire/update en komen hier dus niet langs.
+Route::get('/nieuwsbrief', MailSubscribe::class)->name('mail.subscribe');
+
+// Bevestigen en afmelden gaan zonder login: art. 11.7 lid 4 Tw eist een
+// makkelijke afmeldmogelijkheid, en abonnees zonder account hebben geen login.
+//
+// Bevestigen kost twee stappen: de GET toont alleen wat er staat te gebeuren,
+// pas de POST legt het bewijs vast. `confirmed_at` is het bewijsstuk onder
+// art. 7 lid 1 AVG, en een linkscanner of een prefetch van een mailclient mag
+// dat bewijs niet kunnen fabriceren. Afmelden blijft één GET: dat valt de
+// veilige kant op en is bovendien wat elke mailclient verwacht.
+//
+// De tokens zijn 48 alfanumerieke tekens; dezelfde constraint als bij
+// `/deal/{token}` houdt ruimte voor een verminkte plak-actie zonder dat elk
+// willekeurig pad de controller en de database in loopt.
+Route::get('/nieuwsbrief/bevestigen/{token}', [MailSubscriptionController::class, 'confirm'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
+    ->name('mail.confirm');
+Route::post('/nieuwsbrief/bevestigen/{token}', [MailSubscriptionController::class, 'applyConfirmation'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
+    ->name('mail.confirm.apply');
+Route::get('/nieuwsbrief/afmelden/{token}', [MailSubscriptionController::class, 'unsubscribe'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
+    ->name('mail.unsubscribe');
+
+// Dezelfde afmelding, maar dan zoals de mailclient hem doet. De header
+// `List-Unsubscribe-Post: List-Unsubscribe=One-Click` (RFC 8058) belooft dat
+// een POST op deze URL werkt; bestond alleen de GET, dan gaf Gmails eigen
+// afmeldknop een 405 en mislukte het afmelden stil. De vrijstelling van de
+// CSRF-controle staat in `bootstrap/app.php` en hoort erbij: een mailclient
+// heeft geen sessie en dus geen token.
+Route::post('/nieuwsbrief/afmelden/{token}', [MailSubscriptionController::class, 'unsubscribe'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
+    ->name('mail.unsubscribe.oneclick');
+Route::post('/nieuwsbrief/opnieuw/{token}', [MailSubscriptionController::class, 'resubscribe'])
+    ->where('token', '[A-Za-z0-9]{8,64}')
+    ->name('mail.resubscribe');
 
 // Listing wizard — auth + verified + legal guard. Drafts are persisted
 // after every step so users can resume via /listings/{ulid}/edit. The

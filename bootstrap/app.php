@@ -29,7 +29,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // The SIWE verify endpoint is called from a wallet adapter (MetaMask /
         // WalletConnect) which doesn't carry a Laravel session token. Replay
         // protection is provided by the single-use nonce in `auth_nonces`.
-        $middleware->validateCsrfTokens(except: ['/auth/web3/verify']);
+        //
+        // Afmelden in 1 klik (RFC 8058) komt als POST binnen vanuit Gmail of
+        // Yahoo zelf, buiten elke sessie om. Een CSRF-token bestaat daar niet,
+        // dus de standaard is hier een gegarandeerde TokenMismatch. Het risico
+        // dat de controle afdekt is hier bovendien nagenoeg leeg: het token in
+        // de URL is het geheim, en het ergste wat een vervalst verzoek bereikt
+        // is dat iemand géén reclame meer krijgt. Het herstelscherm biedt de
+        // keuze terug aan.
+        $middleware->validateCsrfTokens(except: [
+            '/auth/web3/verify',
+            'nieuwsbrief/afmelden/*',
+        ]);
 
         // Production sits behind a Caddy reverse proxy on a separate host;
         // trust X-Forwarded-* so request scheme/host/IP reflect the public
@@ -71,6 +82,18 @@ return Application::configure(basePath: dirname(__DIR__))
         // voordat er een dag overheen gaat. Zie IntegrityReport: dit rapport
         // telt ook wat er níet gebeurde, want daar zat de fotobug.
         $schedule->command('platform:daily-check')->dailyAt('07:30');
+
+        // De wekelijkse aanbodmail. Zaterdagochtend, want dat is wanneer een
+        // homelab-bouwer tijd heeft om ergens iets op te halen. Staat er niets
+        // nieuws in iemands categorieen, dan verstuurt het commando niets: geen
+        // nieuws is geen mail. De vlag `mail_list` is de noodrem.
+        $schedule->command('mail:offers')->weeklyOn(6, '09:00');
+
+        // Onbevestigde aanmeldingen zijn geen toestemming, dus die blijven niet
+        // staan. Nachtelijk, want niemand hoeft dit te zien gebeuren, en ruim
+        // voor de dagelijkse check van 07:30 zodat het getal in die mail de
+        // stand na het opruimen is.
+        $schedule->command('mail:purge-unconfirmed')->dailyAt('03:30');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
