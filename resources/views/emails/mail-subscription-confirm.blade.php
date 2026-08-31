@@ -5,6 +5,20 @@
     // misleidend: de ontvanger staat er al op.
     $wijziging = $isWijziging && is_array($subscription->pending_changes) ? $subscription->pending_changes : null;
     $zin = $wijziging['consent_text'] ?? $subscription->consent_text;
+
+    // In de wijzigingsgedaante staat de rij nog op de oude stand, dus wat er is
+    // gevraagd komt uit het geparkeerde vak; in de andere gedaante uit de rij.
+    $keuze = $wijziging ?? [
+        'wants_offers' => $subscription->wants_offers,
+        'wants_updates' => $subscription->wants_updates,
+        'categories' => $subscription->categories,
+    ];
+
+    // De aanvrager zag labels op het scherm, dus die horen hier ook te staan.
+    // Een slug die niet meer in de lijst voorkomt, valt terug op zichzelf.
+    $labels = \App\Livewire\Mail\Subscribe::categoryLabels();
+    $gekozen = array_map(fn ($slug) => $labels[$slug] ?? $slug, $keuze['categories'] ?? []);
+
     $url = route('mail.confirm', $subscription->confirm_token);
     $afmeldUrl = route('mail.unsubscribe', $subscription->unsubscribe_token);
 @endphp
@@ -31,15 +45,6 @@
                     Iemand heeft een wijziging aangevraagd voor de mail die naar dit adres gaat.
                     Was jij dat niet, sluit deze mail dan gewoon. Doe je niets, dan blijft alles zoals het is.
                 </p>
-
-                <p style="margin:0 0 8px;">Dit is wat er is aangevraagd:</p>
-                <ul style="margin:0 0 16px;padding-left:20px;">
-                    <li>{{ ($wijziging['wants_offers'] ?? false) ? 'Wel nieuw aanbod' : 'Geen nieuw aanbod' }}</li>
-                    <li>{{ ($wijziging['wants_updates'] ?? false) ? 'Wel updates' : 'Geen updates' }}</li>
-                    @if (! empty($wijziging['categories']))
-                        <li>Categorieen: {{ implode(', ', $wijziging['categories']) }}</li>
-                    @endif
-                </ul>
             @else
                 <p style="margin:0 0 16px;">
                     Je hebt je aangemeld voor mail van Cloudmarktplaats. Nog 1 klik en het staat vast.
@@ -47,8 +52,17 @@
                 </p>
             @endif
 
+            <p style="margin:0 0 8px;">{{ $isWijziging ? 'Dit is wat er is aangevraagd:' : 'Dit heb je aangevinkt:' }}</p>
+            <ul style="margin:0 0 16px;padding-left:20px;">
+                <li>{{ ($keuze['wants_offers'] ?? false) ? 'Wel nieuw aanbod' : 'Geen nieuw aanbod' }}</li>
+                <li>{{ ($keuze['wants_updates'] ?? false) ? 'Wel updates' : 'Geen updates' }}</li>
+                @if ($gekozen !== [])
+                    <li>Categorieen: {{ implode(', ', $gekozen) }}</li>
+                @endif
+            </ul>
+
             <p style="margin:0 0 16px;font-size:13px;color:#5C6166;">
-                Dit is de zin waarop is aangeklikt:<br>
+                {{ $isWijziging ? 'Dit is de zin die de aanvrager heeft aangevinkt:' : 'Dit is de zin die je hebt aangevinkt:' }}<br>
                 {{ $zin }}
             </p>
 
@@ -64,9 +78,19 @@
             </p>
         </div>
 
+        {{-- Alleen in de wijzigingsgedaante staat het adres echt op de lijst. Bij
+             een onbevestigde rij zou die zin de dubbele opt-in ondergraven: de
+             ontvanger leest dan dat hij er al op staat en klikt de mail weg. --}}
         <p style="margin:24px 0 0;font-size:13px;color:#5C6166;">
-            Dit adres staat op de mailinglijst van Cloudmarktplaats.
-            <a href="{{ $afmeldUrl }}" style="color:#D9480F;">Afmelden</a> kan altijd, in 1 klik.
+            @if ($isWijziging)
+                Dit adres staat op de mailinglijst van Cloudmarktplaats.
+                <a href="{{ $afmeldUrl }}" style="color:#D9480F;">Afmelden</a> kan altijd, in 1 klik.
+            @else
+                Je krijgt deze mail omdat dit adres is opgegeven voor de mailinglijst van
+                Cloudmarktplaats. Zolang je niet op de knop klikt, staat het er niet op.
+                Wil je zeker weten dat je niets krijgt?
+                <a href="{{ $afmeldUrl }}" style="color:#D9480F;">Meld dit adres dan af</a>.
+            @endif
         </p>
     </div>
 </body>

@@ -6,10 +6,13 @@ namespace App\Mail;
 
 use App\Models\MailSubscription;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Mail\Factory;
+use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\SentMessage;
 use Illuminate\Queue\SerializesModels;
 
 /** De enige mail die naar een onbevestigd adres gaat. */
@@ -18,6 +21,25 @@ class MailSubscriptionConfirmMail extends Mailable implements ShouldQueue
     use Queueable, SerializesModels;
 
     public function __construct(public MailSubscription $subscription) {}
+
+    /**
+     * Deze mail staat in de wachtrij en `SerializesModels` haalt de rij pas bij
+     * het verzenden opnieuw op. Is er in de tussentijd op de link geklikt, dan
+     * is `confirm_token` leeg en bestaat de link waar deze mail om draait niet
+     * meer: renderen klapt dan op een ontbrekende routeparameter en de job
+     * belandt in `failed_jobs`. De mail is op dat moment overbodig, dus stil
+     * niets doen is het juiste gedrag, en niet een fout die iemand moet opruimen.
+     *
+     * @param  Factory|Mailer  $mailer
+     */
+    public function send($mailer): ?SentMessage
+    {
+        if ($this->subscription->confirm_token === null) {
+            return null;
+        }
+
+        return parent::send($mailer);
+    }
 
     public function envelope(): Envelope
     {

@@ -13,6 +13,12 @@
         </p>
 
         <form wire:submit="save" class="mt-8 space-y-6">
+            {{-- Honeypot: hidden from humans, irresistible to bots. --}}
+            <div class="hidden" aria-hidden="true">
+                <label for="ml-website">Website (niet invullen)</label>
+                <input type="text" id="ml-website" wire:model="website" tabindex="-1" autocomplete="off">
+            </div>
+
             <div>
                 <label for="ml-email" class="block text-sm font-medium text-cmp-text">{{ __('Je e-mailadres') }}</label>
                 <input
@@ -51,22 +57,9 @@
             </fieldset>
 
             @if ($wants_offers)
-                @php
-                    $categorieLabels = [
-                        'compute' => __('Compute'),
-                        'networking' => __('Networking'),
-                        'servers' => __('Server hardware'),
-                        'storage' => __('Storage'),
-                        'av' => __('Audio/Video pro'),
-                        'power' => __('Power'),
-                        'kabels' => __('Kabels & connectoren'),
-                        'fabrication' => __('3D printers & CNC'),
-                        'books' => __('Boeken & documentatie'),
-                        'licenses' => __('Software licenties'),
-                        'meet' => __('Meetapparatuur'),
-                        'misc' => __('Overig'),
-                    ];
-                @endphp
+                {{-- Dezelfde labels als in de bevestigingsmail, zodat de
+                     ontvanger daar terugleest wat hij hier heeft aangevinkt. --}}
+                @php $categorieLabels = \App\Livewire\Mail\Subscribe::categoryLabels(); @endphp
 
                 <fieldset>
                     <legend class="text-sm font-medium text-cmp-text">{{ __('Over welk aanbod?') }}</legend>
@@ -79,6 +72,13 @@
                         @endforeach
                     </div>
                     @error('categories') <p class="mt-2 text-sm text-cmp-amber">{{ $message }}</p> @enderror
+
+                    {{-- Een waarde die niet in de lijst staat geeft een fout op
+                         `categories.0`, niet op `categories`. Zonder deze regel
+                         weigert het formulier stil en ziet de bezoeker niets. --}}
+                    @foreach ($errors->get('categories.*') as $categorieFouten)
+                        <p class="mt-2 text-sm text-cmp-amber">{{ $categorieFouten[0] }}</p>
+                    @endforeach
                 </fieldset>
             @endif
 
