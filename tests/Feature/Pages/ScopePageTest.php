@@ -14,7 +14,7 @@ it('serves the scope page with the rule, the tests and the edge cases', function
         ->assertSee('Doeltest')
         ->assertSee('Ruistest')
         ->assertSee('Losse desktop-CPU')
-        ->assertSee('Spelcomputer of controller')
+        ->assertSee('Spelcomputer of gamecontroller')
         ->assertSee('Data eraf, altijd.');
 });
 

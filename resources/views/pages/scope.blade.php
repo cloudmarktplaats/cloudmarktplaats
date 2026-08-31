@@ -35,7 +35,7 @@
         [true,  __('Kavel: "doos met SFP\'s, doe een bod"'), __('Aangemoedigd. Dit is de makkelijkste manier om te beginnen.')],
         [true,  __('Flipper Zero, RF- en pentest-hardware'), __('Legaal bezit, lab-doel. Geen gebruiksinstructies in de advertentie.')],
         [false, __('Losse kabel van twee euro'), __('Ruistest. Bundel ze tot een kavel, dan mag het wel.')],
-        [false, __('Spelcomputer of controller'), __('Consumeren, niet bouwen. Ook als je er Linux op draaide.')],
+        [false, __('Spelcomputer of gamecontroller'), __('Consumeren, niet bouwen. Ook als je er Linux op draaide.')],
         [false, __('Scart-, tulp- en huis-tuin-en-keukenkabels'), __('Consumentenelektronica zonder lab-toepassing.')],
         [false, __('De modem van je provider'), __('Die is niet van jou om door te verkopen.')],
     ];

@@ -42,7 +42,7 @@ minder dan dat het platform leeg blijft.
 
 ## Wat er niet op mag
 
-- **Consumentenelektronica zonder lab-toepassing.** Spelcomputers en controllers,
+- **Consumentenelektronica zonder lab-toepassing.** Spelcomputers en gamecontrollers,
   telefoons, tablets, smart-tv's, huishoudelijke apparatuur, scart- en tulpkabels.
 - **Provider-apparatuur die je niet mag doorverkopen** (de modem/router van je ISP).
 - **Apparatuur met data van anderen erop.** Zie de dataregel hieronder.
