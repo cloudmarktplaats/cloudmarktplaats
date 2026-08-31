@@ -64,28 +64,11 @@ Omdat deployen een file-sync is, zegt git níét wat er draait. Wat hier staat
 is op `main` en nog niet op productie. Neem het mee met de volgende sync en
 haal het dan uit deze lijst.
 
-De mailinglijst (`feature/mailinglijst`, 31-08-2026) staat klaar en heeft meer
-nodig dan een gewone sync:
-
-- **Vier migraties.** `create_mail_subscriptions`, `add_pending_changes`,
-  `add_unsubscribed_at` en `create_mail_editions`. Ze horen bij elkaar: de
-  laatste draagt de rem op de nieuwsbrief.
-- **`route:cache` moet mee**, want `routes/web.php` is gewijzigd (`/nieuwsbrief`
-  en vier tokenroutes). Zonder die stap geeft elke nieuwe route een 404. Zie de
-  aandachtspunten hierboven, inclusief het venster van twee seconden waarin
-  bezoekers een 500 krijgen.
-- **`db:seed --class=LegalDocumentSeeder`**, anders staat de nieuwe
-  privacytekst (nieuwsbrief, aanbodmail, bewaartermijn) er niet in terwijl de
-  code er wel naar handelt. **Let op: die seeder staat sinds 31-08 op `1.1.0`,
-  dus deze ronde vraagt élk lid opnieuw om akkoord** zodra het een advertentie
-  wil plaatsen. Dat is met opzet en het gebeurt maar 1 keer, zie hieronder.
-- **`docker/nginx/default.conf` is gewijzigd** (`~^/nieuwsbrief/` als
-  `[redacted]`, zodat tokens niet in het access-log komen). Die bind-mount is
-  een enkel *bestand*: `nginx -s reload` pakt de oude config, dus dit moet met
-  `up -d --force-recreate nginx`. De volledige uitleg staat hierboven bij de
-  aandachtspunten; controleer erna ín de container of de regel er echt staat.
-- Zet **`FEATURE_MAIL_LIST` niet aan** met deze deploy. Zie de reden verderop
-  onder "De mailinglijst".
+*(leeg op 31-08-2026: de mailinglijst is gedeployd, inclusief de vier
+migraties, `route:cache`, `db:seed --class=LegalDocumentSeeder` en de
+hercreatie van nginx. Geverifieerd ín de container dat de redactieregel er
+staat en dat het access-log `/nieuwsbrief/[redacted]` schrijft.
+`FEATURE_MAIL_LIST` staat nog uit.)*
 
 Kwaliteitspoorten vóór elke deploy, alle drie groen:
 
