@@ -300,6 +300,25 @@ dan de code die hem waarmaakt — of haal de belofte eruit.**
   knop "Offline halen", met `archived → draft` als weg terug. Terug naar `draft`
   en niet naar `published`, zodat moderatie bindend blijft.
 
+- **Foto's ordenen en verwijderen (31-08).** De wizard kende alleen toevoegen, dus
+  een verkeerd gekozen foto kostte je de hele advertentie. Ramon Fincken meldde
+  dat. Nu zit het in `ListingPhotoManager`. Twee dingen die je moet weten voor je
+  eraan zit:
+
+  **`(listing_id, position)` is uniek.** Twee foto's kunnen dus niet even tegelijk
+  dezelfde plek dragen, en een rechttoe rechtaan omwisseling klapt op de
+  constraint. De ruil loopt daarom via positie 0: de kolom is een unsigned
+  tinyint en posities beginnen bij 1, dus 0 is de enige veilige tussenstap.
+
+  **Na verwijderen worden de gaten gesloten.** `submit()` telt de volgende upload
+  verder vanaf `max(position)`, dus een gat in de nummering laat een nieuwe foto
+  op de verkeerde plek landen.
+
+  De laatste foto van een **gepubliceerde** advertentie blijft staan, met een
+  melding die naar "Offline halen" wijst. Een fotoloze advertentie die live is,
+  is precies de fotobug die in juli zes dagen onzichtbaar bleef. Bij een concept
+  mag het wel.
+
 - **`Wizard::saveDraft()` degradeerde stilletjes** — opgelost 22-08. De
   step-1-payload bevatte `'state' => 'draft'` en ging via `fill()->save()`, dus
   buiten de state machine om: wie een *gepubliceerde* advertentie ging bewerken
