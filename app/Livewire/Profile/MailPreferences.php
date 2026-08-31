@@ -77,7 +77,7 @@ class MailPreferences extends Component
             'categories.*' => ['string', Rule::in(Subscribe::CATEGORIES)],
         ], [
             'categories.required' => __('Kies minstens 1 categorie.'),
-            'categories.*.in' => __('Kies alleen categorieen uit de lijst.'),
+            'categories.*.in' => __('Kies alleen categorieën uit de lijst.'),
         ]);
 
         // Geen aanbodmail, dan zeggen die categorieen niets meer. Laten staan

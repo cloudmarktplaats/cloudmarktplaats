@@ -88,6 +88,8 @@
             Is er niets nieuws, dan sturen we niets.
             <a href="{{ $afmeldUrl }}" style="color:#D9480F;">Afmelden</a> kan altijd, in 1 klik.
         </p>
+
+        @include('emails.partials.afzender')
     </div>
 </body>
 </html>

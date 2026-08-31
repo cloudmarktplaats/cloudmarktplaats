@@ -101,7 +101,7 @@ it('refuses a category that is not on the list and says so on screen', function 
         ->set('categories', ['gratis-geld'])
         ->call('save')
         ->assertHasErrors('categories.0')
-        ->assertSee('Kies alleen categorieen uit de lijst.');
+        ->assertSee('Kies alleen categorieën uit de lijst.');
 
     expect(MailSubscription::query()->count())->toBe(0);
     Mail::assertNothingQueued();
@@ -221,7 +221,7 @@ it('mails a change request instead of a signup when a change is parked', functio
         $mail->assertSeeInHtml('Doe je niets, dan blijft alles zoals het is.');
         // De aanvrager zag labels op het scherm, dus die horen ook in de mail.
         $mail->assertSeeInHtml('Server hardware');
-        $mail->assertDontSeeInHtml('Categorieen: servers');
+        $mail->assertDontSeeInHtml('Categorieën: servers');
         // Deze gedaante bestaat juist voor iemand die zelf niets heeft aangeklikt.
         $mail->assertSeeInHtml('Dit is de zin die de aanvrager heeft aangevinkt:');
 
@@ -261,4 +261,130 @@ it('does not claim a fresh address is already on the list', function () {
 
         return true;
     });
+});
+
+/*
+ * Een adres dat zich heeft afgemeld levert geen bevestigingsmail meer op (zie
+ * MailSubscriptionServiceTest). Het scherm erna moet dan wél hetzelfde blijven:
+ * een afwijkende melding is een orakel waarmee een vreemde kan uitlezen of een
+ * adres ooit op de lijst stond en zich afmeldde, en dat is precies het gegeven
+ * dat we van hem afschermen. Hij krijgt dus hetzelfde beeld als bij een vers
+ * adres, net zoals de honeypot en de tijdklem dat doen.
+ */
+it('shows the same screen for an address that unsubscribed as for a fresh one', function () {
+    MailSubscription::factory()->create([
+        'email' => 'stil@example.test',
+        'confirmed_at' => now()->subWeek(),
+        'confirm_token' => null,
+        'wants_offers' => false,
+        'wants_updates' => false,
+        'unsubscribed_at' => now()->subDay(),
+    ]);
+
+    $afgemeld = subscribeForm()
+        ->set('email', 'stil@example.test')
+        ->set('wants_updates', true)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $vers = subscribeForm()
+        ->set('email', 'vers@example.test')
+        ->set('wants_updates', true)
+        ->call('save')
+        ->assertHasNoErrors();
+
+    // `wire:id` is per component-instantie uniek en zegt niets over wat de
+    // bezoeker leest; de rest van het beeld moet letterlijk gelijk zijn.
+    $zonderId = fn (string $html) => (string) preg_replace('/wire:id="[^"]+"/', '', $html);
+
+    expect($afgemeld->get('done'))->toBeTrue()
+        ->and($zonderId($afgemeld->html()))->toBe($zonderId($vers->html()));
+});
+
+/*
+ * En dat gedeelde scherm mag niets beloven dat niet komt. Voor een afgemeld
+ * adres wordt er geen link verstuurd, dus de tekst mag er niet 1 aankondigen
+ * als vaststaand feit.
+ */
+it('does not promise a link it may not have sent', function () {
+    $scherm = subscribeForm()
+        ->set('email', 'belofte@example.test')
+        ->set('wants_updates', true)
+        ->call('save')
+        ->html();
+
+    expect($scherm)->not->toContain('Er staat een link klaar.');
+});
+
+/*
+ * Ook de bevestigingsmail is een verzonden mail, dus ook daar hoort de afzender
+ * met adres en KvK-nummer in te staan (art. 11.7 lid 4 Tw, art. 3:15d BW).
+ */
+it('names the sender with address and chamber of commerce number', function () {
+    subscribeForm()
+        ->set('email', 'afzender@example.test')
+        ->set('wants_updates', true)
+        ->call('save');
+
+    Mail::assertQueued(MailSubscriptionConfirmMail::class, function (MailSubscriptionConfirmMail $mail) {
+        $mail->assertSeeInHtml('Aldewereld Consultancy');
+        $mail->assertSeeInHtml('Nieuwe Hemweg 26');
+        $mail->assertSeeInHtml('1013 CX Amsterdam');
+        $mail->assertSeeInHtml('61862533');
+
+        return true;
+    });
+});
+
+/*
+ * De minor uit de eindreview: het ontwerp zegt "elke verzonden mail" draagt de
+ * List-Unsubscribe-header, zodat de afmeldknop in Gmail en Thunderbird werkt.
+ * De bevestigingsmail had alleen de link in de body. RFC 8058 belooft met
+ * List-Unsubscribe-Post dat de POST-route bestaat; die is er sinds taak 6.
+ */
+it('carries the unsubscribe headers on the confirmation mail', function () {
+    subscribeForm()
+        ->set('email', 'kopregel@example.test')
+        ->set('wants_updates', true)
+        ->call('save');
+
+    $sub = MailSubscription::query()->where('email', 'kopregel@example.test')->firstOrFail();
+
+    Mail::assertQueued(MailSubscriptionConfirmMail::class, function (MailSubscriptionConfirmMail $mail) use ($sub) {
+        $headers = $mail->headers()->text;
+
+        return $headers['List-Unsubscribe'] === '<'.route('mail.unsubscribe', $sub->unsubscribe_token).'>'
+            && $headers['List-Unsubscribe-Post'] === 'List-Unsubscribe=One-Click';
+    });
+});
+
+/*
+ * Dezelfde spelling als de rest van de site. De aanbodmail schrijft "categorieën"
+ * met trema (zie OfferDigestTest), het scherm ook; alleen de bevestigingsmail en
+ * de validatiemelding deden het niet. `Subscribe::CONSENT_OFFERS` blijft
+ * ongemoeid: dat is de woordelijk vastgelegde toestemmingstekst en dus
+ * bewijsmateriaal, geen kopij.
+ */
+it('writes categorieen with the trema in the confirmation mail', function () {
+    subscribeForm()
+        ->set('email', 'trema@example.test')
+        ->set('wants_offers', true)
+        ->set('categories', ['servers'])
+        ->call('save');
+
+    Mail::assertQueued(MailSubscriptionConfirmMail::class, function (MailSubscriptionConfirmMail $mail) {
+        $mail->assertSeeInHtml('Categorieën:');
+        $mail->assertDontSeeInHtml('Categorieen:');
+
+        return true;
+    });
+});
+
+it('writes categorieen with the trema in the validation message', function () {
+    subscribeForm()
+        ->set('email', 'verzonnen2@example.test')
+        ->set('wants_offers', true)
+        ->set('categories', ['gratis-geld'])
+        ->call('save')
+        ->assertSee('Kies alleen categorieën uit de lijst.');
 });

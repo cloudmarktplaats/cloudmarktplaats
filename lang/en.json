@@ -721,7 +721,7 @@
     "Toch nieuw aanbod": "New listings after all",
     "Toch updates": "Updates after all",
     "Kijk in je mail.": "Check your mail.",
-    "Er staat een link klaar. Zolang je daar niet op klikt, sturen we niets.": "There is a link waiting for you. Until you click it, we send nothing.",
+    "Valt er iets te bevestigen, dan staat de link in je mail. Zolang je daar niet op klikt, sturen we niets.": "If there is anything to confirm, the link is in your mail. Until you click it, we send nothing.",
     "Mail als er iets voor je bij zit.": "Mail when something is there for you.",
     "Geen account nodig. Je krijgt alleen waar je hieronder ja op zegt, en afmelden kan met de link onderaan elk bericht.": "No account needed. You only get what you say yes to below, and you can unsubscribe with the link at the bottom of every message.",
     "Je e-mailadres": "Your email address",
@@ -732,7 +732,7 @@
     "We gebruiken je adres alleen hiervoor en geven het aan niemand door. Zo gaan we met je gegevens om: <a href=\":url\" class=\"underline\">privacyverklaring</a>.": "We use your address for this only and pass it on to no one. This is how we handle your data: <a href=\":url\" class=\"underline\">privacy statement</a>.",
     "Vink aan waar je mail over wilt krijgen.": "Tick what you want to get mail about.",
     "Kies minstens 1 categorie.": "Pick at least 1 category.",
-    "Kies alleen categorieen uit de lijst.": "Pick only categories from the list.",
+    "Kies alleen categorieën uit de lijst.": "Pick only categories from the list.",
     "Er zijn al genoeg mails naar dit adres onderweg. Probeer het later opnieuw.": "Enough mail is already on its way to this address. Try again later.",
     "Mailvoorkeuren": "Mail preferences",
     "Wat je hier aanvinkt, geldt voor je account. Zet je beide vinkjes uit, dan meld je je helemaal af.": "What you tick here applies to your account. Switch off both boxes and you unsubscribe completely."

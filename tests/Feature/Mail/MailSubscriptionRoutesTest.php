@@ -118,6 +118,7 @@ it('offers both restore buttons after a full unsubscribe', function () {
  * werkende afmeldlink van iemand anders in een index te krijgen.
  */
 it('keeps the live token out of the indexable metadata', function () {
+    config()->set('cloudmarktplaats.features.mail_list', true);
     $sub = MailSubscription::factory()->create();
 
     $this->get('/nieuwsbrief/afmelden/'.$sub->unsubscribe_token)
@@ -127,9 +128,47 @@ it('keeps the live token out of the indexable metadata', function () {
         ->assertDontSee('canonical" href="'.url('/nieuwsbrief/afmelden'), false);
 });
 
+/*
+ * Afmelden werkt ook als `features.mail_list` uit staat, en dat moet: art. 11.7
+ * lid 4 Tw geldt net zo goed voor mail die al verstuurd is toen de noodrem nog
+ * open stond. Het aanmeldformulier op /nieuwsbrief bestaat dan echter niet, dus
+ * een vaste canonical daarheen wijst naar een 404. Een canonical is een
+ * verwijzing naar het origineel van deze pagina; wijst hij naar niets, dan is
+ * hij erger dan geen canonical, en weghalen kan niet omdat de layout dan
+ * terugvalt op de huidige URL mét token.
+ */
+it('never points the canonical at a page that does not exist', function () {
+    $sub = MailSubscription::factory()->create();
+
+    foreach ([true, false] as $vlag) {
+        config()->set('cloudmarktplaats.features.mail_list', $vlag);
+
+        $html = (string) $this->get('/nieuwsbrief/afmelden/'.$sub->unsubscribe_token)
+            ->assertOk()
+            ->getContent();
+
+        expect(preg_match('/<link rel="canonical" href="([^"]+)">/', $html, $treffer))->toBe(1);
+        expect($treffer[1])->not->toContain((string) $sub->unsubscribe_token);
+
+        $this->get($treffer[1])->assertOk();
+    }
+});
+
 /** Tweede weg naar hetzelfde doel, voor de link die iemand zelf ergens plakt. */
 it('disallows crawling of the newsletter token links', function () {
     expect((string) file_get_contents(public_path('robots.txt')))->toContain('Disallow: /nieuwsbrief/');
+});
+
+/*
+ * De schuine streep is het hele verschil: de tokenpaden eronder horen uit elke
+ * index, het aanmeldformulier op /nieuwsbrief zelf hoort er juist in. Zonder
+ * deze test is "Disallow: /nieuwsbrief" een aannemelijke opruimactie die de
+ * pagina onvindbaar maakt.
+ */
+it('leaves the signup page itself crawlable', function () {
+    $regels = array_map('trim', explode("\n", (string) file_get_contents(public_path('robots.txt'))));
+
+    expect($regels)->not->toContain('Disallow: /nieuwsbrief');
 });
 
 it('says so politely when a token means nothing', function () {

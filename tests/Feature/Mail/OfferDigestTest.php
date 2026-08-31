@@ -2,14 +2,17 @@
 
 declare(strict_types=1);
 
+use App\Livewire\Profile\MailPreferences;
 use App\Mail\OfferDigestMail;
 use App\Models\Category;
 use App\Models\Listing;
 use App\Models\MailSubscription;
 use App\Models\User;
+use App\Services\Mail\MailSubscriptionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
+use Livewire\Livewire;
 
 beforeEach(function () {
     Mail::fake();
@@ -355,6 +358,143 @@ it('stays silent about accounts when the reader already has one', function () {
 
     Mail::assertQueued(OfferDigestMail::class, function (OfferDigestMail $mail) {
         $mail->assertDontSeeInHtml('Zelf iets plaatsen kan alleen met een account');
+
+        return true;
+    });
+});
+
+/*
+ * Reviewer-scenario 1: de herstelknop. `offers_sent_at` bleef staan op de
+ * laatste verzending vóór de afmelding, en dit commando rekent vanaf dat
+ * moment. Wie na twee maanden terugkomt kreeg daardoor in 1 mail alles wat er
+ * in die twee maanden bij kwam — de reviewer mat er 40. Precies de catalogus
+ * die dit commando in zijn eigen docblock zegt niet te sturen. Een verse
+ * toestemming hoort het venster opnieuw te laten beginnen.
+ */
+it('does not mail the backlog after the herstelknop', function () {
+    $sub = MailSubscription::factory()->create([
+        'wants_offers' => false,
+        'categories' => ['networking'],
+        'offers_sent_at' => now()->subMonths(2),
+        'unsubscribed_at' => now()->subMonth(),
+    ]);
+    Listing::factory()->count(3)->published()->create([
+        'category_id' => $this->networking->id, 'published_at' => now()->subWeek(),
+    ]);
+
+    app(MailSubscriptionService::class)->resubscribe((string) $sub->unsubscribe_token, 'offers');
+
+    $this->artisan('mail:offers');
+
+    Mail::assertNothingQueued();
+});
+
+/* Tegenproef: wat er ná het herstel bij komt, gaat gewoon mee. */
+it('still mails what arrives after the herstelknop', function () {
+    $sub = MailSubscription::factory()->create([
+        'wants_offers' => false,
+        'categories' => ['networking'],
+        'offers_sent_at' => now()->subMonths(2),
+        'unsubscribed_at' => now()->subMonth(),
+    ]);
+    Listing::factory()->published()->create([
+        'category_id' => $this->networking->id, 'published_at' => now()->subWeek(),
+    ]);
+
+    app(MailSubscriptionService::class)->resubscribe((string) $sub->unsubscribe_token, 'offers');
+
+    $nieuw = Listing::factory()->published()->create([
+        'category_id' => $this->networking->id, 'published_at' => now()->addMinute(),
+    ]);
+
+    $this->artisan('mail:offers');
+
+    Mail::assertQueued(OfferDigestMail::class, fn (OfferDigestMail $mail) => $mail->listings->pluck('id')->all() === [$nieuw->id]);
+});
+
+/*
+ * Reviewer-scenario 2: hetzelfde langs het profiel. Een lid zette beide vinkjes
+ * uit (dat is een afmelding) en vinkt het aanbod later weer aan. Dat loopt langs
+ * geval 3 in `write()` en niet langs de herstelknop, dus het venster moet daar
+ * net zo goed opnieuw beginnen. De reviewer mat hier 20 advertenties in 1 mail.
+ */
+it('does not mail the backlog after a member ticks offers again in their profile', function () {
+    $user = User::factory()->create(['email_verified_at' => now(), 'email' => 'lid@example.test']);
+    MailSubscription::factory()->create([
+        'email' => 'lid@example.test',
+        'user_id' => $user->id,
+        'wants_offers' => false,
+        'wants_updates' => true,
+        'categories' => [],
+        'offers_sent_at' => now()->subMonths(2),
+    ]);
+    Listing::factory()->count(3)->published()->create([
+        'category_id' => $this->networking->id, 'published_at' => now()->subWeek(),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(MailPreferences::class)
+        ->set('wants_offers', true)
+        ->set('categories', ['networking'])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $this->artisan('mail:offers');
+
+    Mail::assertNothingQueued();
+});
+
+/*
+ * De grens van die verversing. Wie het aanbod al aan had staan en alleen zijn
+ * categorieën bijstelt, geeft geen nieuwe toestemming voor aanbod: het venster
+ * blijft staan. Zou het toch opschuiven, dan verdwijnt alles van deze week stil
+ * — dezelfde fout als een lege ronde die toch stempelt, maar dan bij elke
+ * profielwijziging.
+ */
+it('leaves the window alone when the offers box was already ticked', function () {
+    $user = User::factory()->create(['email_verified_at' => now(), 'email' => 'blijft@example.test']);
+    $sub = MailSubscription::factory()->create([
+        'email' => 'blijft@example.test',
+        'user_id' => $user->id,
+        'wants_offers' => true,
+        'categories' => ['networking'],
+        'offers_sent_at' => now()->subWeek(),
+    ]);
+    $vanDezeWeek = Listing::factory()->published()->create([
+        'category_id' => $this->networking->id, 'published_at' => now()->subDays(3),
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(MailPreferences::class)
+        ->set('categories', ['networking', 'storage'])
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $this->artisan('mail:offers');
+
+    Mail::assertQueued(OfferDigestMail::class, fn (OfferDigestMail $mail) => $mail->listings->contains('id', $vanDezeWeek->id));
+});
+
+/*
+ * Art. 11.7 lid 4 Telecommunicatiewet en art. 3:15d BW: de afzender moet in de
+ * mail zelf herkenbaar zijn, met adres en KvK-nummer. Dat stond alleen in de
+ * platformupdate. Dezelfde gegevens als in de privacyverklaring
+ * (database/seeders/legal/privacy.nl.md); wijken ze af, dan klopt er 1 van de
+ * twee niet.
+ */
+it('names the sender with address and chamber of commerce number', function () {
+    MailSubscription::factory()->create([
+        'wants_offers' => true, 'categories' => ['networking'], 'offers_sent_at' => now()->subWeek(),
+    ]);
+    Listing::factory()->published()->create(['category_id' => $this->networking->id]);
+
+    $this->artisan('mail:offers');
+
+    Mail::assertQueued(OfferDigestMail::class, function (OfferDigestMail $mail) {
+        $mail->assertSeeInHtml('Aldewereld Consultancy');
+        $mail->assertSeeInHtml('Nieuwe Hemweg 26');
+        $mail->assertSeeInHtml('1013 CX Amsterdam');
+        $mail->assertSeeInHtml('61862533');
 
         return true;
     });

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Models\MailSubscription;
 use App\Models\User;
 use App\Services\Mail\MailSubscriptionService;
+use Illuminate\Support\Str;
 
 beforeEach(function () {
     $this->service = app(MailSubscriptionService::class);
@@ -682,8 +683,13 @@ it('keeps the withdrawal moment when a stranger only parks a change', function (
 });
 
 /*
- * Wordt die geparkeerde wijziging alsnog bevestigd met de klik uit de eigen
+ * Wordt een geparkeerde wijziging alsnog bevestigd met de klik uit de eigen
  * mailbox, dan is dat wel een nieuwe toestemming en vervalt de intrekking.
+ *
+ * De stand wordt hier met de hand neergezet en niet meer via `subscribe()`
+ * opgebouwd: op een afgemelde rij parkeert `subscribe()` sinds de eindfix
+ * niets meer. Deze regel in `confirm()` blijft staan als vangnet voor elk pad
+ * dat later toch een wijziging naast een intrekking zet.
  */
 it('clears the withdrawal moment once a parked change is confirmed from the mailbox', function () {
     $sub = MailSubscription::factory()->create([
@@ -692,16 +698,114 @@ it('clears the withdrawal moment once a parked change is confirmed from the mail
         'unsubscribed_at' => now()->subDay(),
     ]);
 
+    $sub->forceFill([
+        'confirm_token' => Str::random(48),
+        'pending_changes' => [
+            'wants_offers' => true,
+            'wants_updates' => false,
+            'categories' => ['networking'],
+            'consent_text' => 'Ja, mail mij nieuw aanbod in deze categorieen.',
+            'consent_given_at' => now(),
+            'consent_source' => 'formulier',
+        ],
+    ])->save();
+
+    $this->service->confirm((string) $sub->fresh()?->confirm_token);
+
+    expect($sub->fresh()?->unsubscribed_at)->toBeNull();
+});
+
+/*
+ * De kern van de eindfix. `unsubscribed_at` legt vast dat dit adres nee zei.
+ * Geval 4 zou er een vers `confirm_token` op zetten, en dat token is precies
+ * de reden dat er een bevestigingsmail naar díé mailbox gaat: een vreemde die
+ * het adres op het publieke formulier intikt, laat ons dan mail sturen naar
+ * iemand van wie we hebben vastgelegd dat hij zich afmeldde. De enige rem was
+ * de ratelimiet. De privacyverklaring belooft letterlijk "meld je je af, dan
+ * stopt de mail meteen", en die belofte hoort in de code te staan.
+ */
+it('parks nothing and sets no token on an address that unsubscribed', function () {
+    $sub = MailSubscription::factory()->create([
+        'email' => 'nee@example.test',
+        'confirmed_at' => now()->subWeek(),
+        'confirm_token' => null,
+        'wants_offers' => false,
+        'wants_updates' => false,
+        'categories' => [],
+        'unsubscribed_at' => now()->subDay(),
+    ]);
+
     $this->service->subscribe(
-        email: 'weerterug@example.test',
+        email: 'nee@example.test',
         wantsOffers: true,
-        wantsUpdates: false,
+        wantsUpdates: true,
         categories: ['networking'],
         consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
         source: 'formulier',
     );
 
-    $this->service->confirm((string) $sub->fresh()?->confirm_token);
+    $vers = $sub->fresh();
 
-    expect($sub->fresh()?->unsubscribed_at)->toBeNull();
+    expect($vers?->confirm_token)->toBeNull()
+        ->and($vers?->pending_changes)->toBeNull()
+        ->and($vers?->wants_offers)->toBeFalse()
+        ->and($vers?->wants_updates)->toBeFalse()
+        ->and($vers?->unsubscribed_at)->not->toBeNull();
+});
+
+/*
+ * Tegenproef, zodat de bewaking hierboven niet stiekem geval 4 als geheel
+ * uitzet: op een bevestigde rij die niet is afgemeld hoort een vreemde nog
+ * steeds gewoon te parkeren, want dat is de weg waarlangs de eigenaar zelf een
+ * wijziging kan doorvoeren.
+ */
+it('still parks a strangers change on a confirmed address that never unsubscribed', function () {
+    $sub = MailSubscription::factory()->create([
+        'email' => 'gewoon@example.test',
+        'confirmed_at' => now()->subWeek(),
+        'confirm_token' => null,
+        'unsubscribed_at' => null,
+    ]);
+
+    $this->service->subscribe(
+        email: 'gewoon@example.test',
+        wantsOffers: true,
+        wantsUpdates: true,
+        categories: ['networking'],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'formulier',
+    );
+
+    expect($sub->fresh()?->confirm_token)->not->toBeNull();
+});
+
+/*
+ * De eigenaar zelf blijft wél terug kunnen komen: hij bewijst de mailbox met
+ * `email_verified_at`, dus zijn aanmelding is geval 3 en geen geparkeerde
+ * wijziging. Zonder deze test is "afgemeld blijft afgemeld" niet te
+ * onderscheiden van "afgemeld is voorgoed op slot".
+ */
+it('lets the proven owner sign up again after unsubscribing', function () {
+    $user = User::factory()->create(['email_verified_at' => now(), 'email' => 'terugkomer@example.test']);
+    MailSubscription::factory()->create([
+        'email' => 'terugkomer@example.test',
+        'user_id' => $user->id,
+        'confirmed_at' => now()->subWeek(),
+        'wants_offers' => false,
+        'wants_updates' => false,
+        'unsubscribed_at' => now()->subDay(),
+    ]);
+
+    $sub = $this->service->subscribe(
+        email: 'terugkomer@example.test',
+        wantsOffers: true,
+        wantsUpdates: false,
+        categories: ['networking'],
+        consentText: 'Ja, mail mij nieuw aanbod in deze categorieen.',
+        source: 'profiel',
+        user: $user,
+    );
+
+    expect($sub->wants_offers)->toBeTrue()
+        ->and($sub->unsubscribed_at)->toBeNull();
 });

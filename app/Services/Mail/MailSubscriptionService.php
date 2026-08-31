@@ -50,7 +50,8 @@ class MailSubscriptionService
      * 4. Rij bestaat, is bevestigd, en de aanroeper is niet die eigenaar: de
      *    rij blijft zoals hij is. De gevraagde wijziging wordt geparkeerd in
      *    `pending_changes` met een vers `confirm_token`; `confirm()` past hem
-     *    pas toe als er op de link in díé mailbox is geklikt.
+     *    pas toe als er op de link in díé mailbox is geklikt. Staat er een
+     *    `unsubscribed_at`, dan wordt er zelfs niet geparkeerd: zie `write()`.
      *
      * @param  list<string>  $categories
      */
@@ -205,10 +206,20 @@ class MailSubscriptionService
 
         $sub = MailSubscription::query()->where('unsubscribe_token', $token)->first();
 
+        // Zie `write()`: gaat het aanbod van uit naar aan, dan begint het
+        // venster van de aanbodmail opnieuw. Hier is dat het duidelijkst
+        // zichtbaar — zonder deze regel kreeg wie na twee maanden op de
+        // herstelknop drukte die twee maanden in 1 mail.
+        $vensterOpnieuw = $sub !== null
+            && $what !== 'updates'
+            && $sub->wants_offers !== true
+            && $sub->offers_sent_at !== null;
+
         // Spiegelbeeld van `unsubscribe()`: het gevraagde doel gaat aan, het
         // andere houdt zijn huidige waarde. Bij `null` gaan beide aan.
         $sub?->forceFill([
             'wants_offers' => $sub->wants_offers || $what !== 'updates',
+            'offers_sent_at' => $vensterOpnieuw ? now() : $sub->offers_sent_at,
             'wants_updates' => $sub->wants_updates || $what !== 'offers',
             'consent_text' => match ($what) {
                 'offers' => 'Toch nieuw aanbod, hersteld na een afmelding.',
@@ -274,6 +285,24 @@ class MailSubscriptionService
 
         // Geval 4.
         if ($sub !== null && $sub->confirmed_at !== null && $owner === null) {
+            // Wie zich afmeldde heeft nee gezegd, en dat is vastgelegd. Parkeren
+            // zet een vers `confirm_token`, en dat token is precies wat er een
+            // bevestigingsmail naar die mailbox laat gaan: een vreemde die het
+            // adres op het publieke formulier intikt, mailt zo iemand die
+            // uitdrukkelijk afscheid nam. De privacyverklaring belooft "meld je
+            // je af, dan stopt de mail meteen"; die belofte hoort hier te staan
+            // en niet alleen in dat document.
+            //
+            // De rij blijft dus onaangeraakt: geen wachtrij, geen token, geen
+            // opgeschoven `updated_at`. `MailSubscriptionConfirmMail::send()`
+            // ziet dan een leeg `confirm_token` en verstuurt niets. Terugkomen
+            // kan nog steeds langs de twee wegen die de mailbox wél bewijzen:
+            // de herstelknop in de laatste mail (`resubscribe()`), en het
+            // profiel van een lid met een geverifieerd adres (geval 3).
+            if ($sub->unsubscribed_at !== null) {
+                return $sub;
+            }
+
             $sub->forceFill([
                 'pending_changes' => $wanted,
                 'confirm_token' => Str::random(48),
@@ -283,6 +312,25 @@ class MailSubscriptionService
         }
 
         // Gevallen 1 tot en met 3.
+        //
+        // `SendOfferDigest` rekent "nieuw" vanaf `offers_sent_at ?? created_at`.
+        // Die stempel blijft na een afmelding staan op de laatste verzending, en
+        // niemand zette hem ooit terug. Wie opnieuw ja zegt tegen aanbod kreeg
+        // daardoor in 1 keer alles wat er sinds die dag bij kwam: de reviewer mat
+        // 20 advertenties na een profielwijziging. Dat is de catalogus die het
+        // commando in zijn eigen docblock zegt niet te sturen.
+        //
+        // Alleen bij de overgang van uit naar aan, want alleen dan is er een
+        // nieuwe toestemming voor aanbod. Wie zijn categorieën bijstelt terwijl
+        // het aanbod al aan stond, hoort de advertenties van deze week gewoon te
+        // krijgen; het venster daar verzetten laat een week stil verdwijnen.
+        // En alleen als er echt een oude stempel staat: zonder stempel is het
+        // ijkpunt `created_at`, en dat wordt hieronder toch al ververst.
+        $vensterOpnieuw = $sub !== null
+            && $wanted['wants_offers'] === true
+            && $sub->wants_offers !== true
+            && $sub->offers_sent_at !== null;
+
         $sub ??= new MailSubscription;
 
         $sub->forceFill(array_merge($wanted, [
@@ -300,6 +348,10 @@ class MailSubscriptionService
             // de wisverplichting uit taak 1. Er komt er alleen een bij als het
             // adres bewezen van dat account is.
             'user_id' => $owner?->id ?? $sub->user_id,
+            // Het ijkpunt van de aanbodmail; zie de toelichting hierboven. In
+            // dezelfde save en niet los via `DB::table()`, want hier verandert
+            // de rij echt en hoort `updated_at` dus wél mee te schuiven.
+            'offers_sent_at' => $vensterOpnieuw ? now() : $sub->offers_sent_at,
             'confirmed_at' => $owner !== null ? now() : $sub->confirmed_at,
             'confirm_token' => $owner !== null ? null : Str::random(48),
             'pending_changes' => null,

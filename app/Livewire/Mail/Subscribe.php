@@ -129,7 +129,7 @@ class Subscribe extends Component
             'categories.required' => __('Kies minstens 1 categorie.'),
             // Zonder eigen tekst wordt dit "De gekozen categories.1 is ongeldig":
             // dat lekt de attribuutnaam en zegt de bezoeker niets.
-            'categories.*.in' => __('Kies alleen categorieen uit de lijst.'),
+            'categories.*.in' => __('Kies alleen categorieën uit de lijst.'),
         ]);
 
         if (! $this->passesRateLimit()) {

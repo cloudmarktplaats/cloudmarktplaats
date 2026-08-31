@@ -1,10 +1,16 @@
-{{--
-    Expliciete canonical, want de layout valt anders terug op url()->current()
-    en die URL draagt hier een levend token. Dat zou het token in
-    <link rel="canonical"> en og:url zetten: de twee velden die juist bedoeld
-    zijn om door te geven aan de rest van de wereld.
---}}
-<x-layouts.marketing :title="__('Nieuwsbrief')" :canonical="url('/nieuwsbrief')">
+@php
+    // Expliciete canonical, want de layout valt anders terug op url()->current()
+    // en die URL draagt hier een levend token. Dat zou het token in
+    // <link rel="canonical"> en og:url zetten: de twee velden die juist bedoeld
+    // zijn om door te geven aan de rest van de wereld.
+    //
+    // Vlagbewust, want afmelden werkt ook als `features.mail_list` uit staat en
+    // dat moet ook: art. 11.7 lid 4 Tw geldt net zo goed voor mail die al
+    // verstuurd is toen de noodrem nog open stond. /nieuwsbrief bestaat dan
+    // niet, en een canonical naar een 404 verwijst naar niets.
+    $canonical = config('cloudmarktplaats.features.mail_list') ? url('/nieuwsbrief') : url('/');
+@endphp
+<x-layouts.marketing :title="__('Nieuwsbrief')" :canonical="$canonical">
     <section class="mx-auto max-w-xl px-5 py-16 sm:px-8 sm:py-20">
         <div class="cmp-section-label mb-4">{{ __('Nieuwsbrief') }}</div>
 

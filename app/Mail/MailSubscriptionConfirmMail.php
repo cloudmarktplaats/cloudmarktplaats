@@ -12,6 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Mail\Mailables\Headers;
 use Illuminate\Mail\SentMessage;
 use Illuminate\Queue\SerializesModels;
 
@@ -49,6 +50,25 @@ class MailSubscriptionConfirmMail extends Mailable implements ShouldQueue
                 : 'Bevestig je aanmelding',
             replyTo: ['info@cloudmarktplaats.nl'],
         );
+    }
+
+    /**
+     * Het ontwerp zegt "elke verzonden mail" draagt een afmeldmogelijkheid, en
+     * deze mail is er 1. De link stond al in de voet; de header laat de knop in
+     * Gmail en Thunderbird werken, en juist dáár is hij hier nuttig: wie deze
+     * mail nooit aanvroeg (een vreemde tikte zijn adres in) meldt zich zo af
+     * zonder eerst een pagina te openen.
+     *
+     * Zelfde vorm als OfferDigestMail: zonder `wat`, want een klik hierop
+     * bedoelt alles. `List-Unsubscribe-Post` (RFC 8058) belooft dat de POST
+     * werkt; die route bestaat sinds taak 6 (`mail.unsubscribe.oneclick`).
+     */
+    public function headers(): Headers
+    {
+        return new Headers(text: [
+            'List-Unsubscribe' => '<'.route('mail.unsubscribe', $this->subscription->unsubscribe_token).'>',
+            'List-Unsubscribe-Post' => 'List-Unsubscribe=One-Click',
+        ]);
     }
 
     /**

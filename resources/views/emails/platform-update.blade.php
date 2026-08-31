@@ -43,13 +43,7 @@
             <a href="{{ $afmeldUrl }}" style="color:#D9480F;">Afmelden</a> kan altijd, in 1 klik.
         </p>
 
-        {{-- Art. 3:15d BW: wie je dit stuurt hoort in de mail te staan, met
-             adres en KvK-nummer. Dezelfde gegevens als in de privacyverklaring
-             (database/seeders/legal/privacy.nl.md); wijken ze af, dan klopt er
-             1 van de twee niet. --}}
-        <p style="margin:16px 0 0;font-size:13px;color:#5C6166;">
-            Cloudmarktplaats is een dienst van Aldewereld Consultancy, Nieuwe Hemweg 26, 1013 CX Amsterdam, KvK 61862533.
-        </p>
+        @include('emails.partials.afzender')
     </div>
 </body>
 </html>

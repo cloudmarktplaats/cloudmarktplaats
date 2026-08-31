@@ -1,10 +1,16 @@
 <div class="mx-auto max-w-xl px-5 py-16 sm:px-8 sm:py-20">
     <div class="cmp-section-label mb-4">{{ __('Nieuwsbrief') }}</div>
 
+    {{-- Eén scherm voor elke uitkomst. Bij een adres dat zich heeft afgemeld
+         gaat er geen mail uit (zie MailSubscriptionService::write(), geval 4),
+         en bij de honeypot en de tijdklem ook niet. Een aparte melding voor die
+         gevallen zou een orakel zijn waarmee een vreemde kan uitlezen of een
+         adres op de lijst staat of stond. Daarom staat er geen link beloofd als
+         vaststaand feit: deze zin moet in alle drie de gevallen waar zijn. --}}
     @if ($done)
         <h1 class="text-3xl font-bold tracking-display-tighter sm:text-4xl">{{ __('Kijk in je mail.') }}</h1>
         <p class="mt-4 text-cmp-text/90 text-[15px] leading-[1.75]">
-            {{ __('Er staat een link klaar. Zolang je daar niet op klikt, sturen we niets.') }}
+            {{ __('Valt er iets te bevestigen, dan staat de link in je mail. Zolang je daar niet op klikt, sturen we niets.') }}
         </p>
     @else
         <h1 class="text-3xl font-bold tracking-display-tighter sm:text-4xl">{{ __('Mail als er iets voor je bij zit.') }}</h1>

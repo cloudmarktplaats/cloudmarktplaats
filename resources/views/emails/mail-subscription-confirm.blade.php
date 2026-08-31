@@ -57,7 +57,7 @@
                 <li>{{ ($keuze['wants_offers'] ?? false) ? 'Wel nieuw aanbod' : 'Geen nieuw aanbod' }}</li>
                 <li>{{ ($keuze['wants_updates'] ?? false) ? 'Wel updates' : 'Geen updates' }}</li>
                 @if ($gekozen !== [])
-                    <li>Categorieen: {{ implode(', ', $gekozen) }}</li>
+                    <li>Categorieën: {{ implode(', ', $gekozen) }}</li>
                 @endif
             </ul>
 
@@ -92,6 +92,8 @@
                 <a href="{{ $afmeldUrl }}" style="color:#D9480F;">Meld dit adres dan af</a>.
             @endif
         </p>
+
+        @include('emails.partials.afzender')
     </div>
 </body>
 </html>
