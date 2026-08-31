@@ -148,11 +148,44 @@
               x-on:livewire-upload-finish="bezig = false; voortgang = 100"
               x-on:livewire-upload-cancel="bezig = false"
               x-on:livewire-upload-error="bezig = false; probleem = @js(__('Het uploaden is misgegaan. Vaak zijn de foto\'s samen te groot, of viel de verbinding weg. Probeer het opnieuw met minder of kleinere foto\'s.'))">
-            @php($existingPhotoCount = $editing && $listing ? $listing->photos()->count() : 0)
+            @php($bestaandeFotos = $listing ? $listing->photos()->get() : collect())
+            @php($existingPhotoCount = $bestaandeFotos->count())
+            {{-- Toevoegen was alles wat de wizard kon: een verkeerd gezette foto
+                 kostte je de hele advertentie, want er was geen weg terug.
+                 Ramon Fincken meldde dat op 31-08. --}}
             @if ($existingPhotoCount > 0)
-                <p class="rounded-sm bg-cmp-bg2 p-3 text-sm text-cmp-muted">
-                    {{ __(':count foto(\'s) blijven behouden. Nieuwe foto\'s toevoegen is optioneel.', ['count' => $existingPhotoCount]) }}
-                </p>
+                <div class="space-y-2">
+                    <p class="text-sm font-medium">{{ __('Foto\'s die er nu op staan') }}</p>
+                    <ul class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                        @foreach ($bestaandeFotos as $index => $foto)
+                            <li class="space-y-1 rounded-sm border border-cmp-border p-2">
+                                <img src="{{ $foto->urlFor('thumb') }}" alt=""
+                                     class="aspect-square w-full rounded-sm object-cover">
+                                <div class="flex items-center justify-between gap-1">
+                                    <span class="text-xs text-cmp-muted">
+                                        {{ $index === 0 ? __('Hoofdfoto') : __('Foto :n', ['n' => $index + 1]) }}
+                                    </span>
+                                    <span class="flex gap-1">
+                                        <button type="button" wire:click="movePhoto({{ $foto->id }}, 'up')"
+                                                @disabled($index === 0)
+                                                aria-label="{{ __('Naar voren') }}"
+                                                class="rounded border px-2 py-1 text-xs disabled:opacity-30">&uarr;</button>
+                                        <button type="button" wire:click="movePhoto({{ $foto->id }}, 'down')"
+                                                @disabled($index === $existingPhotoCount - 1)
+                                                aria-label="{{ __('Naar achteren') }}"
+                                                class="rounded border px-2 py-1 text-xs disabled:opacity-30">&darr;</button>
+                                        <button type="button" wire:click="deletePhoto({{ $foto->id }})"
+                                                aria-label="{{ __('Verwijderen') }}"
+                                                class="rounded border border-red-300 px-2 py-1 text-xs text-red-600">&times;</button>
+                                    </span>
+                                </div>
+                            </li>
+                        @endforeach
+                    </ul>
+                    <p class="text-xs text-cmp-muted">
+                        {{ __('De eerste foto is de hoofdfoto. Verwijderen is meteen definitief, ook het bestand.') }}
+                    </p>
+                </div>
             @endif
             <label class="block text-sm">
                 <span class="mb-1 block font-medium">

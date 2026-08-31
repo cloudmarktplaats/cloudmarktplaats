@@ -8,9 +8,11 @@ use App\Exceptions\InvalidUploadException;
 use App\Jobs\Listings\StoreListingPhotoJob;
 use App\Models\Category;
 use App\Models\Listing;
+use App\Models\ListingPhoto;
 use App\Services\Admin\AdminActionLogger;
 use App\Services\Gamification\TrustLevelService;
 use App\Services\Listings\InvalidStateTransition;
+use App\Services\Listings\ListingPhotoManager;
 use App\Services\Listings\ListingStateService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\View\View;
@@ -146,6 +148,57 @@ class Wizard extends Component
     public function back(): void
     {
         $this->step = max(1, $this->step - 1);
+    }
+
+    /**
+     * Haalt één foto weg bij een advertentie die al bestaat.
+     *
+     * De laatste foto van een gepubliceerde advertentie blijft staan: een
+     * fotoloze advertentie die live is, is precies de fotobug die in juli zes
+     * dagen onzichtbaar bleef. Offline halen kan wel, en dat staat in de
+     * melding.
+     */
+    public function deletePhoto(int $photoId): void
+    {
+        $listing = $this->currentListing();
+        $photo = $this->ownPhoto($photoId);
+
+        if ($listing->state === 'published' && $listing->photos()->count() === 1) {
+            $this->addError('photos', __('Een advertentie die online staat heeft minstens 1 foto nodig. Voeg er eerst een andere toe, of haal de advertentie offline via Mijn advertenties.'));
+
+            return;
+        }
+
+        app(ListingPhotoManager::class)->delete($listing, $photo);
+    }
+
+    public function movePhoto(int $photoId, string $direction): void
+    {
+        abort_unless(in_array($direction, ['up', 'down'], true), 400);
+
+        app(ListingPhotoManager::class)->move($this->currentListing(), $this->ownPhoto($photoId), $direction);
+    }
+
+    /**
+     * De id komt uit de browser en is dus niet te vertrouwen. Zoeken binnen
+     * `$this->listing` is de hele controle: `mount()` heeft die advertentie al
+     * langs de policy gehaald, dus een foto die eraan hangt is per definitie
+     * van deze verkoper.
+     */
+    private function ownPhoto(int $photoId): ListingPhoto
+    {
+        $photo = $this->currentListing()->photos()->find($photoId);
+        abort_if($photo === null, 404);
+
+        return $photo;
+    }
+
+    private function currentListing(): Listing
+    {
+        $listing = $this->listing;
+        abort_if($listing === null, 404);
+
+        return $listing;
     }
 
     public function submit(): void
