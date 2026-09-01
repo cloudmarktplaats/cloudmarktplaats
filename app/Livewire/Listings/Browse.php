@@ -63,8 +63,27 @@ class Browse extends Component
     #[Locked]
     public int $perPage = 12;
 
+    /**
+     * Een categoriepad is een Postgres-ltree, en die is strenger dan de
+     * routebeperking `[a-z0-9._-]+`. `a...b`, een pad dat op een punt eindigt,
+     * of een label met een streepje zijn geen geldige ltree, dus liep
+     * `whereRaw('path <@ ?::ltree')` daarop stuk met een QueryException en zag
+     * de bezoeker een 500. Gemeten op productie op 01-09-2026.
+     *
+     * Alle 113 echte paden zijn kleine letters, cijfers en punten, hoogstens 28
+     * tekens en 2 niveaus diep. Wat hier niet doorheen komt kan dus onmogelijk
+     * bestaan, en dan is 404 het eerlijke antwoord.
+     */
+    private const PATH_SHAPE = '/^[a-z0-9_]+(\.[a-z0-9_]+)*$/';
+
     public function mount(?string $categoryPath = null): void
     {
+        abort_if(
+            $categoryPath !== null && $categoryPath !== ''
+            && (strlen($categoryPath) > 255 || preg_match(self::PATH_SHAPE, $categoryPath) !== 1),
+            404
+        );
+
         $this->categoryPath = $categoryPath;
 
         // Arriving with ?sort=shuffle but no seed (e.g. a bare shared link)
