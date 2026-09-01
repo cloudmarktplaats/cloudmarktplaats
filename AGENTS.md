@@ -64,15 +64,21 @@ Omdat deployen een file-sync is, zegt git níét wat er draait. Wat hier staat
 is op `main` en nog niet op productie. Neem het mee met de volgende sync en
 haal het dan uit deze lijst.
 
-*(leeg op 01-09-2026, na twee deploys. Eerst de `autocomplete`-tokens op de
-auth-velden. Daarna de securityronde: negen bestanden, met `route:cache` omdat
-`routes/web.php` wijzigde en `up -d --force-recreate nginx` omdat de config een
-bind-mount van 1 bestand is. Gemeten vóór en na: `/c/a...b` ging van 500 naar
-404, `/.well-known/security.txt` van 404 naar 200, en X-Frame-Options,
-Permissions-Policy en CSP staan er nu wél terwijl X-Powered-By en het
-nginx-versienummer weg zijn. In de container geverifieerd dat de nieuwe config
-draait én dat de log nog `/nieuwsbrief/[redacted]` schrijft met het geheim 0
-keer erin. Dertien pagina's nagelopen, alle 200.)*
+*(leeg op 01-09-2026, na vijf deploys op één dag. In volgorde: de
+`autocomplete`-tokens op de auth-velden; de securityronde (negen bestanden, met
+`route:cache` omdat `routes/web.php` wijzigde en `up -d --force-recreate nginx`
+omdat de config een bind-mount van 1 bestand is); de herbouwde assetbundel; het
+weghalen van axios; en de console-signatuur. Elke deploy met een eigen voor- en
+nameting. `/c/a...b` ging van 500 naar 404, `/.well-known/security.txt` van 404
+naar 200, X-Frame-Options en CSP staan er nu wél, X-Powered-By en het
+nginx-versienummer zijn weg, en de JS ging van 21.971 naar 2.806 bytes gzip. In
+de container geverifieerd dat de nieuwe nginx-config draait én dat de log nog
+`/nieuwsbrief/[redacted]` schrijft met het geheim 0 keer erin.)*
+
+**Op te ruimen als het rustig blijft:** op productie staan drie oude
+JS-bundels en twee manifest-kopieën (`manifest.json.voor-2026-09-01`,
+`manifest.json.voor-axios-verwijdering`). Dat zijn de rollbackpunten van
+01-09. Weg als de week zonder klachten voorbij is.
 
 Kwaliteitspoorten vóór elke deploy, alle drie groen:
 
@@ -171,6 +177,15 @@ bewijs dan een grep, want het vangt ook aanroepen die niet in de bron staan.
 `->ajax()`, `expectsJson()` en `X-Requested-With` komen in `app/`, `routes/`,
 `config/` en `bootstrap/` nergens voor, dus die header miste niemand.
 `tests/Feature/FrontendBundleTest.php` houdt de standaardregel er voortaan uit.
+
+**De console draagt sinds 01-09 een signatuur.** "NICK ALDEWERELD" in
+blokletters van twee rijen onder het cmp-logo, plus een regel naar
+aldewereldconsultancy.nl. Twee dingen om te weten als je eraan komt. De kleur is
+**merkoranje en bewust niet de inktkleur**: een devtools-console in donkere
+modus staat op ongeveer `#202124` en daar is `#17191B` onzichtbaar op, terwijl
+dit publiek juist devtools draait. En **beide blokletterrijen moeten exact even
+lang blijven**; bewerk je er één, dan staat de tweede verschoven en zie je dat
+in een diff met het blote oog niet. `FrontendBundleTest` vergelijkt de lengtes.
 
 **Buiten scope gebleven:** netwerk- en infrastructuurtesten op de VPS, Caddy,
 Headscale en de Proxmox-host. Geen brute force, geen fuzzing, en niets dat data
