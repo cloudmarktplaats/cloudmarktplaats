@@ -229,6 +229,48 @@ binden. Niet getest, dus niet geplaatst.
 §5.1.1.2 schrijft voor dat verifiers het moeten toestaan. Er staat een test op
 die het tegenhoudt als iemand het ooit goedbedoeld voorstelt.
 
+## Veldlengtes en de 72-bytegrens van bcrypt (01-09-2026)
+
+Aanleiding: Hans Kruse merkte op LinkedIn op dat aanmeld-, inlog- en
+wachtwoordschermen bij grote partijen verschillende regels hanteren en dat het
+verderop in de keten alsnog misgaat (zijn voorbeeld: KPN kapt een adres af op
+52 tekens). Tegen de eigen code aangehouden, en dat leverde één echte fout op.
+
+**Wat in orde bleek.** Gebruikersnaam is `max:30` in de validatie én
+`VARCHAR(30)` in de kolom. Wachtwoord is `min:10` bij registreren én bij
+herstellen. Een geldig adres van 250 tekens wordt opgeslagen, een van 300
+geeft een veldfout en geen 500.
+
+**Inloggen heeft bewust géén `min` op het wachtwoord, en dat moet zo blijven.**
+Wie zich inschreef toen de grens lager lag moet gewoon kunnen inloggen. Zou
+het inlogscherm de nieuwe grens afdwingen, dan sluit je bestaande leden buiten
+zonder ze iets te kunnen aanbieden. `FieldLengthConsistencyTest` legt die
+asymmetrie vast, inclusief de reden.
+
+**Wat stuk was: bcrypt kijkt niet verder dan 72 bytes.** Aangetoond:
+
+    Hash::check(72×"x" + "TWEE", bcrypt(72×"x" + "EEN")) === true
+
+Twee verschillende wachtwoorden, hetzelfde account. Als aanval stelt dat weinig
+voor (wie de eerste 72 bytes weet is binnen), maar een veld dat invoer stil
+weggooit liegt tegen de gebruiker: wie een zin van 100 tekens kiest denkt dat
+hij iets sterkers heeft. Opgelost met `App\Rules\PastesIntoBcrypt` op
+registratie en wachtwoordherstel.
+
+**Die regel telt bytes en geen tekens, en dat is het hele punt.** Laravels
+`max:72` telt tekens; 40 keer "é" is 40 tekens maar 80 bytes. Met de
+ingebouwde regel zou precies het geval waarvoor hij bestaat erdoor glippen.
+
+Argon2id kent die grens niet en zou de nettere oplossing zijn, maar dat vraagt
+om elke bestaande bcrypt-hash bij de volgende login om te zetten. Dat is een
+migratie en geen validatieregel; niet half beginnen.
+
+**Nog een les uit dezelfde ronde:** een lang e-mailadres is niet hetzelfde als
+één lange sliert. Het lokale deel mag 64 tekens maar elk DNS-label maximaal 63,
+dus een domein van 189 tekens in één stuk is gewoon ongeldig. `email:strict`
+weigerde dat terecht; mijn testdata was fout, niet de code. Staat als comment
+bij de test zodat de volgende het niet "repareert".
+
 ## Meten zonder analytics
 
 Er zitten bewust geen trackers op, dus er is **geen funnel-data**. Elke vraag over
