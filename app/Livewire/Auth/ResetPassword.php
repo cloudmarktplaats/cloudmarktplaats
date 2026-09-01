@@ -4,6 +4,7 @@ namespace App\Livewire\Auth;
 
 use App\Models\User;
 use App\Models\UserIdentity;
+use App\Rules\PastesIntoBcrypt;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
@@ -38,7 +39,7 @@ class ResetPassword extends Component
         $this->validate([
             'token' => ['required'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'min:10', 'confirmed'],
+            'password' => ['required', 'min:10', 'confirmed', new PastesIntoBcrypt],
         ]);
 
         $status = Password::reset(

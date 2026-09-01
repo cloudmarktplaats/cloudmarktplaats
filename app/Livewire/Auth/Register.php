@@ -8,6 +8,7 @@ use App\Models\LegalDocument;
 use App\Models\User;
 use App\Models\UserIdentity;
 use App\Models\WaitlistEntry;
+use App\Rules\PastesIntoBcrypt;
 use App\Services\FoundingCohort;
 use App\Services\Gamification\InviteService;
 use Illuminate\Auth\Events\Registered;
@@ -108,7 +109,7 @@ class Register extends Component
         $this->validate([
             'email' => ['required', 'email:strict', 'unique:users,email'],
             'username' => ['required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9_-]+$/i', 'unique:users,username'],
-            'password' => ['required', 'string', 'min:10', 'confirmed'],
+            'password' => ['required', 'string', 'min:10', 'confirmed', new PastesIntoBcrypt],
             'accept_tos' => ['accepted'],
         ]);
 

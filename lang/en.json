@@ -1,4 +1,5 @@
 {
+    "Een wachtwoord telt tot 72 bytes mee; alles daarna wordt genegeerd. Kies er een die korter is, dan weet je zeker dat het hele wachtwoord telt.": "A password counts up to 72 bytes; anything beyond that is ignored. Pick a shorter one so you know the whole password counts.",
     "Er zijn vanaf dit adres net al accounts aangemaakt. Probeer het over een uur opnieuw, of vraag een lid om een uitnodiging.": "Several accounts were just created from this address. Try again in an hour, or ask a member for an invite.",
     "Founding member": "Founding member",
     "Een van de eerste 100 leden.": "One of the first 100 members.",
