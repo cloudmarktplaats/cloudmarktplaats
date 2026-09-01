@@ -64,11 +64,15 @@ Omdat deployen een file-sync is, zegt git níét wat er draait. Wat hier staat
 is op `main` en nog niet op productie. Neem het mee met de volgende sync en
 haal het dan uit deze lijst.
 
-*(leeg op 01-09-2026: de `autocomplete`-tokens op de auth-velden zijn
-gedeployd. Zes blade-bestanden, `view:clear` en een herstart van php-fpm; geen
-migratie, geen route, geen `public/build`. Gemeten vóór de sync dat `/login`
-nul `autocomplete`-attributen had en erna dat login, register, forgot-password
-en het herstelformulier de juiste tokens tonen, alle vijf met een 200.)*
+*(leeg op 01-09-2026, na twee deploys. Eerst de `autocomplete`-tokens op de
+auth-velden. Daarna de securityronde: negen bestanden, met `route:cache` omdat
+`routes/web.php` wijzigde en `up -d --force-recreate nginx` omdat de config een
+bind-mount van 1 bestand is. Gemeten vóór en na: `/c/a...b` ging van 500 naar
+404, `/.well-known/security.txt` van 404 naar 200, en X-Frame-Options,
+Permissions-Policy en CSP staan er nu wél terwijl X-Powered-By en het
+nginx-versienummer weg zijn. In de container geverifieerd dat de nieuwe config
+draait én dat de log nog `/nieuwsbrief/[redacted]` schrijft met het geheim 0
+keer erin. Dertien pagina's nagelopen, alle 200.)*
 
 Kwaliteitspoorten vóór elke deploy, alle drie groen:
 
@@ -103,6 +107,51 @@ vervolgrequests gaan naar `/livewire/update`, niet naar de oorspronkelijke route
 verkooppaneel heeft — zet je de check daar in `boot()`, dan 403't de hele pagina
 zodra de vlag uit gaat. Daar hoort hij dus per muterende methode, zoals bij
 `markSold()` en `newLink()`.
+
+## Securityronde 01-09-2026
+
+Een OWASP-ronde over de app, met actieve tests lokaal en alleen lezende
+controles op productie. Zeven punten gerepareerd en gedeployd. Wat blijvend
+geldt staat hieronder; de rest zit in de commits.
+
+**Securityheaders staan op twéé plekken.** HSTS, Referrer-Policy en
+X-Content-Type-Options komen uit de **Caddy op de VPS**, niet uit deze repo, en
+daarom ontbreken ze lokaal. `docker/nginx/default.conf` vult aan met
+X-Frame-Options, Permissions-Policy en CSP. Zet er nooit één bij die Caddy ook
+stuurt: dubbele headers geven bij CSP de doorsnede van beide en breken dan stil.
+
+**De CSP is geen XSS-verdediging en doet niet alsof.** `unsafe-inline` en
+`unsafe-eval` staan erin omdat Livewire een inline configuratieblok neerzet en
+Alpine zijn expressies met `new Function()` uitvoert. Zonder die twee werkt geen
+knop meer, in de app noch in Filament. Wat de CSP wél afdwingt is
+`frame-ancestors none`, `object-src none`, `base-uri self` en `form-action
+self`. Komt er ooit een CDN of extern lettertype bij, dan moet het hier ook bij,
+want alles is nu eigen origin.
+
+**Wat goed bleek en zo moet blijven.** Alle 13 methodes die een ID van de client
+aannemen controleren eigendom, via de policies of via een gescopete relatie, en
+er is bewust geen `before()`-admin-bypass. De foto-upload doet
+`getimagesizefromstring` op de echte bytes en **hercodeert via GD**, wat elke
+ingebedde payload vernietigt; bestandsnamen komen van de server. Alle ruwe SQL
+is geparameteriseerd: `'; DROP TABLE users; --` door de ltree-filter liet de
+tabel intact.
+
+**De CRLF-advisory (CVE-2026-48019) is reproduceerbaar maar niet uitbuitbaar.**
+De regels `email` en `email:rfc` accepteren `"a\r\nBcc: x@y.nl"@b.nl`, maar
+`Symfony\Component\Mime\Address` weigert hem alsnog. Er komt dus nooit een
+geïnjecteerde header naar buiten, en dát is waarom de ignore-regel in
+`composer audit` verdedigbaar is. Niet omdat de kwetsbaarheid niet bestaat.
+
+**Openstaand, bewust niet in deze ronde meegenomen:** de JS-bundel op productie
+(`app-BbTNh9mu.js`) is ouder dan wat de huidige lockfile bouwt
+(`app-CXZ0B1OJ.js`). Dependabot bumpte axios en 7 pakketten in git, maar
+`public/build` is daarna nooit herbouwd en meegestuurd. De CSS is wél gelijk.
+Dat hoort in een eigen deploy, niet gebundeld met securityfixes, anders is een
+rollback niet meer eenduidig.
+
+**Buiten scope gebleven:** netwerk- en infrastructuurtesten op de VPS, Caddy,
+Headscale en de Proxmox-host. Geen brute force, geen fuzzing, en niets dat data
+op productie muteert.
 
 ## Wachtwoordmanagers en `wire:model` (01-09-2026)
 
