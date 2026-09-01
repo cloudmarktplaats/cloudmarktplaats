@@ -77,7 +77,7 @@ class ContactSeller extends Component
         }
 
         $this->validate([
-            'email' => ['required', 'email:rfc'],
+            'email' => ['required', 'email:strict'],
             'body' => ['required', 'string', 'min:10', 'max:2000'],
         ], attributes: [
             'email' => 'e-mailadres',

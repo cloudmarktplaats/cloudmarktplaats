@@ -116,7 +116,7 @@ class Subscribe extends Component
         }
 
         $this->validate([
-            'email' => ['required', 'email'],
+            'email' => ['required', 'email:strict'],
             // Zonder vinkje is er geen toestemming, en dan is er niets om vast
             // te leggen. Niet `required_without_all`: een uitgevinkt vakje is
             // `false` en dat is voor `required` gewoon aanwezig, dus die regel

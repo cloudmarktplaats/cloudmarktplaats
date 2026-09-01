@@ -48,7 +48,7 @@ class SiweOnboarding extends Component
     {
         $this->validate([
             'address' => ['required', 'regex:/^0x[a-fA-F0-9]{40}$/'],
-            'email' => ['required', 'email', 'unique:users,email'],
+            'email' => ['required', 'email:strict', 'unique:users,email'],
             'username' => ['required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9_-]+$/i', 'unique:users,username'],
             'accept_tos' => ['accepted'],
         ]);

@@ -66,7 +66,7 @@ class Register extends Component
     public function joinWaitlist(): void
     {
         $this->validate([
-            'waitlist_email' => ['required', 'email', 'unique:waitlist_entries,email'],
+            'waitlist_email' => ['required', 'email:strict', 'unique:waitlist_entries,email'],
         ]);
 
         WaitlistEntry::query()->create(['email' => strtolower(trim($this->waitlist_email))]);
@@ -106,7 +106,7 @@ class Register extends Component
         $this->email = Str::lower(trim($this->email));
 
         $this->validate([
-            'email' => ['required', 'email', 'unique:users,email'],
+            'email' => ['required', 'email:strict', 'unique:users,email'],
             'username' => ['required', 'string', 'min:3', 'max:30', 'regex:/^[a-z0-9_-]+$/i', 'unique:users,username'],
             'password' => ['required', 'string', 'min:10', 'confirmed'],
             'accept_tos' => ['accepted'],
