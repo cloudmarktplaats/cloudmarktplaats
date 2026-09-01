@@ -294,3 +294,32 @@ Route::post('/reports/listing/{listing}', [ReportController::class, 'storeForLis
 Route::post('/reports/homelab/{post:ulid}', [ReportController::class, 'storeForHomelabPost'])
     ->middleware('auth')
     ->name('reports.homelab.store');
+
+/*
+ * RFC 9116. Wie een gat vindt kijkt hier, niet in de repo, en tot 01-09-2026
+ * stond hier niets. `SECURITY.md` noemde het meldadres al; dit maakt het
+ * vindbaar op de plek waar de RFC het voorschrijft.
+ *
+ * `Expires` wordt per verzoek berekend en niet vastgezet. Een verlopen
+ * security.txt is precies de belofte-zonder-onderhoud waar dit project zich al
+ * eerder aan brandde, en een datum die vanzelf meeloopt kan niet stilletjes
+ * verlopen.
+ */
+Route::get('/.well-known/security.txt', function () {
+    $regels = [
+        'Contact: mailto:privacy@cloudmarktplaats.nl',
+        'Expires: '.now()->addYear()->toIso8601ZuluString(),
+        'Preferred-Languages: nl, en',
+        'Canonical: https://cloudmarktplaats.nl/.well-known/security.txt',
+        'Policy: https://github.com/cloudmarktplaats/cloudmarktplaats/blob/main/SECURITY.md',
+        '',
+        '# De broncode staat onder AGPL-3.0 op github.com/cloudmarktplaats/cloudmarktplaats.',
+        '# Meld niets als openbaar issue: dat geeft iedereen die meeleest een',
+        '# handleiding voordat het gedicht is.',
+        '',
+    ];
+
+    return response(implode("\n", $regels))->header('Content-Type', 'text/plain; charset=UTF-8');
+})->name('security.txt');
+
+Route::redirect('/security.txt', '/.well-known/security.txt');
