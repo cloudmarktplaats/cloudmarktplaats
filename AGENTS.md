@@ -157,9 +157,20 @@ bundel was byte-identiek in oud en nieuw (1482 tekens), dus alleen het
 axios-blok veranderde en de lightbox kon niet breken. Daarna op productie
 bevestigd door de lightbox echt te openen.
 
-Terzijde, nog open: **axios wordt gebundeld maar door niets gebruikt.**
-`bootstrap.js` zet alleen `window.axios` met een header; Livewire gebruikt
-fetch. Dat is ~3 kB gzip aan dode code in elke paginalading.
+**Axios is er daarna uit gegaan, en dat scheelde meer dan gedacht.**
+`bootstrap.js` was de standaardregel die Laravel bij een nieuw project
+meelevert: `window.axios` zetten plus een `X-Requested-With`-header. Livewire
+praat met fetch en in de hele repo stond geen enkele aanroep. De bundel ging van
+57,30 kB naar **5,76 kB**, gzip van 22,09 naar **2,69 kB**; ik had het vooraf op
+~3 kB gzip geschat en dat was ruim tien keer te laag.
+
+De manier waarop dat is vastgesteld is herbruikbaar: op productie `window.axios`
+vervangen door een getter die elke opvraging telt, en dan de site gebruiken.
+Nul opvragingen op zowel de advertentielijst als de lightbox. Dat is harder
+bewijs dan een grep, want het vangt ook aanroepen die niet in de bron staan.
+`->ajax()`, `expectsJson()` en `X-Requested-With` komen in `app/`, `routes/`,
+`config/` en `bootstrap/` nergens voor, dus die header miste niemand.
+`tests/Feature/FrontendBundleTest.php` houdt de standaardregel er voortaan uit.
 
 **Buiten scope gebleven:** netwerk- en infrastructuurtesten op de VPS, Caddy,
 Headscale en de Proxmox-host. Geen brute force, geen fuzzing, en niets dat data
