@@ -142,12 +142,24 @@ De regels `email` en `email:rfc` accepteren `"a\r\nBcc: x@y.nl"@b.nl`, maar
 geïnjecteerde header naar buiten, en dát is waarom de ignore-regel in
 `composer audit` verdedigbaar is. Niet omdat de kwetsbaarheid niet bestaat.
 
-**Openstaand, bewust niet in deze ronde meegenomen:** de JS-bundel op productie
-(`app-BbTNh9mu.js`) is ouder dan wat de huidige lockfile bouwt
-(`app-CXZ0B1OJ.js`). Dependabot bumpte axios en 7 pakketten in git, maar
-`public/build` is daarna nooit herbouwd en meegestuurd. De CSS is wél gelijk.
-Dat hoort in een eigen deploy, niet gebundeld met securityfixes, anders is een
-rollback niet meer eenduidig.
+**De JS-bundeldrift is in een eigen deploy rechtgezet** (01-09, na de
+securityronde). Productie draaide `app-BbTNh9mu.js` met axios 1.19.0 terwijl de
+lockfile 1.20.0 zegt: Dependabot bumpte het in git, maar `public/build` werd
+nooit herbouwd en meegestuurd. Nu `app-CXZ0B1OJ.js`. Geen advisory, gewoon
+onderhoud.
+
+Twee dingen die dat opleverde en die je vaker kunt gebruiken. **De oude assets
+blijven op productie staan** (een sync voegt toe, verwijdert niet), dus
+terugdraaien is alleen `manifest.json` terugzetten; er staat een kopie als
+`public/build/manifest.json.voor-2026-09-01`. En **vergelijk vóór het deployen
+wat er écht verschilt**: het stuk vanaf `photoLightbox` tot het einde van de
+bundel was byte-identiek in oud en nieuw (1482 tekens), dus alleen het
+axios-blok veranderde en de lightbox kon niet breken. Daarna op productie
+bevestigd door de lightbox echt te openen.
+
+Terzijde, nog open: **axios wordt gebundeld maar door niets gebruikt.**
+`bootstrap.js` zet alleen `window.axios` met een header; Livewire gebruikt
+fetch. Dat is ~3 kB gzip aan dode code in elke paginalading.
 
 **Buiten scope gebleven:** netwerk- en infrastructuurtesten op de VPS, Caddy,
 Headscale en de Proxmox-host. Geen brute force, geen fuzzing, en niets dat data
