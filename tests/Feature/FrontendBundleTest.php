@@ -41,6 +41,26 @@ it('keeps axios out of package.json', function () {
 });
 
 /*
+ * De console-signatuur. Dit is de enige plek waar de maker zelf in de site
+ * staat, en het staat er bewust in de console en niet op een pagina.
+ *
+ * De tweede verwachting is de nuttige: de naam is in blokletters van twee
+ * rijen gezet, en als iemand er één regel van bewerkt staat het scheef zonder
+ * dat een test dat merkt. Ongelijke rijlengtes zijn hier de enige echte
+ * kapotmaker.
+ */
+it('signs the console with the name of whoever built it', function () {
+    $bron = (string) file_get_contents(resource_path('js/easter-eggs.js'));
+
+    expect($bron)->toContain('Nick Aldewereld');
+
+    preg_match('/const SIGNATUUR = \[\s*\'([^\']+)\',\s*\'([^\']+)\'/u', $bron, $m);
+
+    expect($m)->toHaveCount(3)
+        ->and(mb_strlen($m[1]))->toBe(mb_strlen($m[2]));
+});
+
+/*
  * De twee modules die er wel toe doen moeten blijven staan. Zakt deze test, dan
  * is er meer weggehaald dan de bedoeling was: de lightbox draagt de fotoweergave
  * op elke advertentiepagina.

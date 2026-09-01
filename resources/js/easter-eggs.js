@@ -11,6 +11,17 @@
  */
 
 const SPONSOR = 'https://github.com/sponsors/NickAldewereld';
+
+/*
+ * "NICK ALDEWERELD" in blokletters van twee rijen. Beide regels moeten exact
+ * even lang blijven, anders staat de tweede rij verschoven onder de eerste;
+ * FrontendBundleTest bewaakt dat, want het is met het blote oog in een diff
+ * niet te zien.
+ */
+const SIGNATUUR = [
+    '█▄█ █ ▄▀▀ █▄▀    ▄▀▄ █   █▀▄ ██▀ █ █ ██▀ █▀▄ ██▀ █   █▀▄',
+    '█ █ █ ▀▄▄ █ █    █▀█ █▄▄ █▄▀ █▄▄ ▀▄▀ █▄▄ █▀▄ █▄▄ █▄▄ █▄▀',
+];
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const GLYPHS = 'アカサタナハマヤラワ0123456789<>[]{}/\\|=+*·:.'.split('');
 
@@ -22,6 +33,15 @@ function consoleEgg() {
         "  `-.__~~~__.-'     geen trackers, wel kabels",
     ].join('\n');
     console.log('%c' + art, 'color:#D9480F;font-family:monospace;font-size:12px;line-height:1.25');
+    console.log(
+        '%c' + SIGNATUUR.join('\n') + '\n%cgebouwd door Nick Aldewereld · aldewereldconsultancy.nl',
+        // Merkoranje en niet de inktkleur: een console in donkere modus staat
+        // op ongeveer #202124, en daar is #17191B onzichtbaar op. Dit publiek
+        // draait devtools, en een handtekening die de helft niet ziet is geen
+        // handtekening.
+        'color:#D9480F;font-family:monospace;font-size:11px;line-height:1.15',
+        'color:#9AA1A6;font-family:monospace;font-size:11px'
+    );
     console.log(
         "%cDraait dit ding op jouw homelab? Mooi. Hou 'm draaiend →%c " + SPONSOR,
         'color:#5A6167;font-family:monospace',
