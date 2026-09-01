@@ -107,12 +107,16 @@ zodra de vlag uit gaat. Daar hoort hij dus per muterende methode, zoals bij
 ## Wachtwoordmanagers en `wire:model` (01-09-2026)
 
 Alle inlog-, registratie- en herstelvelden dragen sinds vandaag een
-`autocomplete`-token: `username` op elk veld dat het account aanwijst,
-`current-password` en `new-password` op de wachtwoorden, `nickname` op de
-weergavenaam (die is geen inlognaam), `off` op de uitnodigingscode. Bewaakt door
-`tests/Feature/Auth/PasswordManagerSupportTest.php`.
+`autocomplete`-token, live sinds 01-09: `username` op elk veld dat het account
+aanwijst, `current-password` en `new-password` op de wachtwoorden, `nickname` op
+de weergavenaam (die is geen inlognaam), `off` op de uitnodigingscode. Bewaakt
+door `tests/Feature/Auth/PasswordManagerSupportTest.php`.
 
-Twee dingen daaruit die je niet uit de code kunt aflezen.
+Aanleiding was geen melding maar een LinkedIn-draadje waarin iemand voorstelde
+plakken te blokkeren op wachtwoordvelden. Het antwoord daarop is nee, en het
+naslaan van de eigen code leverde de omgekeerde fout op.
+
+Drie dingen die je niet uit de code kunt aflezen.
 
 **Het readonly e-mailveld op het herstelformulier is geen sierraad.** Chrome en
 Firefox bieden het opslaan van een gewijzigd wachtwoord alleen aan als er in
