@@ -5,8 +5,8 @@
          gebruiker opnieuw voor een raadsel staan. --}}
     @error('oauth') <p class="mb-3 rounded-sm bg-red-50 p-3 text-sm text-red-700">{{ $message }}</p> @enderror
     <form wire:submit="submit" class="space-y-3">
-        <input type="email" wire:model="email" placeholder="{{ __('email') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
-        <input type="password" wire:model="password" placeholder="{{ __('wachtwoord') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+        <input type="email" autocomplete="username" wire:model="email" placeholder="{{ __('email') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+        <input type="password" autocomplete="current-password" wire:model="password" placeholder="{{ __('wachtwoord') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('email') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
         <label class="flex items-center space-x-2 text-sm"><input type="checkbox" wire:model="remember"> <span>{{ __('Onthoud mij') }}</span></label>
         <button class="w-full cmp-btn cmp-btn-primary">{{ __('Inloggen') }}</button>

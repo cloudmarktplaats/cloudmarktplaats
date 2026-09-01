@@ -64,11 +64,10 @@ Omdat deployen een file-sync is, zegt git níét wat er draait. Wat hier staat
 is op `main` en nog niet op productie. Neem het mee met de volgende sync en
 haal het dan uit deze lijst.
 
-*(leeg op 31-08-2026: de mailinglijst is gedeployd, inclusief de vier
-migraties, `route:cache`, `db:seed --class=LegalDocumentSeeder` en de
-hercreatie van nginx. Geverifieerd ín de container dat de redactieregel er
-staat en dat het access-log `/nieuwsbrief/[redacted]` schrijft.
-`FEATURE_MAIL_LIST` staat nog uit.)*
+- **De `autocomplete`-tokens op de auth-velden** (`ed185c6`). Zes blade-bestanden,
+  verder niets: geen route, geen migratie, geen nieuwe Tailwind-class, dus
+  `public/build` hoeft niet mee. Wel `view:clear`, want views worden op
+  productie gecompileerd bewaard.
 
 Kwaliteitspoorten vóór elke deploy, alle drie groen:
 
@@ -103,6 +102,40 @@ vervolgrequests gaan naar `/livewire/update`, niet naar de oorspronkelijke route
 verkooppaneel heeft — zet je de check daar in `boot()`, dan 403't de hele pagina
 zodra de vlag uit gaat. Daar hoort hij dus per muterende methode, zoals bij
 `markSold()` en `newLink()`.
+
+## Wachtwoordmanagers en `wire:model` (01-09-2026)
+
+Alle inlog-, registratie- en herstelvelden dragen sinds vandaag een
+`autocomplete`-token: `username` op elk veld dat het account aanwijst,
+`current-password` en `new-password` op de wachtwoorden, `nickname` op de
+weergavenaam (die is geen inlognaam), `off` op de uitnodigingscode. Bewaakt door
+`tests/Feature/Auth/PasswordManagerSupportTest.php`.
+
+Twee dingen daaruit die je niet uit de code kunt aflezen.
+
+**Het readonly e-mailveld op het herstelformulier is geen sierraad.** Chrome en
+Firefox bieden het opslaan van een gewijzigd wachtwoord alleen aan als er in
+hetzelfde formulier een veld met `autocomplete="username"` staat. Haal je het
+weg, dan slaat de manager het nieuwe wachtwoord nergens op.
+
+**`wire:model.blur` redt een autofill niet, ondanks wat de naam belooft.**
+Livewire 3.8.6 luistert bij tekstvelden alleen naar `input`
+(`dist/livewire.esm.js:3445`) en kent geen autofill-afhandeling. Zet een vuller
+de waarde wél in de DOM maar vuurt hij geen event af, dan meldt het formulier
+"E-mailadres is verplicht." terwijl het veld zichtbaar gevuld is. Gemeten in
+Chrome op 01-09-2026, in beide richtingen. `.blur` lost dat niet op, want
+`getModifierTail` (regel 11890) filtert `blur` eruit voordat het naar Alpine
+gaat, en Livewires eigen `@blur` roept alleen `$commit()` aan: die verstuurt de
+bestaande staat zonder de DOM te lezen. Geprobeerd, gemeten, weer verwijderd.
+**Dit gat staat dus nog open** en is met een modifier niet te dichten. De
+gangbare managers vuren `input` wel af, dus het bijt alleen bij een niet-gangbare
+vuller. Kandidaat als het ooit gemeld wordt: `wire:model.fill`, want die
+modifier komt wél door `getModifierTail` heen en leest de elementwaarde bij het
+binden. Niet getest, dus niet geplaatst.
+
+**Plakken blokkeren op wachtwoord- of MFA-velden: nooit doen.** NIST SP 800-63B
+§5.1.1.2 schrijft voor dat verifiers het moeten toestaan. Er staat een test op
+die het tegenhoudt als iemand het ooit goedbedoeld voorstelt.
 
 ## Meten zonder analytics
 

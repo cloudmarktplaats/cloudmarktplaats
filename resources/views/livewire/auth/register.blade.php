@@ -5,17 +5,17 @@
         <p class="-mt-2 mb-4 font-mono text-[11px] text-cmp-signal">{{ $spotsLeft }} {{ __('van de 100 founding-plekken vrij') }}</p>
     @endif
     <form wire:submit="submit" class="space-y-3">
-        <input type="email" wire:model="email" placeholder="{{ __('email') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+        <input type="email" autocomplete="username" wire:model="email" placeholder="{{ __('email') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('email') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <input wire:model="username" placeholder="{{ __('username') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+        <input autocomplete="nickname" wire:model="username" placeholder="{{ __('username') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('username') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
         <p class="text-xs text-cmp-faint -mt-1">{{ __('Dit is je naam op het platform — inloggen doe je straks met je e-mailadres. Je kunt later in je profiel een aparte weergavenaam kiezen.') }}</p>
 
-        <input type="password" wire:model="password" placeholder="{{ __('wachtwoord') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+        <input type="password" autocomplete="new-password" wire:model="password" placeholder="{{ __('wachtwoord') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <input type="password" wire:model="password_confirmation" placeholder="{{ __('herhaal wachtwoord') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+        <input type="password" autocomplete="new-password" wire:model="password_confirmation" placeholder="{{ __('herhaal wachtwoord') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
 
         <label class="flex items-start space-x-2 text-sm">
             <input type="checkbox" wire:model="accept_tos" class="mt-1">
@@ -24,7 +24,7 @@
         @error('accept_tos') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
         @if (config('cloudmarktplaats.features.invites'))
-            <input wire:model="invite_code" placeholder="{{ __('uitnodigingscode (optioneel)') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
+            <input autocomplete="off" wire:model="invite_code" placeholder="{{ __('uitnodigingscode (optioneel)') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
             @error('invite_code') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
         @endif
 
@@ -54,7 +54,7 @@
             <h1 class="mb-2 text-xl font-bold">{{ __('De beta zit vol') }}</h1>
             <p class="mb-4 text-sm text-cmp-muted">{{ __('De eerste 100 founding members zijn binnen. Laat je e-mail achter — je krijgt als eerste een uitnodiging zodra er een plek vrijkomt.') }}</p>
             <form wire:submit="joinWaitlist" class="space-y-3">
-                <input type="email" wire:model="waitlist_email" placeholder="{{ __('email') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+                <input type="email" autocomplete="email" wire:model="waitlist_email" placeholder="{{ __('email') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
                 @error('waitlist_email') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
                 <button class="w-full cmp-btn cmp-btn-primary">{{ __('Zet me op de wachtlijst') }}</button>
             </form>

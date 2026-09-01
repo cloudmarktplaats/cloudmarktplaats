@@ -5,11 +5,11 @@
     </p>
 
     <form wire:submit="submit" class="space-y-3">
-        <input type="email" wire:model="email" placeholder="{{ __('email') }}"
+        <input type="email" autocomplete="username" wire:model="email" placeholder="{{ __('email') }}"
                class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('email') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-        <input wire:model="username" placeholder="{{ __('username') }}"
+        <input autocomplete="nickname" wire:model="username" placeholder="{{ __('username') }}"
                class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
         @error('username') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 

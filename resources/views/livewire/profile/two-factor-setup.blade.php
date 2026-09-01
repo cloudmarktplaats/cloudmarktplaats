@@ -33,7 +33,7 @@
                        wire:model="code" placeholder="{{ __('TOTP-code') }}" maxlength="6"
                        class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal font-mono">
                 @if (auth()->user()->identities()->where('provider', 'password')->exists())
-                    <input type="password" wire:model="password" placeholder="{{ __('Wachtwoord') }}"
+                    <input type="password" autocomplete="current-password" wire:model="password" placeholder="{{ __('Wachtwoord') }}"
                            class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal">
                 @endif
                 @error('password') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
