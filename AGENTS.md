@@ -64,10 +64,11 @@ Omdat deployen een file-sync is, zegt git níét wat er draait. Wat hier staat
 is op `main` en nog niet op productie. Neem het mee met de volgende sync en
 haal het dan uit deze lijst.
 
-- **De `autocomplete`-tokens op de auth-velden** (`ed185c6`). Zes blade-bestanden,
-  verder niets: geen route, geen migratie, geen nieuwe Tailwind-class, dus
-  `public/build` hoeft niet mee. Wel `view:clear`, want views worden op
-  productie gecompileerd bewaard.
+*(leeg op 01-09-2026: de `autocomplete`-tokens op de auth-velden zijn
+gedeployd. Zes blade-bestanden, `view:clear` en een herstart van php-fpm; geen
+migratie, geen route, geen `public/build`. Gemeten vóór de sync dat `/login`
+nul `autocomplete`-attributen had en erna dat login, register, forgot-password
+en het herstelformulier de juiste tokens tonen, alle vijf met een 200.)*
 
 Kwaliteitspoorten vóór elke deploy, alle drie groen:
 
