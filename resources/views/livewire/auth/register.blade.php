@@ -5,11 +5,9 @@
         <p class="-mt-2 mb-4 font-mono text-[11px] text-cmp-signal">{{ $spotsLeft }} {{ __('van de 100 founding-plekken vrij') }}</p>
     @endif
     <form wire:submit="submit" class="space-y-3">
-        {{-- Honeypot: buiten beeld, niet bereikbaar met tab, en de
-             wachtwoordmanager laten we hem overslaan. Vult iets dit veld, dan
-             is het geen mens. --}}
-        <div class="absolute left-[-9999px]" aria-hidden="true">
-            <label for="reg-website">{{ __('Laat dit veld leeg') }}</label>
+        {{-- Honeypot: hidden from humans, irresistible to bots. --}}
+        <div class="hidden" aria-hidden="true">
+            <label for="reg-website">Website (niet invullen)</label>
             <input type="text" id="reg-website" wire:model="website" tabindex="-1" autocomplete="off">
         </div>
         <input type="email" autocomplete="username" wire:model="email" placeholder="{{ __('email') }}" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
