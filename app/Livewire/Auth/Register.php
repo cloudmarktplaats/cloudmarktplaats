@@ -13,7 +13,9 @@ use App\Services\Gamification\InviteService;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -36,6 +38,21 @@ class Register extends Component
     public string $waitlist_email = '';
 
     public bool $waitlisted = false;
+
+    /** Honeypot. Moet leeg blijven; een mens ziet dit veld nooit. */
+    public string $website = '';
+
+    /**
+     * Hoeveel accounts 1 adres per uur mag aanmaken. Ruim genoeg voor een
+     * kantoor of een CGNAT-provider achter 1 uitgaand IP, krap genoeg om
+     * scripted aanmaak te stoppen voordat die de verzendlimiet opeet.
+     */
+    private const MAX_PER_HOUR = 5;
+
+    private function throttleKey(): string
+    {
+        return 'register:'.request()->ip();
+    }
 
     public function mount(): void
     {
@@ -72,6 +89,15 @@ class Register extends Component
             403
         );
 
+        // Een bot vult elk veld dat hij tegenkomt. Stil afhandelen, net als bij
+        // ContactSeller en Mail\Subscribe: een foutmelding zou de val verklappen.
+        // Geen tijdklem hier, anders dan bij Subscribe — de auth-velden dragen
+        // sinds 01-09 autocomplete-tokens, dus een wachtwoordmanager vult dit
+        // formulier sneller dan een mens ooit typt.
+        if ($this->website !== '') {
+            return;
+        }
+
         // Normalise before validating, not after: `unique:users,email` compares
         // case-sensitively on Postgres, so "TAKEN@..." would pass validation
         // against a stored "taken@..." and only blow up on the insert — the
@@ -85,6 +111,15 @@ class Register extends Component
             'password' => ['required', 'string', 'min:10', 'confirmed'],
             'accept_tos' => ['accepted'],
         ]);
+
+        // Ná de validatie, zodat een typefout geen poging kost en iemand zich
+        // niet met een te kort wachtwoord buitensluit. Alleen een account dat
+        // er echt komt telt mee, want dat is wat een verificatiemail kost.
+        if (RateLimiter::tooManyAttempts($this->throttleKey(), self::MAX_PER_HOUR)) {
+            throw ValidationException::withMessages([
+                'email' => __('Er zijn vanaf dit adres net al accounts aangemaakt. Probeer het over een uur opnieuw, of vraag een lid om een uitnodiging.'),
+            ]);
+        }
 
         $invitesOn = (bool) config('cloudmarktplaats.features.invites');
         $startingCredits = $invitesOn ? (int) config('cloudmarktplaats.gamification.starting_invite_credits') : 0;
@@ -133,6 +168,10 @@ class Register extends Component
 
             return;
         }
+
+        // Pas hier, want pas nu is er een account en gaat er een verificatiemail
+        // uit. Een mislukte poging kost niets.
+        RateLimiter::hit($this->throttleKey(), 3600);
 
         event(new Registered($user));
         auth()->login($user);
