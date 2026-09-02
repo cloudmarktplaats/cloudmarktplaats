@@ -126,8 +126,17 @@ class IntegrityReport
         // als die verstreken is zonder claim, is er echt iets aan de hand.
         // Legacy-rijen zonder claim-token (van vóór de claim-link) hebben
         // geen vervaldatum en vallen terug op de oude `created_at`-regel.
-        $vergeten = Transaction::query()
+        // **Twee gevallen, twee verschillende mensen die iets kunnen doen.**
+        // Dit stond op 02-09-2026 als één signaal met één advies ("de verkoper
+        // kan een nieuwe sturen"), en dat advies was onuitvoerbaar voor de
+        // enige rij die afging: daar hing al een koper aan, en `unclaimed()`
+        // filtert juist op rijen zónder koper. De verkoper zag die deal dus
+        // nergens en kon er niets mee. Een signaal dat een handeling
+        // voorschrijft moet de handeling noemen die het juiste scherm ook
+        // echt aanbiedt.
+        $vervallen = Transaction::query()
             ->where('status', 'pending')
+            ->whereNull('buyer_user_id')
             ->where(function ($query) use ($now, $quiet) {
                 $query->where('claim_expires_at', '<=', $now)
                     ->orWhere(function ($query) use ($quiet) {
@@ -135,8 +144,19 @@ class IntegrityReport
                     });
             })
             ->count();
-        if ($vergeten > 0) {
-            $signalen[] = sprintf('%d deal(s) wachten nog op bevestiging terwijl er geen bruikbare claim-link meer is — de verkoper kan een nieuwe sturen.', $vergeten);
+        if ($vervallen > 0) {
+            $signalen[] = sprintf('%d gemelde verkoop/verkopen wachten nog op een koper terwijl de claim-link niet meer bruikbaar is — de verkoper kan op de advertentie een nieuwe link maken.', $vervallen);
+        }
+
+        // Koper hangt er al aan maar heeft nooit bevestigd. Alleen die koper
+        // kan dit afmaken, met één klik op /profile/deals.
+        $onbevestigd = Transaction::query()
+            ->where('status', 'pending')
+            ->whereNotNull('buyer_user_id')
+            ->where('created_at', '<=', $quiet)
+            ->count();
+        if ($onbevestigd > 0) {
+            $signalen[] = sprintf('%d deal(s) hebben al een koper maar zijn nooit bevestigd — alleen die koper kan dat afmaken, op /profile/deals.', $onbevestigd);
         }
 
         // Weigeren is onomkeerbaar: de advertentie blijft op 'sold' staan en

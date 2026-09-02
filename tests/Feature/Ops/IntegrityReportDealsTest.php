@@ -91,3 +91,31 @@ it('does not signal a decline from outside the 24-hour window', function () {
 
     expect(collect($signalen)->contains(fn ($signaal) => str_contains($signaal, 'geweigerd')))->toBeFalse();
 });
+
+/*
+ * Het geval dat op 02-09-2026 het verkeerde advies kreeg. Een deal waar al een
+ * koper aan hangt maar die nooit bevestigd is, kan de verkoper niet oplossen:
+ * `openClaims()` gebruikt `unclaimed()`, en die filtert op rijen zónder koper.
+ * De verkoper ziet zo'n deal dus nergens. Alleen de koper kan hem afmaken, op
+ * /profile/deals, en dat moet het signaal dan ook zeggen.
+ */
+it('tells the buyer, not the seller, when a deal already has a buyer but was never confirmed', function () {
+    $koper = User::factory()->create();
+    $verkoper = User::factory()->create();
+    $listing = Listing::factory()->for($verkoper, 'user')->create(['state' => 'sold']);
+
+    Transaction::factory()->create([
+        'listing_id' => $listing->id,
+        'seller_user_id' => $verkoper->id,
+        'buyer_user_id' => $koper->id,
+        'status' => 'pending',
+        'claim_token' => null,
+        'claim_expires_at' => null,
+        'created_at' => now()->subDays(20),
+    ]);
+
+    $signalen = app(IntegrityReport::class)->build(now())['signalen'];
+
+    expect(collect($signalen)->filter(fn ($s) => str_contains($s, '/profile/deals')))->toHaveCount(1)
+        ->and(collect($signalen)->filter(fn ($s) => str_contains($s, 'de verkoper kan')))->toBeEmpty();
+});

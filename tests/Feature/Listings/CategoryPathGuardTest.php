@@ -1,6 +1,9 @@
 <?php
 
 declare(strict_types=1);
+use App\Livewire\Listings\Browse;
+use Livewire\Attributes\Locked;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /*
  * `/c/a...b` gaf een 500, geverifieerd op productie op 01-09-2026 met 1 request.
@@ -46,11 +49,11 @@ it('still serves the unfiltered index', function () {
  * dat is precies de toestand waarin de fout op 01-09-2026 in de log belandde.
  */
 it('also refuses an unparseable path when render is reached directly', function () {
-    $component = new \App\Livewire\Listings\Browse();
+    $component = new Browse;
     $component->categoryPath = 'a...b';
 
     $component->render();
-})->throws(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+})->throws(NotFoundHttpException::class);
 
 /*
  * En het slot erop, dat in de praktijk de eerste verdediging is: het pad is een
@@ -61,7 +64,7 @@ it('also refuses an unparseable path when render is reached directly', function 
  * dat je alleen kent uit een attribuut is makkelijk weg te halen.
  */
 it('locks the category path against client-side updates', function () {
-    $eigenschap = new ReflectionProperty(\App\Livewire\Listings\Browse::class, 'categoryPath');
+    $eigenschap = new ReflectionProperty(Browse::class, 'categoryPath');
 
-    expect($eigenschap->getAttributes(\Livewire\Attributes\Locked::class))->not->toBeEmpty();
+    expect($eigenschap->getAttributes(Locked::class))->not->toBeEmpty();
 });

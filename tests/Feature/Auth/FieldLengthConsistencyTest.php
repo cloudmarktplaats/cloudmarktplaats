@@ -2,7 +2,9 @@
 
 declare(strict_types=1);
 
+use App\Livewire\Auth\Register;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 
 /*
@@ -43,7 +45,7 @@ it('accepts an email at the RFC limit instead of blowing up on the column', func
     expect(strlen($adres))->toBeLessThanOrEqual(RFC_MAX_EMAIL)
         ->and(strlen($adres))->toBeGreaterThan(240);
 
-    Livewire::test(\App\Livewire\Auth\Register::class)
+    Livewire::test(Register::class)
         ->set('email', $adres)
         ->set('username', 'langadres')
         ->set('password', 'geheimgeheim')
@@ -57,7 +59,7 @@ it('accepts an email at the RFC limit instead of blowing up on the column', func
 it('rejects an email longer than the column can hold, with a message and not a crash', function () {
     $adres = str_repeat('a', 300).'@voorbeeld.nl';
 
-    Livewire::test(\App\Livewire\Auth\Register::class)
+    Livewire::test(Register::class)
         ->set('email', $adres)
         ->set('username', 'telang')
         ->set('password', 'geheimgeheim')
@@ -82,12 +84,12 @@ it('proves bcrypt itself stops looking after 72 bytes', function () {
     /* Dit is geen bug in onze code maar in wat bcrypt nu eenmaal doet, en het
        staat hier zodat niemand de regel hieronder weghaalt met "dat valt wel
        mee". Twee verschillende wachtwoorden, dezelfde hash. */
-    expect(\Illuminate\Support\Facades\Hash::check($basis.'TWEE', bcrypt($basis.'EEN')))
+    expect(Hash::check($basis.'TWEE', bcrypt($basis.'EEN')))
         ->toBeTrue();
 });
 
 it('refuses a password longer than bcrypt reads instead of silently ignoring the rest', function () {
-    Livewire::test(\App\Livewire\Auth\Register::class)
+    Livewire::test(Register::class)
         ->set('email', 'lang@voorbeeld.nl')
         ->set('username', 'langwoord')
         ->set('password', str_repeat('x', 73))
@@ -106,7 +108,7 @@ it('counts bytes and not characters, so accents cannot smuggle past the limit', 
     expect(mb_strlen($wachtwoord))->toBe(40)
         ->and(strlen($wachtwoord))->toBe(80);
 
-    Livewire::test(\App\Livewire\Auth\Register::class)
+    Livewire::test(Register::class)
         ->set('email', 'accent@voorbeeld.nl')
         ->set('username', 'accenten')
         ->set('password', $wachtwoord)
@@ -119,7 +121,7 @@ it('counts bytes and not characters, so accents cannot smuggle past the limit', 
 it('still accepts a long passphrase that fits', function () {
     $wachtwoord = str_repeat('a', 72);
 
-    Livewire::test(\App\Livewire\Auth\Register::class)
+    Livewire::test(Register::class)
         ->set('email', 'past@voorbeeld.nl')
         ->set('username', 'pastnog')
         ->set('password', $wachtwoord)
