@@ -45,6 +45,13 @@ use Livewire\Component;
 #[Layout('components.layouts.marketing', ['title' => 'Snuffelen — Cloudmarktplaats'])]
 class Browse extends Component
 {
+    /**
+     * `#[Locked]` omdat dit een routeparameter is en geen invoerveld. Zonder
+     * dit slot mag een Livewire-vervolgverzoek de waarde gewoon overschrijven,
+     * en dan komt er alsnog een onparseerbaar pad in de ltree-query terecht.
+     * Zie de opmerking bij PATH_SHAPE.
+     */
+    #[Locked]
     public ?string $categoryPath = null;
 
     /** Ordering mode: `recent` (default) or `shuffle` ("Verras me"). */
@@ -73,17 +80,28 @@ class Browse extends Component
      * Alle 113 echte paden zijn kleine letters, cijfers en punten, hoogstens 28
      * tekens en 2 niveaus diep. Wat hier niet doorheen komt kan dus onmogelijk
      * bestaan, en dan is 404 het eerlijke antwoord.
+     *
+     * **De controle hoort niet alleen in `mount()`.** Die draait maar één keer,
+     * bij de eerste paginalading; elke volgende Livewire-ronde (sorteren,
+     * meer laden) gaat rechtstreeks naar `render()`. Stond de controle alleen
+     * in `mount()`, dan was er nog een tweede deur naar dezelfde 500. Gemeten
+     * op 02-09-2026 in de dagelijkse check: twee ltree-fouten in de log met
+     * `Browse.php(101)` in het spoor, en dat is `render()`.
      */
     private const PATH_SHAPE = '/^[a-z0-9_]+(\.[a-z0-9_]+)*$/';
 
-    public function mount(?string $categoryPath = null): void
+    private function guardPath(?string $path): void
     {
         abort_if(
-            $categoryPath !== null && $categoryPath !== ''
-            && (strlen($categoryPath) > 255 || preg_match(self::PATH_SHAPE, $categoryPath) !== 1),
+            $path !== null && $path !== ''
+            && (strlen($path) > 255 || preg_match(self::PATH_SHAPE, $path) !== 1),
             404
         );
+    }
 
+    public function mount(?string $categoryPath = null): void
+    {
+        $this->guardPath($categoryPath);
         $this->categoryPath = $categoryPath;
 
         // Arriving with ?sort=shuffle but no seed (e.g. a bare shared link)
@@ -107,6 +125,8 @@ class Browse extends Component
 
     public function render(): View
     {
+        $this->guardPath($this->categoryPath);
+
         $base = Listing::query()
             ->with('photos')
             ->where('state', 'published');

@@ -1,9 +1,21 @@
 @props(['transaction'])
 
 @php
-    $url = route('deals.claim', ['token' => $transaction->claim_token]);
-    $expired = $transaction->claim_expires_at?->isPast() ?? false;
-    $copyText = __('Bedankt voor de koop. Wil je hier even bevestigen dat het is doorgegaan? :url — één klik, meer is het niet.', ['url' => $url]);
+    /* Geen token of geen vervaldatum telt als verlopen, niet als geldig.
+       Verkopen van vóór de claim-link hebben allebei NULL, en met
+       `?->isPast() ?? false` viel dat in de tak voor een geldige link. De
+       dagelijkse check droeg de verkoper intussen elke dag op om een nieuwe
+       link te sturen, terwijl het scherm die knop juist niet toonde.
+       Gevonden op 02-09-2026. */
+    $expired = $transaction->claim_token === null
+        || ($transaction->claim_expires_at?->isPast() ?? true);
+
+    /* De URL pas berekenen als er een token is. `route()` met een lege
+       parameter gooit `UrlGenerationException`, en deze regel stond bóven de
+       `@if`: de verkoper kreeg daardoor geen ontbrekende knop maar een 500 op
+       zijn eigen advertentiepagina. */
+    $url = $expired ? null : route('deals.claim', ['token' => $transaction->claim_token]);
+    $copyText = $expired ? null : __('Bedankt voor de koop. Wil je hier even bevestigen dat het is doorgegaan? :url — één klik, meer is het niet.', ['url' => $url]);
 @endphp
 
 {{-- `$attributes` moet op de root staan, anders valt de `wire:key` uit de

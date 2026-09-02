@@ -35,3 +35,33 @@ it('still serves a real category', function () {
 it('still serves the unfiltered index', function () {
     $this->get('/listings')->assertOk();
 });
+
+/*
+ * De tweede deur. `mount()` draait alleen bij de eerste paginalading; elke
+ * volgende Livewire-ronde (sorteren, meer laden) gaat rechtstreeks naar
+ * `render()`. Stond de controle alleen in `mount()`, dan gaf een component die
+ * al leefde alsnog een 500 op een onparseerbaar pad.
+ *
+ * Deze test zet het pad rechtstreeks, dus zonder langs `mount()` te gaan, en
+ * dat is precies de toestand waarin de fout op 01-09-2026 in de log belandde.
+ */
+it('also refuses an unparseable path when render is reached directly', function () {
+    $component = new \App\Livewire\Listings\Browse();
+    $component->categoryPath = 'a...b';
+
+    $component->render();
+})->throws(\Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class);
+
+/*
+ * En het slot erop, dat in de praktijk de eerste verdediging is: het pad is een
+ * routeparameter en geen invoerveld, dus een Livewire-vervolgverzoek mag hem
+ * niet zetten. Gemeten toen deze test er kwam: Livewire gooit dan
+ * `CannotUpdateLockedPropertyException` en `render()` wordt niet eens bereikt.
+ * De controle in `render()` blijft er als tweede slot op staan, want een slot
+ * dat je alleen kent uit een attribuut is makkelijk weg te halen.
+ */
+it('locks the category path against client-side updates', function () {
+    $eigenschap = new ReflectionProperty(\App\Livewire\Listings\Browse::class, 'categoryPath');
+
+    expect($eigenschap->getAttributes(\Livewire\Attributes\Locked::class))->not->toBeEmpty();
+});
