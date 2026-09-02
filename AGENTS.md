@@ -271,6 +271,46 @@ dus een domein van 189 tekens in één stuk is gewoon ongeldig. `email:strict`
 weigerde dat terecht; mijn testdata was fout, niet de code. Staat als comment
 bij de test zodat de volgende het niet "repareert".
 
+## Wat de dagelijkse check van 02-09-2026 opleverde
+
+Twee meldingen, twee echte fouten eronder. Allebei van hetzelfde soort: de
+controle stond ergens waar hij niet langskwam.
+
+**1. De ltree-guard zat alleen in `mount()`.** Dat is de helft van de deuren.
+`mount()` draait bij de eerste paginalading; elke volgende Livewire-ronde
+(sorteren, meer laden) gaat rechtstreeks naar `render()`. Het spoor in de log
+wees dan ook naar `Browse.php(101)` en dat is `render()`. Nu staat de controle
+in `guardPath()` en wordt hij vanuit allebei aangeroepen, en `$categoryPath`
+heeft `#[Locked]`.
+
+**Regel om te onthouden: een publieke Livewire-eigenschap die uit de route
+komt hoort `#[Locked]` te zijn.** Zonder dat slot mag een vervolgverzoek hem
+overschrijven, en dan is elke controle in `mount()` een formaliteit. Livewire
+gooit met het slot `CannotUpdateLockedPropertyException` vóór `render()`; de
+controle in `render()` blijft er als tweede slot op staan, want een slot dat
+je alleen kent uit een attribuut is makkelijk weg te halen.
+
+**2. De mail droeg de verkoper op iets te doen dat het scherm niet aanbood.**
+"De verkoper kan een nieuwe sturen" klopte niet voor de enige rij die het
+signaal afgaf: een verkoop van vóór de claim-link, met `claim_token` en
+`claim_expires_at` allebei NULL. In `claim-link.blade.php` stond
+
+    $expired = $transaction->claim_expires_at?->isPast() ?? false;
+
+en op een NULL-datum geeft dat `false`. Die rij viel dus in de tak voor een
+geldige link en de knop "Nieuwe link" bleef weg. Erger nog: `route()` met een
+lege parameter gooit `UrlGenerationException`, en die regel stond bóven de
+`@if`. De verkoper kreeg geen ontbrekende knop maar een 500 op zijn eigen
+advertentiepagina.
+
+**Regel om te onthouden: `?->` gevolgd door `?? false` maakt van "onbekend"
+stilletjes "in orde".** Bij een vervaldatum is de veilige kant `?? true`.
+Zoek dit patroon voordat je het opnieuw schrijft.
+
+En breder: **een signaal in de dagelijkse mail dat een handeling voorschrijft,
+hoort getoetst te worden aan het scherm dat die handeling moet aanbieden.**
+Deze stond er twaalf dagen, elke dag opnieuw, en was niet uit te voeren.
+
 ## Meten zonder analytics
 
 Er zitten bewust geen trackers op, dus er is **geen funnel-data**. Elke vraag over
