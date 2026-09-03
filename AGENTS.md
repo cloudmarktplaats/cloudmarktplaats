@@ -311,6 +311,31 @@ En breder: **een signaal in de dagelijkse mail dat een handeling voorschrijft,
 hoort getoetst te worden aan het scherm dat die handeling moet aanbieden.**
 Deze stond er twaalf dagen, elke dag opnieuw, en was niet uit te voeren.
 
+## Eén deal is administratief bevestigd (03-09-2026)
+
+Transactie 1 ("Jabra Speak spiderphone", verkoper rpaardekam, koper martijn,
+gemeld 21-08) staat op `completed` omdat de **eigenaar** zei dat de koop is
+doorgegaan, niet omdat de koper heeft geklikt.
+
+**Dat verschil moet vindbaar blijven.** Het staat daarom in `admin_actions`
+als `deal.confirmed_by_owner` (rij 44), met in `meta` de reden, wie het
+bevestigde en dat het via de CLI ging. Wie ooit uitrekent hoeveel bevestigde
+verkopen rpaardekam heeft, kan die ene eruit halen. Zonder die rij zou het
+getal een bewijskracht suggereren die het niet heeft, en dat is precies wat
+dit platform niet wil.
+
+De aanleiding: de rij stamt van vóór de claim-link, dus token en vervaldatum
+waren NULL en de koper had nooit een link gekregen. Een servicemail op 02-09
+naar de koper bleef onbeantwoord.
+
+**Regel voor een volgende keer:** een deal bevestigen namens iemand anders gaat
+via `DealService::confirm()` en niet via een rauwe UPDATE, zodat de rij
+dezelfde sloten en controles doorloopt, en er hoort altijd een
+`admin_actions`-regel bij. Let op: `ip_hash` staat op NOT NULL, en vanaf de CLI
+is er geen IP; `AdminActionLogger` valt in dat geval terug op een hash van
+0.0.0.0. Zet dan `via: cli` in de meta, want die hash verraadt zelf niet waar
+hij vandaan komt.
+
 ## Meten zonder analytics
 
 Er zitten bewust geen trackers op, dus er is **geen funnel-data**. Elke vraag over
