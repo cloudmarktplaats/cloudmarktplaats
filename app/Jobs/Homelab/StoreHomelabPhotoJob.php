@@ -15,6 +15,9 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\Interfaces\ImageInterface;
 use Intervention\Image\Laravel\Facades\Image;
 use Throwable;
@@ -78,7 +81,7 @@ class StoreHomelabPhotoJob implements ShouldQueue
                 );
             }
 
-            // Goedkope header-only afmetingscheck vóór de dure Image::read():
+            // Goedkope header-only afmetingscheck vóór de dure Image::decodeBinary():
             // een vijandige upload die de MIME-sniff passeert maar een
             // decompression-bomb is (bijv. een piepkleine PNG die naar
             // gigapixels expandeert) mag de decoder nooit bereiken.
@@ -91,7 +94,7 @@ class StoreHomelabPhotoJob implements ShouldQueue
                 throw new InvalidUploadException("Image dimensions out of bounds ({$w}x{$h})");
             }
 
-            $image = Image::read($this->bytes);
+            $image = Image::decodeBinary($this->bytes);
 
             // Shrink naar het grootste formaat dat we bewaren, VÓÓR we varianten
             // afleiden. Anders cloont elke variant-writer de foto op ware grootte
@@ -102,7 +105,7 @@ class StoreHomelabPhotoJob implements ShouldQueue
             //
             // Privacy: EXIF/IPTC/XMP (incl. GPS) verdwijnt door de GD-her-encode
             // hieronder — GD kan EXIF niet eens schrijven. Niet door een clone.
-            // Oriëntatie blijft wel behouden: Image::read() hierboven heeft de
+            // Oriëntatie blijft wel behouden: Image::decodeBinary() hierboven heeft de
             // pixels al gedraaid op basis van de EXIF `Orientation`-tag
             // (Intervention's standaardgedrag, vereist ext-exif) — de tag zelf
             // is op dit punt overbodig geworden, niet nog te verliezen.
@@ -146,10 +149,10 @@ class StoreHomelabPhotoJob implements ShouldQueue
         $copy = clone $image;
         $copy->scaleDown(self::ORIGINAL_MAX_LONG_EDGE, self::ORIGINAL_MAX_LONG_EDGE);
         $encoded = match ($mime) {
-            'image/jpeg' => $copy->toJpeg(quality: 88),
-            'image/png' => $copy->toPng(),
-            'image/webp' => $copy->toWebp(quality: 88),
-            default => $copy->toJpeg(quality: 88),
+            'image/jpeg' => $copy->encode(new JpegEncoder(quality: 88)),
+            'image/png' => $copy->encode(new PngEncoder),
+            'image/webp' => $copy->encode(new WebpEncoder(quality: 88)),
+            default => $copy->encode(new JpegEncoder(quality: 88)),
         };
         $storage->put($path, (string) $encoded);
 
@@ -161,7 +164,7 @@ class StoreHomelabPhotoJob implements ShouldQueue
         /** @var ImageInterface $image */
         $copy = clone $image;
         $copy->cover(600, 600);
-        $storage->put($path, (string) $copy->toWebp(quality: 82));
+        $storage->put($path, (string) $copy->encode(new WebpEncoder(quality: 82)));
 
         return $path;
     }
@@ -171,7 +174,7 @@ class StoreHomelabPhotoJob implements ShouldQueue
         /** @var ImageInterface $image */
         $copy = clone $image;
         $copy->cover(300, 300);
-        $storage->put($path, (string) $copy->toWebp(quality: 78));
+        $storage->put($path, (string) $copy->encode(new WebpEncoder(quality: 78)));
 
         return $path;
     }

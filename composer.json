@@ -10,13 +10,13 @@
         "ext-exif": "*",
         "bacon/bacon-qr-code": "^3",
         "filament/filament": "^3.2",
-        "intervention/image-laravel": "^1",
+        "intervention/image-laravel": "^4.0",
         "kornrunner/keccak": "^1.1",
-        "laravel/framework": "^12.61",
+        "laravel/framework": "^13.12",
         "laravel/socialite": "^5",
-        "laravel/tinker": "^2.9",
+        "laravel/tinker": "^3.0",
         "livewire/livewire": "^3.5",
-        "pragmarx/google2fa-laravel": "^2",
+        "pragmarx/google2fa-laravel": "^3.0",
         "simplito/elliptic-php": "^1.0.10",
         "socialiteproviders/gitlab": "^4.1"
     },
@@ -30,10 +30,10 @@
         "laravel/sail": "^1.26",
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.1",
-        "pestphp/pest": "^3.0",
-        "pestphp/pest-plugin-laravel": "^3.0",
+        "pestphp/pest": "^4.0",
+        "pestphp/pest-plugin-laravel": "^4.0",
         "phpstan/phpstan": "^2.0",
-        "phpunit/phpunit": "^11.0.1"
+        "phpunit/phpunit": "^12.0"
     },
     "autoload": {
         "psr-4": {
