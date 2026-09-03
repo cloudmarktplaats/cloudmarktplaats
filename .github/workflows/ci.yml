@@ -66,11 +66,11 @@ jobs:
           echo "OK: geen token, e-mailadres of invite-code in de log"
           docker rm -f nginx-pii-check
 
-  # Dependency CVE gate. `composer audit` honours the advisories listed in
-  # composer.json config.audit.ignore (the 3 Laravel-11 email/URL CVEs with
-  # no backport). Any NEW advisory outside that list fails the build, so we
-  # learn about it on push instead of during an incident. npm audit covers
-  # only production deps — dev-server CVEs (vite) don't ship.
+  # Dependency CVE gate. `composer audit` fails the build on any advisory —
+  # the 3 Laravel-11 email/URL CVEs that used to need a documented ignore
+  # here no longer apply since the Laravel 12/13 upgrade actually fixed them
+  # (composer.json's audit.ignore block was removed in the same PR). npm
+  # audit covers only production deps — dev-server CVEs (vite) don't ship.
   security:
     runs-on: ubuntu-latest
     steps:
