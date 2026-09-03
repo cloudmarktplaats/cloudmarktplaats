@@ -78,7 +78,7 @@ it('auto-orients the original from de EXIF Orientation tag vóór het EXIF-strip
 
     // Breedte/hoogte omgewisseld t.o.v. de bron: bewijs dat de pixels al
     // gedraaid waren vóórdat de GD-her-encode de Orientation-tag wegstripte.
-    $original = Image::read((string) $disk->get($base.'/original.jpg'));
+    $original = Image::decodeBinary((string) $disk->get($base.'/original.jpg'));
     expect($original->width())->toBe(200)->and($original->height())->toBe(300);
 });
 
@@ -104,7 +104,7 @@ it('processes a 12MP phone photo without exhausting the memory limit', function 
         ->and($disk->exists($base.'/thumb.webp'))->toBeTrue();
 
     // De bewaarde original is op de lange zijde gekapt: 4000x3000 -> 2000x1500.
-    $original = Image::read((string) $disk->get($base.'/original.jpg'));
+    $original = Image::decodeBinary((string) $disk->get($base.'/original.jpg'));
     expect($original->width())->toBe(2000)->and($original->height())->toBe(1500);
 
     // De rij bewaart de bron-afmetingen, niet de geschaalde.

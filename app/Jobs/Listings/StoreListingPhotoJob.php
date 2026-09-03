@@ -15,6 +15,9 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Intervention\Image\Encoders\JpegEncoder;
+use Intervention\Image\Encoders\PngEncoder;
+use Intervention\Image\Encoders\WebpEncoder;
 use Intervention\Image\Interfaces\ImageInterface;
 use Intervention\Image\Laravel\Facades\Image;
 use Throwable;
@@ -114,7 +117,7 @@ class StoreListingPhotoJob implements ShouldQueue
         // Cheap header-only dimension check before the expensive decode: a
         // hostile upload that passes MIME sniffing but is a decompression
         // bomb (e.g. a tiny PNG that expands to gigapixels) should never
-        // reach Image::read().
+        // reach Image::decodeBinary().
         $info = getimagesizefromstring($this->bytes);
         if ($info === false) {
             throw new InvalidUploadException('Not a readable image');
@@ -127,7 +130,7 @@ class StoreListingPhotoJob implements ShouldQueue
             throw new InvalidUploadException("Image too large ({$w}x{$h} = ".round($w * $h / 1_000_000, 1).'MP, maximum '.(self::MAX_PIXELS / 1_000_000).'MP)');
         }
 
-        $image = Image::read($this->bytes);
+        $image = Image::decodeBinary($this->bytes);
 
         // Shrink to the largest size we actually keep, BEFORE deriving variants.
         //
@@ -142,7 +145,7 @@ class StoreListingPhotoJob implements ShouldQueue
         // Privacy note: EXIF/GPS is dropped by the GD re-encode below, not by
         // any copy — GD cannot write EXIF at all. (The `photo-with-gps.jpg`
         // fixture test pins this.) Orientation survives the strip because
-        // Image::read() above already auto-rotated the pixels from the EXIF
+        // Image::decodeBinary() above already auto-rotated the pixels from the EXIF
         // `Orientation` tag (Intervention's default, needs ext-exif) — by
         // the time we get here the tag is redundant, not yet-lost.
         $image->scaleDown(self::ORIGINAL_MAX_LONG_EDGE, self::ORIGINAL_MAX_LONG_EDGE);
@@ -206,10 +209,10 @@ class StoreListingPhotoJob implements ShouldQueue
     {
         /** @var ImageInterface $image */
         $encoded = match ($mime) {
-            'image/jpeg' => $image->toJpeg(quality: 88),
-            'image/png' => $image->toPng(),
-            'image/webp' => $image->toWebp(quality: 88),
-            default => $image->toJpeg(quality: 88),
+            'image/jpeg' => $image->encode(new JpegEncoder(quality: 88)),
+            'image/png' => $image->encode(new PngEncoder),
+            'image/webp' => $image->encode(new WebpEncoder(quality: 88)),
+            default => $image->encode(new JpegEncoder(quality: 88)),
         };
 
         $storage->put($path, (string) $encoded);
@@ -225,7 +228,7 @@ class StoreListingPhotoJob implements ShouldQueue
         /** @var ImageInterface $image */
         $copy = clone $image;
         $copy->cover($size, $size);
-        $encoded = $copy->toWebp(quality: 82);
+        $encoded = $copy->encode(new WebpEncoder(quality: 82));
 
         $storage->put($path, (string) $encoded);
     }
