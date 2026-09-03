@@ -27,13 +27,13 @@ Wat **nog niet** in Foundation zit, wel in toekomstige sub-projecten: messaging,
 | Laag | Keuze | Waarom |
 |---|---|---|
 | Runtime | **PHP 8.3** | Strict types, readonly props, intersection types — gebruikt het allemaal. |
-| Framework | **Laravel 11** | Filament + Livewire ecosysteem, batterijen inbegrepen. |
+| Framework | **Laravel 13** | Filament + Livewire ecosysteem, batterijen inbegrepen. |
 | Database | **Postgres 16** | Generated `tsvector` kolom voor zoekindex, `ltree` voor categorieboom, native `jsonb`. |
 | Cache & queue | **Redis 7** | View-counter SETNX, throttle-buckets, queue-backend. |
 | UI | **Livewire 3 + Tailwind 3** | Component-based, geen SPA-overhead. |
 | Admin | **Filament 3** | Resources voor users, listings, reports, legal docs, audit trail. |
 | Storage | Lokale disk (default) / S3-compatible / IPFS pinning (later) | Achter `StorageInterface`. |
-| Tests | **Pest 3** | Feature-tests draaien in Docker via Postgres + Redis. |
+| Tests | **Pest 4** | Feature-tests draaien in Docker via Postgres + Redis. |
 | Lint | **Pint** + **PHPStan level 8** | Beide blijven groen in CI. |
 
 Mail in dev gaat via Mailpit (`docker compose`), object-storage via MinIO.

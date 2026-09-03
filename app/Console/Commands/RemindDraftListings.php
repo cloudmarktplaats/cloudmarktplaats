@@ -71,7 +71,7 @@ class RemindDraftListings extends Command
             $first = $listings->first();
             $user = $first->user;
 
-            if (! $user instanceof User || $user->email === null) {
+            if (! $user instanceof User) {
                 $rows[] = [$userId, '(geen eigenaar/e-mail)', $listings->count(), '', 'OVERGESLAGEN'];
 
                 continue;

@@ -51,11 +51,11 @@ it('writes original/card/thumb variants and strips EXIF from the original', func
     expect(strpos((string) $written, 'GPSLatitudeRef'))->toBeFalse();
 
     // Card variant is 600x600 cover, WebP
-    $card = Image::read((string) $disk->get($basePath.'/card.webp'));
+    $card = Image::decodeBinary((string) $disk->get($basePath.'/card.webp'));
     expect($card->width())->toBe(600)->and($card->height())->toBe(600);
 
     // Thumb variant is 200x200 cover, WebP
-    $thumb = Image::read((string) $disk->get($basePath.'/thumb.webp'));
+    $thumb = Image::decodeBinary((string) $disk->get($basePath.'/thumb.webp'));
     expect($thumb->width())->toBe(200)->and($thumb->height())->toBe(200);
 
     // DB row points to the card variant
@@ -83,7 +83,7 @@ it('auto-orients the original from the EXIF Orientation tag before stripping EXI
 
     // Width/height are swapped versus the source: proof the pixels were
     // rotated before the GD re-encode dropped the Orientation tag for good.
-    $original = Image::read((string) $disk->get($basePath.'/original.jpg'));
+    $original = Image::decodeBinary((string) $disk->get($basePath.'/original.jpg'));
     expect($original->width())->toBe(200)->and($original->height())->toBe(300);
 
     // The Orientation tag itself is gone from the written bytes (same EXIF
@@ -116,7 +116,7 @@ it('processes a 12MP phone photo without exhausting the memory limit', function 
         ->and($disk->exists($basePath.'/thumb.webp'))->toBeTrue();
 
     // The stored original is capped at the long edge, so 4000x3000 -> 2000x1500.
-    $original = Image::read((string) $disk->get($basePath.'/original.jpg'));
+    $original = Image::decodeBinary((string) $disk->get($basePath.'/original.jpg'));
     expect($original->width())->toBe(2000)->and($original->height())->toBe(1500);
 
     // The row records the source dimensions, not the stored ones.
