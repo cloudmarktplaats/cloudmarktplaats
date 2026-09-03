@@ -79,7 +79,7 @@ class MailSubscriptionService
         $wanted = [
             'wants_offers' => $wantsOffers,
             'wants_updates' => $wantsUpdates,
-            'categories' => array_values($categories),
+            'categories' => $categories,
             'consent_text' => $consentText,
             'consent_given_at' => now(),
             'consent_source' => $source,
@@ -347,7 +347,7 @@ class MailSubscriptionService
             // Een bestaande koppeling met een account blijft staan: die draagt
             // de wisverplichting uit taak 1. Er komt er alleen een bij als het
             // adres bewezen van dat account is.
-            'user_id' => $owner?->id ?? $sub->user_id,
+            'user_id' => $owner !== null ? $owner->id : $sub->user_id,
             // Het ijkpunt van de aanbodmail; zie de toelichting hierboven. In
             // dezelfde save en niet los via `DB::table()`, want hier verandert
             // de rij echt en hoort `updated_at` dus wél mee te schuiven.
