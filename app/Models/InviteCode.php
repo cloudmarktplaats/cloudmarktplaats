@@ -44,7 +44,7 @@ class InviteCode extends Model
     protected static function booted(): void
     {
         static::creating(function (InviteCode $c) {
-            if ($c->code === null || $c->code === '') {
+            if (blank($c->getAttributes()['code'] ?? null)) {
                 // 10-char uppercase alphanumeric; relies on the unique index
                 // to catch the astronomically unlikely collision.
                 $c->code = strtoupper(Str::random(10));
