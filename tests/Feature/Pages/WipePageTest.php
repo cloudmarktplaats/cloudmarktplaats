@@ -27,6 +27,18 @@ it('names a different method per drive type', function () {
         ->assertSee('Een SSD overschrijven');
 });
 
+// "Bij sommige schijven weet ik het echt niet meer" is bijna nooit een schijf
+// zonder SMART, maar een USB-brug of een RAID-controller ertussen. Zonder die
+// terugvallen loopt de lezer dood op de enige regel die stap 2 had.
+it('names a way out when smartctl returns nothing', function () {
+    $this->get('/data-wissen')
+        ->assertOk()
+        ->assertSee('smartctl -a -d sat /dev/sdb')
+        ->assertSee('smartctl -a -d megaraid,0 /dev/sda')
+        ->assertSee('nvme smart-log /dev/nvme0')
+        ->assertSee('draaiuren onbekend');
+});
+
 it('links the wipe page from the footer and from the scope page', function () {
     $this->get('/')->assertOk()->assertSee(route('wipe'), false);
     $this->get('/wat-mag-erop')->assertOk()->assertSee(route('wipe'), false);

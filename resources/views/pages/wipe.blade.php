@@ -31,6 +31,34 @@
         ],
     ];
 
+    // Arjan Krabbendam vroeg op 10-09-2026 hoe je draaiuren uitleest bij de
+    // schijven waarbij dat "echt niet meer" lukt. Dat is bijna nooit een schijf
+    // zonder SMART: er zit iets tussen dat de gegevens niet doorgeeft. Stap 2
+    // had precies 1 regel en geen enkele terugval, dus wie hier vastliep haakte
+    // af zonder te weten dat het aan de kabel lag.
+    $smartTerugvallen = [
+        [
+            __('Een USB-behuizing ertussen'),
+            __('De brug in het dockingstation geeft SMART-opdrachten vaak niet door. Met -d sat stuur je ze er alsnog doorheen. Weet je het type niet: smartctl --scan noemt het.'),
+            'sudo smartctl -a -d sat /dev/sdb',
+        ],
+        [
+            __('Achter een RAID-controller'),
+            __('Een PERC of LSI laat het besturingssysteem de array zien en niet de schijven. Het nummer achter megaraid is de fysieke slot, dus tel omhoog tot je hem hebt. Een HP Smart Array gebruikt cciss in plaats van megaraid.'),
+            'sudo smartctl -a -d megaraid,0 /dev/sda',
+        ],
+        [
+            __('NVMe'),
+            __('NVMe kent de ATA-attributen niet. Het getal heet hier gewoon power_on_hours.'),
+            'sudo nvme smart-log /dev/nvme0',
+        ],
+        [
+            __('SAS in plaats van SATA'),
+            __('Een SAS-schijf heeft geen attribuut 9. Het staat er als "Accumulated power on time, hours:minutes", verderop in dezelfde uitvoer.'),
+            'sudo smartctl -a /dev/sdb | grep -i "power on time"',
+        ],
+    ];
+
     $methodes = [
         [
             __('HDD (magnetisch)'),
@@ -119,6 +147,29 @@
                 </li>
             @endforeach
         </ol>
+
+        {{-- Hoort bij stap 2, en staat daarom direct achter de stappen. --}}
+        <div class="mb-14 rounded-sm border border-cmp-border bg-cmp-bg2 p-6">
+            <h2 class="text-base font-bold tracking-display-tight">{{ __('En dan geeft smartctl niets terug') }}</h2>
+            <p class="mt-2 text-sm text-cmp-muted leading-relaxed">
+                {{ __('Dat ligt bijna nooit aan de schijf. Er zit iets tussen dat de opdracht niet doorgeeft, en dan is de vraag welke omweg je neemt.') }}
+            </p>
+            <dl class="mt-4 space-y-4">
+                @foreach ($smartTerugvallen as [$geval, $uitleg, $cmd])
+                    <div class="border-t border-cmp-border pt-3">
+                        <dt class="text-sm font-bold tracking-display-tight">{{ $geval }}</dt>
+                        <dd class="text-sm text-cmp-muted mt-1 leading-relaxed">{{ $uitleg }}</dd>
+                        <dd><pre class="mt-2 overflow-x-auto rounded-sm bg-cmp-ink p-3 font-mono text-xs text-white"><code>{{ $cmd }}</code></pre></dd>
+                    </div>
+                @endforeach
+            </dl>
+            {{-- Een eerlijk "weet ik niet" is bruikbaarder dan een schatting die
+                 de koper niet kan controleren. Dat is dezelfde regel als op
+                 /wat-mag-erop: beschrijf de staat inclusief het vervelende deel. --}}
+            <p class="mt-5 text-sm text-cmp-muted leading-relaxed">
+                {{ __('Komt er dan nog niets uit, zet dan "draaiuren onbekend" in je advertentie. Dat is een geldig antwoord. Een koper kan een schatting namelijk niet controleren, en een getal dat je erbij verzint kost je precies het vertrouwen waarvoor hij hier komt.') }}
+            </p>
+        </div>
 
         <h2 class="cmp-section-label mb-4">{{ __('Stap 3, per type schijf') }}</h2>
         <div class="mb-6 grid grid-cols-1 gap-4">
