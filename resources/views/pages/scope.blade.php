@@ -120,6 +120,7 @@
         </p>
 
         <div class="mt-14 pt-6 border-t border-cmp-border font-mono text-[11px] text-cmp-muted flex flex-wrap gap-x-6 gap-y-2">
+            <a href="{{ route('wipe') }}" class="hover:text-cmp-blue">{{ __('→ Data van je schijf wissen') }}</a>
             <a href="{{ route('faq') }}" class="hover:text-cmp-blue">{{ __('→ Wat mag je NIET verkopen') }}</a>
             <a href="{{ route('values') }}" class="hover:text-cmp-blue">{{ __('→ Onze waarden') }}</a>
             <a href="https://github.com/cloudmarktplaats/cloudmarktplaats/issues" class="hover:text-cmp-blue" rel="noopener external">{{ __('→ Stel een wijziging voor') }}</a>

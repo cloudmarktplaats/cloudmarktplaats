@@ -48,6 +48,7 @@ Route::view('/over-ons', 'pages.about')->name('about');
 Route::view('/waarden', 'pages.values')->name('values');
 Route::view('/faq', 'pages.faq')->name('faq');
 Route::view('/wat-mag-erop', 'pages.scope')->name('scope');
+Route::view('/data-wissen', 'pages.wipe')->name('wipe');
 Route::view('/sponsors', 'pages.sponsor')->name('sponsor');
 Route::view('/doneren', 'pages.donate')->name('donate');
 
