@@ -53,7 +53,12 @@ class MailSubscriptionService
      *    pas toe als er op de link in díé mailbox is geklikt. Staat er een
      *    `unsubscribed_at`, dan wordt er zelfs niet geparkeerd: zie `write()`.
      *
-     * @param  list<string>  $categories
+     * Accepts any key arrangement, not just a list: the shape is enforced at
+     * runtime below rather than promised in the type, because both real
+     * callers build this array from a Livewire checkbox binding and nothing
+     * stops a future caller from passing keyed input instead.
+     *
+     * @param  array<string>  $categories
      */
     public function subscribe(
         string $email,
@@ -64,6 +69,10 @@ class MailSubscriptionService
         string $source,
         ?User $user = null,
     ): MailSubscription {
+        if (! array_is_list($categories)) {
+            throw new InvalidArgumentException('categories must be a list.');
+        }
+
         $normalizedEmail = self::normalise($email);
 
         // `email_verified_at` bewijst één mailbox: die van het account zelf.
@@ -79,7 +88,7 @@ class MailSubscriptionService
         $wanted = [
             'wants_offers' => $wantsOffers,
             'wants_updates' => $wantsUpdates,
-            'categories' => array_values($categories),
+            'categories' => $categories,
             'consent_text' => $consentText,
             'consent_given_at' => now(),
             'consent_source' => $source,
@@ -347,7 +356,7 @@ class MailSubscriptionService
             // Een bestaande koppeling met een account blijft staan: die draagt
             // de wisverplichting uit taak 1. Er komt er alleen een bij als het
             // adres bewezen van dat account is.
-            'user_id' => $owner?->id ?? $sub->user_id,
+            'user_id' => $owner !== null ? $owner->id : $sub->user_id,
             // Het ijkpunt van de aanbodmail; zie de toelichting hierboven. In
             // dezelfde save en niet los via `DB::table()`, want hier verandert
             // de rij echt en hoort `updated_at` dus wél mee te schuiven.

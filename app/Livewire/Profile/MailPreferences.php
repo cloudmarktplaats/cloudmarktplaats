@@ -65,7 +65,7 @@ class MailPreferences extends Component
 
         $this->wants_offers = $sub->wants_offers;
         $this->wants_updates = $sub->wants_updates;
-        $this->categories = $sub->categories ?? [];
+        $this->categories = array_values(array_map('strval', (array) $sub->categories));
     }
 
     public function save(): void

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 use App\Models\MailSubscription;
 use App\Services\Mail\MailSubscriptionService;
-use Illuminate\Foundation\Http\Middleware\ValidateCsrfToken;
+use Illuminate\Foundation\Http\Middleware\PreventRequestForgery;
 use Illuminate\Http\Request;
 
 /*
@@ -296,7 +296,7 @@ it('unsubscribes on the one-click POST a mail client sends', function () {
  */
 it('leaves the one-click unsubscribe out of the CSRF check', function () {
     $sub = MailSubscription::factory()->create();
-    $middleware = app(ValidateCsrfToken::class);
+    $middleware = app(PreventRequestForgery::class);
     $inExceptArray = new ReflectionMethod($middleware, 'inExceptArray');
 
     expect($inExceptArray->invoke($middleware, Request::create('/nieuwsbrief/afmelden/'.$sub->unsubscribe_token, 'POST')))->toBeTrue()

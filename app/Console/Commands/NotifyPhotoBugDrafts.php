@@ -74,7 +74,7 @@ class NotifyPhotoBugDrafts extends Command
 
             $titles = $listings->pluck('title')->implode(', ');
 
-            if (! $user instanceof User || $user->email === null) {
+            if (! $user instanceof User) {
                 $rows[] = [$userId, '(geen eigenaar/e-mail)', $listings->count(), $titles, 'OVERGESLAGEN'];
 
                 continue;

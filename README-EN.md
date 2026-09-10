@@ -22,7 +22,7 @@ Not in Foundation yet (sequenced sub-projects): messaging, reviews/reputation, s
 
 ## Stack
 
-PHP 8.3 · Laravel 11 · Postgres 16 · Redis 7 · Livewire 3 · Filament 3 · Tailwind 3 · Pest 3 · Pint · PHPStan level 8.
+PHP 8.3 · Laravel 13 · Postgres 16 · Redis 7 · Livewire 3 · Filament 3 · Tailwind 3 · Pest 4 · Pint · PHPStan level 8.
 
 ---
 

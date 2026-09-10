@@ -12,27 +12,27 @@ use Livewire\Livewire;
 
 /*
  * CVE-2026-48019 / GHSA-5vg9-5847-vvmq, CRLF-injectie in de standaard
- * `email`-regel. Er bestaat geen 11.x-backport, dus `composer audit` blijft
- * hem melden en hij staat als genegeerd. Nagemeten op 01-09-2026 in plaats van
- * aangenomen.
+ * `email`-regel. Er bestond geen 11.x-backport; op Laravel 11 stond hij als
+ * genegeerd in `composer.json` (nagemeten op 01-09-2026).
  *
- * Uitkomst in twee delen. De regels `email` en `email:rfc` **accepteren** het
- * adres `"a\r\nBcc: x@y.nl"@b.nl`, dus de kwetsbaarheid is echt. Maar
- * `Symfony\Component\Mime\Address` weigert hem alsnog met "contains control
- * characters", dus er komt nooit een geinjecteerde header naar buiten. De
- * tweede linie houdt, en dat is waarom dit geen lek is.
+ * De upgrade naar Laravel 12.69.1 (03-09-2026) bevat de fix zelf: de bare
+ * `email`-regel wijst `GIFTIG` nu ook al af. Vóór de fix accepteerden `email`
+ * en `email:rfc` dit adres wel, maar `Symfony\Component\Mime\Address` weigerde
+ * het alsnog met "contains control characters", dus er kwam nooit een
+ * geïnjecteerde header naar buiten — dat is waarom dit nooit een lek was.
  *
  * Wat er wel van overbleef: zo'n adres kon in `users.email` belanden, en dan
  * mislukt elke mail aan die persoon in de worker. `email:strict` sluit dat af
- * aan de voorkant, waar het thuishoort.
+ * aan de voorkant, waar het thuishoort — en blijft daarom de regel die deze
+ * velden gebruiken, ook nu de framework-bug zelf gerepareerd is.
  */
 
 const GIFTIG = '"a'."\r\n".'Bcc: x@y.nl"@b.nl';
 
-it('shows why the bare email rule is not enough', function () {
-    // Dit is de kwetsbaarheid zelf, niet ons gedrag. Zakt deze test ooit, dan
-    // heeft Laravel hem gerepareerd en mag `strict` hieronder heroverwogen.
-    expect(Validator::make(['e' => GIFTIG], ['e' => ['email']])->passes())->toBeTrue()
+it('shows the framework now rejects the historical CVE payload directly', function () {
+    // Zakt dit eerste deel ooit weer terug naar `true`, dan is de framework-fix
+    // teruggedraaid en moet dit bestand opnieuw tegen die kwetsbaarheid testen.
+    expect(Validator::make(['e' => GIFTIG], ['e' => ['email']])->passes())->toBeFalse()
         ->and(Validator::make(['e' => GIFTIG], ['e' => ['email:strict']])->passes())->toBeFalse();
 });
 

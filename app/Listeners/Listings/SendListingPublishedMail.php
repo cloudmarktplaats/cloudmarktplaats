@@ -22,7 +22,7 @@ class SendListingPublishedMail
     {
         $owner = $event->listing->user;
 
-        if (! $owner instanceof User || $owner->email === null) {
+        if (! $owner instanceof User) {
             return;
         }
 
