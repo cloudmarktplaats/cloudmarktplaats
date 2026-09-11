@@ -377,6 +377,17 @@ class Wizard extends Component
             $categoryGroups[$top->name] = $options;
         }
 
-        return view('livewire.listings.wizard', ['categoryGroups' => $categoryGroups]);
+        // Storage is de enige tak waar een fout van de verkoper de kóper raakt:
+        // een schijf met data erop verkoop je maar één keer. De id's gaan als
+        // strings mee omdat een <select> altijd strings teruggeeft.
+        $storageCategoryIds = $all
+            ->filter(fn (Category $c): bool => explode('.', (string) $c->path)[0] === 'storage')
+            ->map(fn (Category $c): string => (string) $c->id)
+            ->values();
+
+        return view('livewire.listings.wizard', [
+            'categoryGroups' => $categoryGroups,
+            'storageCategoryIds' => $storageCategoryIds,
+        ]);
     }
 }

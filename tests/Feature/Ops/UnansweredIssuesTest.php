@@ -46,27 +46,89 @@ it('reports an issue that nobody answered', function () {
 
 /*
  * Het /issues-endpoint geeft ook pull requests terug. Op 31-08 stonden er 2
- * issues open en 2 Dependabot-PR's, en de API leverde er vier. Zonder dit
- * filter alarmeert de check elke week op Dependabot.
+ * issues open en 2 Dependabot-PR's, en de API leverde er vier. Dependabot mag
+ * er niet elke week doorheen komen — maar het filter stond op de sóórt en niet
+ * op de indiener, en daardoor lag de Laravel 13-PR van arjankapteijn 7 dagen
+ * onzichtbaar in de wachtrij. Weren doen we nu op de bot.
  */
-it('ignores pull requests, which the issues endpoint also returns', function () {
+it('ignores a pull request from a bot', function () {
     Http::fake(['api.github.com/*' => Http::response([
-        issuePayload(['number' => 38, 'pull_request' => ['url' => 'https://api.github.com/…']]),
+        issuePayload([
+            'number' => 41,
+            'user' => ['login' => 'dependabot[bot]', 'type' => 'Bot'],
+            'pull_request' => ['url' => 'https://api.github.com/…'],
+        ]),
     ])]);
 
     expect(app(UnansweredIssues::class)->find())->toBe([]);
 });
 
-it('ignores an issue the maintainer already replied to', function () {
+it('reports a pull request from a human that nobody answered', function () {
     Http::fake([
-        'api.github.com/repos/*/issues?*' => Http::response([issuePayload(['comments' => 2])]),
-        'api.github.com/repos/*/issues/36/comments*' => Http::response([
-            ['user' => ['login' => 'iemand-anders']],
-            ['user' => ['login' => 'NickAldewereld']],
+        'api.github.com/repos/*/issues?*' => Http::response([
+            issuePayload([
+                'number' => 39,
+                'title' => 'Upgrade to Laravel 13',
+                'user' => ['login' => 'arjankapteijn', 'type' => 'User'],
+                'created_at' => now()->subDays(7)->toIso8601String(),
+                'pull_request' => ['url' => 'https://api.github.com/…'],
+            ]),
+        ]),
+        'api.github.com/repos/*/issues/39/comments*' => Http::response([]),
+        'api.github.com/repos/*/pulls/39/reviews*' => Http::response([]),
+    ]);
+
+    $open = app(UnansweredIssues::class)->find();
+
+    expect($open)->toHaveCount(1)
+        ->and($open[0]['kind'])->toBe('PR')
+        ->and($open[0]['days'])->toBe(7);
+});
+
+/* Een review is een antwoord, ook zonder los commentaar eronder. */
+it('ignores a pull request the maintainer reviewed', function () {
+    Http::fake([
+        'api.github.com/repos/*/issues?*' => Http::response([
+            issuePayload(['number' => 39, 'pull_request' => ['url' => 'https://api.github.com/…']]),
+        ]),
+        'api.github.com/repos/*/issues/39/comments*' => Http::response([]),
+        'api.github.com/repos/*/pulls/39/reviews*' => Http::response([
+            ['user' => ['login' => 'NickAldewereld'], 'submitted_at' => now()->subDay()->toIso8601String()],
         ]),
     ]);
 
     expect(app(UnansweredIssues::class)->find())->toBe([]);
+});
+
+it('ignores an issue where the maintainer had the last word', function () {
+    Http::fake([
+        'api.github.com/repos/*/issues?*' => Http::response([issuePayload(['comments' => 2])]),
+        'api.github.com/repos/*/issues/36/comments*' => Http::response([
+            ['user' => ['login' => 'ramonfincken'], 'created_at' => now()->subDays(4)->toIso8601String()],
+            ['user' => ['login' => 'NickAldewereld'], 'created_at' => now()->subDays(3)->toIso8601String()],
+        ]),
+    ]);
+
+    expect(app(UnansweredIssues::class)->find())->toBe([]);
+});
+
+/*
+ * Het geval waar de oude regel op stukliep. In #36 antwoordde Nick op 31-08,
+ * beantwoordde Ramon Fincken de wedervraag op 01-09, en daarna was het 9 dagen
+ * stil terwijl de check hem als afgehandeld beschouwde. Een wedervraag
+ * beantwoorden is precies het moment waarop een melder afhaakt.
+ */
+it('reports an issue where the reporter answered back and nobody replied', function () {
+    Http::fake([
+        'api.github.com/repos/*/issues?*' => Http::response([issuePayload(['comments' => 3])]),
+        'api.github.com/repos/*/issues/36/comments*' => Http::response([
+            ['user' => ['login' => 'NickAldewereld'], 'created_at' => now()->subDays(10)->toIso8601String()],
+            ['user' => ['login' => 'NickAldewereld'], 'created_at' => now()->subDays(10)->toIso8601String()],
+            ['user' => ['login' => 'ramonfincken'], 'created_at' => now()->subDays(9)->toIso8601String()],
+        ]),
+    ]);
+
+    expect(app(UnansweredIssues::class)->find())->toHaveCount(1);
 });
 
 it('still reports an issue where only other people commented', function () {

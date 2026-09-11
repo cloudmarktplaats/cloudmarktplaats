@@ -189,7 +189,8 @@ class IntegrityReport
         } else {
             foreach ($onbeantwoord as $issue) {
                 $signalen[] = sprintf(
-                    'Issue #%d ligt %d dagen zonder antwoord: %s',
+                    '%s #%d ligt %d dagen op jouw beurt: %s',
+                    $issue['kind'],
                     $issue['number'],
                     $issue['days'],
                     $issue['title'],

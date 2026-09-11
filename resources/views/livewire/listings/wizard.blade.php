@@ -27,29 +27,42 @@
             </label>
             @error('title') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
 
-            <label class="block text-sm">
-                <span class="mb-1 block font-medium">{{ __('Categorie') }}</span>
-                <select wire:model="category_id" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
-                    <option value="">{{ __('— Kies een categorie —') }}</option>
-                    @foreach ($categoryGroups as $groupLabel => $options)
-                        <optgroup label="{{ $groupLabel }}">
-                            @foreach ($options as $id => $label)
-                                <option value="{{ $id }}">{{ $label }}</option>
-                            @endforeach
-                        </optgroup>
-                    @endforeach
-                </select>
-            </label>
-            @error('category_id') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
-            {{-- Hier zit de twijfel ("mag mijn spul hier eigenlijk wel op?"), dus
-                 hier hoort het antwoord. Nieuw tabblad: de draft blijft staan. --}}
-            <p class="text-xs text-cmp-muted">
-                <a href="{{ route('scope') }}" target="_blank" rel="noopener" class="underline hover:text-cmp-blue">{{ __('Twijfel je of je spullen erop mogen?') }}</a>
-                @if (auth()->user()?->seller_type !== 'business')
-                    ·
-                    <a href="{{ route('profile.seller-type') }}" target="_blank" rel="noopener" class="underline hover:text-cmp-blue">{{ __('Verkoop je namens een bedrijf?') }}</a>
-                @endif
-            </p>
+            {{-- `wire:model` is uitgesteld, dus het kiezen van een categorie
+                 gaat niet langs de server. De storagewaarschuwing hangt daarom
+                 aan Alpine: geen extra ronde per keuze, en de draft blijft heel. --}}
+            <div x-data="{ opslag: @js($storageCategoryIds), gekozen: @js((string) $category_id) }">
+                <label class="block text-sm">
+                    <span class="mb-1 block font-medium">{{ __('Categorie') }}</span>
+                    <select wire:model="category_id" x-on:change="gekozen = $event.target.value" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required>
+                        <option value="">{{ __('— Kies een categorie —') }}</option>
+                        @foreach ($categoryGroups as $groupLabel => $options)
+                            <optgroup label="{{ $groupLabel }}">
+                                @foreach ($options as $id => $label)
+                                    <option value="{{ $id }}">{{ $label }}</option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </label>
+                @error('category_id') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+                {{-- Hier zit de twijfel ("mag mijn spul hier eigenlijk wel op?"), dus
+                     hier hoort het antwoord. Nieuw tabblad: de draft blijft staan. --}}
+                <p class="mt-1 text-xs text-cmp-muted">
+                    <a href="{{ route('scope') }}" target="_blank" rel="noopener" class="underline hover:text-cmp-blue">{{ __('Twijfel je of je spullen erop mogen?') }}</a>
+                    @if (auth()->user()?->seller_type !== 'business')
+                        ·
+                        <a href="{{ route('profile.seller-type') }}" target="_blank" rel="noopener" class="underline hover:text-cmp-blue">{{ __('Verkoop je namens een bedrijf?') }}</a>
+                    @endif
+                </p>
+                {{-- De twijfel bij opslag is een andere ("staat er nog wat op?"),
+                     en die houdt advertenties tegen. Antwoord op dezelfde plek. --}}
+                <div x-show="opslag.includes(gekozen)" x-cloak
+                     class="mt-3 rounded-sm border border-cmp-border bg-cmp-bg2 p-3 text-sm">
+                    <p class="font-medium">{{ __('Verkoop je opslag? Data eraf, altijd.') }}</p>
+                    <p class="mt-1 text-cmp-muted">{{ __('Snel formatteren is geen wissen, en wat op een harde schijf werkt doet op een SSD niets. Zet in je beschrijving hoe je gewist hebt en hoeveel draaiuren erop staan.') }}</p>
+                    <a href="{{ route('wipe') }}" target="_blank" rel="noopener" class="mt-2 inline-block underline hover:text-cmp-blue">{{ __('→ Zo wis je een schijf echt') }}</a>
+                </div>
+            </div>
 
             <label class="block text-sm">
                 <span class="mb-1 block font-medium">{{ __('Staat') }}</span>
@@ -93,6 +106,12 @@
                 <textarea wire:model="description" rows="8" class="w-full rounded-sm border-cmp-border p-2 focus:border-cmp-signal focus:ring-cmp-signal" required></textarea>
             </label>
             @error('description') <p class="text-sm text-red-600">{{ $message }}</p> @enderror
+            {{-- Stap 2 is de plek waar de advertentietekst ontstaat, dus hier de
+                 herinnering aan wat erin hoort. De categorie staat inmiddels vast,
+                 dus dit mag gewoon server-side. --}}
+            @if (in_array((string) $category_id, $storageCategoryIds->all(), true))
+                <p class="-mt-1 text-xs text-cmp-muted">{{ __('Zet erbij hoe je gewist hebt, hoeveel draaiuren erop staan en wat SMART zegt. Dat is voor een koper belangrijker dan de prijs.') }} <a href="{{ route('wipe') }}" target="_blank" rel="noopener" class="underline hover:text-cmp-blue">{{ __('Zo wis je een schijf echt') }}</a></p>
+            @endif
 
             <label class="block text-sm">
                 <span class="mb-1 block font-medium">{{ __('Postcode (4 cijfers)') }}</span>
