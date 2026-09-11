@@ -5,7 +5,7 @@ Lees dit eerst. Wat hier staat is niet uit de code af te leiden.
 ## Wat dit is
 
 Open-source marktplaats voor tweedehands IT- en homelab-hardware. AGPL-3.0,
-publiek op github.com/cloudmarktplaats/cloudmarktplaats. Laravel 11 + Livewire 3
+publiek op github.com/cloudmarktplaats/cloudmarktplaats. Laravel 13 + Livewire 3
 + Postgres 16 + Redis, alles in Docker. Volledige beschrijving in `README.md`;
 waarden in `docs/GOVERNANCE.md` en op /waarden.
 
@@ -90,6 +90,45 @@ docker compose exec -T php-fpm ./vendor/bin/phpstan analyse --memory-limit=512M
 
 Faalt de EXIF-auto-oriëntatietest lokaal? Dan mist je php-fpm-image `ext-exif`:
 `docker compose build php-fpm`. Productie heeft hem wel.
+
+**Faalt er een hele reeks tests met `UnexpectedValueException: FilesystemIterator
+... Permission denied`? Dan is dat niet de suite maar je eigen schijf.** In
+`storage/framework/testing/disks` staan dan mappen van `root`, achtergelaten door
+1 keer composer of artisan als root draaien. De testrunner is www-data en komt er
+niet in. Repareren:
+
+```bash
+docker compose exec -T -u root php-fpm chown -R www-data:www-data /app/storage/framework/testing
+```
+
+Dit heeft tien dagen als "43 bestaande falers" in de projectnotities gestaan en
+is op 11-09 opgelost. De suite was al die tijd heel: 835 tests, allemaal groen.
+Draai `composer` lokaal dus **als uid 1000** (`docker compose exec -u 1000`),
+nooit als root, anders zet je het meteen terug. `vendor/` is van 1000, `storage/`
+en `bootstrap/cache` zijn van 82.
+
+### Een framework-upgrade is géén gewone file-sync
+
+De deploy hierboven raakt `vendor/` niet aan, en dat is bijna altijd goed. Maar
+bij een wijziging in `composer.lock` moet je er zelf omheen bouwen. Zo ging de
+Laravel 11 → 13-upgrade van 11-09:
+
+1. `php artisan down --retry=60` **vóór** de sync. Bezoekers krijgen een 503 in
+   plaats van stacktraces, en dat werkt ook terwijl de app niet kan booten.
+2. Rollbackpunt zetten dat de database met rust laat:
+   `cp composer.json{,.voor-laravel13} && cp composer.lock{,.voor-laravel13} && cp -a vendor{,.voor-laravel13}`
+   (94 MB, en er is 18 GB vrij). Een PBS-restore van de hele container zou ook
+   de database terugzetten en dus leden en advertenties kosten; dit niet.
+3. Sync, dan `composer install --no-dev --optimize-autoloader --no-scripts` als
+   **uid 1000**. `--no-scripts` is nodig omdat `package:discover` als uid 1000
+   niet in `storage/logs` mag schrijven; draai die daarna los als www-data.
+4. `migrate --force`, `config:cache`, `route:cache`, `view:clear`, herstart
+   php-fpm, queue-worker **en scheduler** (die laatste draait de dagelijkse check
+   en houdt anders de oude code vast).
+5. `php artisan up`, en dan pas meten.
+
+`--no-dev` houdt Laravel Boost en de MCP-server van productie af. Dat hoort zo:
+die staan in `require-dev` en horen daar te blijven.
 
 **Larastan leest de Laravel-11-vorm `casts(): array` niet** en ziet een
 `datetime`-cast dan als `string`. Los dat op het model op met een letterlijke
