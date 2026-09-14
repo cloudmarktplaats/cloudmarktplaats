@@ -49,6 +49,25 @@ it('Detail renders a published listing for anonymous visitors', function () {
         ->assertSee('Vintage workstation');
 });
 
+it('Detail renders markdown formatting in the description', function () {
+    $listing = Listing::factory()->published()->create([
+        'description' => '**Belangrijk**: werkt goed.',
+    ]);
+
+    Livewire::test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->assertSee('<strong>Belangrijk</strong>', false);
+});
+
+it('Detail strips raw HTML from the description to prevent XSS', function () {
+    $listing = Listing::factory()->published()->create([
+        'description' => 'Zie <script>alert(1)</script> hier.',
+    ]);
+
+    $html = Livewire::test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])->html();
+
+    expect($html)->not->toContain('<script>');
+});
+
 it('Detail 404s for non-published listings for anonymous visitors', function () {
     $listing = Listing::factory()->create(['state' => 'draft']);
 

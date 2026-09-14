@@ -107,7 +107,7 @@
                 </p>
 
                 <div class="prose mt-6 max-w-none text-cmp-text">
-                    {!! nl2br(e($listing->description)) !!}
+                    {!! $descriptionHtml !!}
                 </div>
 
                 {{-- Contact relay: the "Stuur bericht" button toggles the form in
