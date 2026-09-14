@@ -58,7 +58,12 @@ services:
     logging: *default-logging
 
   minio:
-    image: minio/minio:latest
+    # MinIO Inc. pulled minio/minio off Docker Hub on 2026-09-11 and wound
+    # the community edition down entirely (archived upstream, no more
+    # images or releases). quay.io/minio/minio still has the last images
+    # they ever published — this tag is the final one and will never be
+    # updated, so it's pinned rather than `:latest`.
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: minio
