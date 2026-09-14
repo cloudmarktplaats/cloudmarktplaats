@@ -137,7 +137,10 @@ class Detail extends Component
 
     public function render(): View
     {
-        $view = view('livewire.listings.detail', ['openClaims' => $this->openClaims()]);
+        $view = view('livewire.listings.detail', [
+            'openClaims' => $this->openClaims(),
+            'descriptionHtml' => $this->descriptionHtml(),
+        ]);
 
         // Only a published listing gets its own OG tags. For draft /
         // pending_review / rejected the layout defaults stay, so a listing
@@ -178,6 +181,20 @@ class Detail extends Component
         }
 
         return $photo->urlFor('original');
+    }
+
+    /**
+     * The wizard advertises markdown support for the description, so render
+     * it as such. `html_input: strip` and `allow_unsafe_links: false` guard
+     * the unescaped `{!! !!}` output in the view against XSS from raw HTML
+     * or `javascript:` links pasted into the textarea.
+     */
+    private function descriptionHtml(): string
+    {
+        return Str::markdown((string) $this->listing->description, [
+            'html_input' => 'strip',
+            'allow_unsafe_links' => false,
+        ]);
     }
 
     /**
