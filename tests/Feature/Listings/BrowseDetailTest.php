@@ -68,6 +68,16 @@ it('Detail strips raw HTML from the description to prevent XSS', function () {
     expect($html)->not->toContain('<script>');
 });
 
+it('Detail strips unsafe javascript: links from the description', function () {
+    $listing = Listing::factory()->published()->create([
+        'description' => '[klik](javascript:alert(1))',
+    ]);
+
+    $html = Livewire::test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])->html();
+
+    expect($html)->not->toContain('javascript:');
+});
+
 it('Detail 404s for non-published listings for anonymous visitors', function () {
     $listing = Listing::factory()->create(['state' => 'draft']);
 
