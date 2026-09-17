@@ -68,6 +68,15 @@ it('Detail strips raw HTML from the description to prevent XSS', function () {
     expect($html)->not->toContain('<script>');
 });
 
+it('Detail renders a single line break in the description as <br>', function () {
+    $listing = Listing::factory()->published()->create([
+        'description' => "Werkt perfect.\nNetjes uitgebouwd.",
+    ]);
+
+    Livewire::test(Detail::class, ['ulid' => (string) $listing->ulid, 'slug' => (string) $listing->slug])
+        ->assertSee('Werkt perfect.<br', false);
+});
+
 it('Detail strips unsafe javascript: links from the description', function () {
     $listing = Listing::factory()->published()->create([
         'description' => '[klik](javascript:alert(1))',

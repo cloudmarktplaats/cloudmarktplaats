@@ -188,12 +188,23 @@ class Detail extends Component
      * it as such. `html_input: strip` and `allow_unsafe_links: false` guard
      * the unescaped `{!! !!}` output in the view against XSS from raw HTML
      * or `javascript:` links pasted into the textarea.
+     *
+     * CommonMark treats a single line ending as a "soft break" — just a
+     * newline in the HTML, which a browser collapses to whitespace — and
+     * only starts a new paragraph on a blank line. Sellers write descriptions
+     * the way the old plain-text field trained them to, one fact per line
+     * with no blank lines between, so without this override every line ran
+     * into the next. `soft_break` makes every line ending a real `<br>`,
+     * matching the `nl2br()` behaviour the markdown rendering replaced.
      */
     private function descriptionHtml(): string
     {
         return Str::markdown((string) $this->listing->description, [
             'html_input' => 'strip',
             'allow_unsafe_links' => false,
+            'renderer' => [
+                'soft_break' => "<br />\n",
+            ],
         ]);
     }
 
