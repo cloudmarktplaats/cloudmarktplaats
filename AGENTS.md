@@ -1,4 +1,4 @@
-# AGENTS.md — werkgeheugen Cloudmarktplaats
+# AGENTS.md: werkgeheugen Cloudmarktplaats
 
 Lees dit eerst. Wat hier staat is niet uit de code af te leiden.
 
@@ -11,7 +11,7 @@ waarden in `docs/GOVERNANCE.md` en op /waarden.
 
 De propositie is **architectuur boven beleid**: geen trackers, IP-retentie 24 uur
 afgedwongen door een cronjob, EXIF gestript bij upload, geen cookiebanner omdat er
-niets te vragen valt. Elke claim moet in code te controleren zijn — dat is niet
+niets te vragen valt. Elke claim moet in code te controleren zijn, dat is niet
 marketing maar de reden dat mensen meedoen. Bouw niets dat die belofte alleen op
 papier waarmaakt.
 
@@ -39,13 +39,13 @@ Aandachtspunten die een keer misgingen:
 - **Nginx hoefde vroeger als laatste herstart te worden**, omdat hij het IP van php-fpm
   eeuwig vasthield. Sinds 19-08 lost `resolver 127.0.0.11` in `docker/nginx/default.conf`
   dat op: php-fpm mag verhuizen zonder dat nginx eraan te pas komt. Verwijder die
-  resolver niet — hij voorkomt een storing van minuten bij elke deploy.
+  resolver niet, hij voorkomt een storing van minuten bij elke deploy.
 - **`docker/nginx/default.conf` wijzigen? Dan `up -d --force-recreate nginx`, niet
   `nginx -s reload`.** Die bind-mount is een enkel *bestand*, en die hangt aan het
   inode. `tar xzf` vervangt het bestand door een nieuw inode, dus de container blijft
   aan het oude hangen: de reload slaagt, `nginx -t` zegt ok, en je draait nog steeds
   de vorige config. Op 21-08 bleef de redactie van claim-tokens daardoor uit terwijl
-  alles groen leek — controleer altijd ín de container:
+  alles groen leek, controleer altijd ín de container:
   `docker compose -f docker-compose.prod.yml exec -T nginx grep redacted /etc/nginx/conf.d/default.conf`.
 - **Chown na een sync alleen de paden die je stuurde, en nooit `bootstrap/` als
   geheel.** `bootstrap/cache` is van uid 82 (www-data); zet je die op 1000, dan
@@ -54,7 +54,7 @@ Aandachtspunten die een keer misgingen:
 - **Sync en `route:cache` horen direct achter elkaar.** Tussen het uitpakken van
   een nieuwe view die naar een nieuwe route verwijst en het herbouwen van de
   routecache zit een venster waarin bezoekers een 500 krijgen. Op 19-08 waren dat
-  er vier in twee seconden — zichtbaar geworden dankzij `platform:daily-check`.
+  er vier in twee seconden, zichtbaar geworden dankzij `platform:daily-check`.
 - **`storage/` is van uid 82.** Artisan lokaal draaien buiten Docker faalt op de log;
   gebruik `docker compose exec -T php-fpm php artisan ...`.
 
@@ -64,7 +64,7 @@ Omdat deployen een file-sync is, zegt git níét wat er draait. Wat hier staat
 is op `main` en nog niet op productie. Neem het mee met de volgende sync en
 haal het dan uit deze lijst.
 
-*(leeg op 01-09-2026, na vijf deploys op één dag. In volgorde: de
+*(leeg op 01-09-2026, na vijf deploys op 1 dag. In volgorde: de
 `autocomplete`-tokens op de auth-velden; de securityronde (negen bestanden, met
 `route:cache` omdat `routes/web.php` wijzigde en `up -d --force-recreate nginx`
 omdat de config een bind-mount van 1 bestand is); de herbouwde assetbundel; het
@@ -107,7 +107,7 @@ Draai `composer` lokaal dus **als uid 1000** (`docker compose exec -u 1000`),
 nooit als root, anders zet je het meteen terug. `vendor/` is van 1000, `storage/`
 en `bootstrap/cache` zijn van 82.
 
-### Een framework-upgrade is géén gewone file-sync
+### Een framework-upgrade is geen gewone file-sync
 
 De deploy hierboven raakt `vendor/` niet aan, en dat is bijna altijd goed. Maar
 bij een wijziging in `composer.lock` moet je er zelf omheen bouwen. Zo ging de
@@ -132,7 +132,7 @@ die staan in `require-dev` en horen daar te blijven.
 
 **Larastan leest de Laravel-11-vorm `casts(): array` niet** en ziet een
 `datetime`-cast dan als `string`. Los dat op het model op met een letterlijke
-`@return array{...}`-shape boven `casts()` — zie `app/Models/Transaction.php` —
+`@return array{...}`-shape boven `casts()`, zie `app/Models/Transaction.php`,
 niet met een omweg op de aanroepplek.
 
 ## Livewire kill-switches
@@ -143,13 +143,13 @@ nadat de vlag om is. Dit gat is tijdens de koper-koppeling-reeks drie keer echt
 aangetoond.
 
 De plek is `boot()`. Livewire roept die aan bij mount én bij elke hydrate, telkens
-vóór de actie — dus één regel dekt het hele component. Route-middleware helpt niet:
+vóór de actie, dus 1 regel dekt het hele component. Route-middleware helpt niet:
 vervolgrequests gaan naar `/livewire/update`, niet naar de oorspronkelijke route.
 
 **Maar alleen als het hele component van die feature is.** `Deals\Claim` en
 `Profile\Deals` bestaan niet zonder de dealsfunctie, dus daar staat de check in
 `boot()`. `Listings\Detail` is de publieke advertentiepagina die toevallig ook een
-verkooppaneel heeft — zet je de check daar in `boot()`, dan 403't de hele pagina
+verkooppaneel heeft, zet je de check daar in `boot()`, dan 403't de hele pagina
 zodra de vlag uit gaat. Daar hoort hij dus per muterende methode, zoals bij
 `markSold()` en `newLink()`.
 
@@ -162,7 +162,7 @@ geldt staat hieronder; de rest zit in de commits.
 **Securityheaders staan op twéé plekken.** HSTS, Referrer-Policy en
 X-Content-Type-Options komen uit de **Caddy op de VPS**, niet uit deze repo, en
 daarom ontbreken ze lokaal. `docker/nginx/default.conf` vult aan met
-X-Frame-Options, Permissions-Policy en CSP. Zet er nooit één bij die Caddy ook
+X-Frame-Options, Permissions-Policy en CSP. Zet er nooit 1 bij die Caddy ook
 stuurt: dubbele headers geven bij CSP de doorsnede van beide en breken dan stil.
 
 **De CSP is geen XSS-verdediging en doet niet alsof.** `unsafe-inline` en
@@ -223,7 +223,7 @@ aldewereldconsultancy.nl. Twee dingen om te weten als je eraan komt. De kleur is
 **merkoranje en bewust niet de inktkleur**: een devtools-console in donkere
 modus staat op ongeveer `#202124` en daar is `#17191B` onzichtbaar op, terwijl
 dit publiek juist devtools draait. En **beide blokletterrijen moeten exact even
-lang blijven**; bewerk je er één, dan staat de tweede verschoven en zie je dat
+lang blijven**; bewerk je er 1, dan staat de tweede verschoven en zie je dat
 in een diff met het blote oog niet. `FrontendBundleTest` vergelijkt de lengtes.
 
 **Buiten scope gebleven:** netwerk- en infrastructuurtesten op de VPS, Caddy,
@@ -273,14 +273,14 @@ die het tegenhoudt als iemand het ooit goedbedoeld voorstelt.
 Aanleiding: Hans Kruse merkte op LinkedIn op dat aanmeld-, inlog- en
 wachtwoordschermen bij grote partijen verschillende regels hanteren en dat het
 verderop in de keten alsnog misgaat (zijn voorbeeld: KPN kapt een adres af op
-52 tekens). Tegen de eigen code aangehouden, en dat leverde één echte fout op.
+52 tekens). Tegen de eigen code aangehouden, en dat leverde 1 echte fout op.
 
 **Wat in orde bleek.** Gebruikersnaam is `max:30` in de validatie én
 `VARCHAR(30)` in de kolom. Wachtwoord is `min:10` bij registreren én bij
 herstellen. Een geldig adres van 250 tekens wordt opgeslagen, een van 300
 geeft een veldfout en geen 500.
 
-**Inloggen heeft bewust géén `min` op het wachtwoord, en dat moet zo blijven.**
+**Inloggen heeft bewust geen `min` op het wachtwoord, en dat moet zo blijven.**
 Wie zich inschreef toen de grens lager lag moet gewoon kunnen inloggen. Zou
 het inlogscherm de nieuwe grens afdwingen, dan sluit je bestaande leden buiten
 zonder ze iets te kunnen aanbieden. `FieldLengthConsistencyTest` legt die
@@ -305,8 +305,8 @@ om elke bestaande bcrypt-hash bij de volgende login om te zetten. Dat is een
 migratie en geen validatieregel; niet half beginnen.
 
 **Nog een les uit dezelfde ronde:** een lang e-mailadres is niet hetzelfde als
-één lange sliert. Het lokale deel mag 64 tekens maar elk DNS-label maximaal 63,
-dus een domein van 189 tekens in één stuk is gewoon ongeldig. `email:strict`
+1 lange sliert. Het lokale deel mag 64 tekens maar elk DNS-label maximaal 63,
+dus een domein van 189 tekens in 1 stuk is gewoon ongeldig. `email:strict`
 weigerde dat terecht; mijn testdata was fout, niet de code. Staat als comment
 bij de test zodat de volgende het niet "repareert".
 
@@ -350,7 +350,7 @@ En breder: **een signaal in de dagelijkse mail dat een handeling voorschrijft,
 hoort getoetst te worden aan het scherm dat die handeling moet aanbieden.**
 Deze stond er twaalf dagen, elke dag opnieuw, en was niet uit te voeren.
 
-## Eén deal is administratief bevestigd (03-09-2026)
+## 1 deal is administratief bevestigd (03-09-2026)
 
 Transactie 1 ("Jabra Speak spiderphone", verkoper rpaardekam, koper martijn,
 gemeld 21-08) staat op `completed` omdat de **eigenaar** zei dat de koop is
@@ -387,12 +387,12 @@ ssh root@192.168.178.88 'pct exec 214 -- bash -lc "cd /opt/cloudmarktplaats \
 
 De vier metingen die er tot nu toe toe deden:
 
-- `listings` per `state` + `count(DISTINCT user_id)` — hoeveel verkopers echt actief zijn
-- `users.login_count` — terugkeer. Let op: de kolom bestaat pas sinds 26-07 met een
+- `listings` per `state` + `count(DISTINCT user_id)`: hoeveel verkopers echt actief zijn
+- `users.login_count`: terugkeer. Let op: de kolom bestaat pas sinds 26-07 met een
   backfill van 1, dus "1" is een ondergrens. De 0-groep is wél hard: `Register` roept
   `auth()->login()` aan zonder `recordLogin()`, dus 0 = nooit teruggekomen.
-- `contact_relay_logs` — of er überhaupt contact gelegd wordt
-- `transactions` — of dat contact ook wordt vastgelegd
+- `contact_relay_logs`: of er überhaupt contact gelegd wordt
+- `transactions`: of dat contact ook wordt vastgelegd
 
 Die laatste twee naast elkaar leggen was de vondst van 19-08: 14 contacten over 10
 advertenties, 0 transacties. Niet omdat mensen niet handelden, maar omdat "Markeer
@@ -400,7 +400,7 @@ als verkocht" alleen op de publieke advertentiepagina stond en niet op Mijn
 advertenties. **Als een getal op 0 staat, zoek eerst de knop voordat je de motivatie
 van gebruikers in twijfel trekt.**
 
-`deals_bevestigd` telde tot 21-08 `status = 'confirmed'` — een waarde die de enum
+`deals_bevestigd` telde tot 21-08 `status = 'confirmed'`, een waarde die de enum
 (`pending|completed|cancelled`) niet kent. Dat cijfer stond dus structureel op nul,
 ongeacht wat gebruikers deden. Controleer bij een nulmeting altijd eerst of het
 getal überhaupt kán bewegen.
@@ -415,7 +415,7 @@ Het signaal voor deals die op bevestiging wachten alarmeert sinds 21-08 **niet**
 meer op `silence_days` (7 dagen), maar op een verlopen claim-link
 (`claim_expires_at`, geldig 30 dagen). Reden: een claim-link leeft vier keer zo
 lang als `silence_days`, dus alarmeren op de oude regel liet elke normale, nog
-niet geclaimde melding vanaf dag 7 dagelijks vals afgaan — in precies de mail die
+niet geclaimde melding vanaf dag 7 dagelijks vals afgaan, in precies de mail die
 dit platform als enige zichtbaarheid heeft. Legacy-rijen zonder `claim_token`
 (van vóór de claim-link) hebben geen vervaldatum en vallen terug op de oude
 `created_at`/`silence_days`-regel.
@@ -437,7 +437,7 @@ vaststellen" zegt in plaats van "alles in orde".
 
 **Een voorraad is geen alarm.** `concepten_zonder_foto` telt álle concepten
 zonder foto ouder dan 24 uur, en dat getal daalt alleen als de verkoper zelf
-terugkomt — vijf van de tien zijn toetsenbordgeklets dat nooit afkomt. Het
+terugkomt, vijf van de tien zijn toetsenbordgeklets dat nooit afkomt. Het
 alarmeerde daardoor elke ochtend op dezelfde tien rijen van juli en augustus,
 terwijl de fotobug er al sinds 19-08 uit was en de tien verkopers op 22-08
 gemaild waren. Erger dan ruis: een elfde geval zou "10 concept(en)" naar "11"
@@ -445,21 +445,21 @@ laten lopen en dat leest als dezelfde ochtend als gisteren. Sinds 24-08 telt het
 **signaal** alleen concepten waarvan de eigenaar nog van niemand iets gehoord
 heeft (`draft_reminded_at` én `photo_bug_notified_at` allebei leeg); het
 **getal** blijft het volledige totaal, dus de voorraad blijft zichtbaar. Bouw je
-een nieuw signaal, vraag dan eerst of het over aanwas of over voorraad gaat —
+een nieuw signaal, vraag dan eerst of het over aanwas of over voorraad gaat,
 alarmeren op voorraad zonder afhandelmarkering gaat altijd vanzelf staan roepen.
 
 Draai hem met `--show` om het rapport in de terminal te zien zonder te mailen.
 Dat is ook de snelste manier om na een deploy te controleren of je niets hebt
-gebroken — hij las binnen een dag vier 500's uit de log die niemand had gemeld.
+gebroken, hij las binnen een dag vier 500's uit de log die niemand had gemeld.
 
 ---
 
 ## Geld en zichtbaarheid
 
-Eén regel, en die is niet onderhandelbaar: **geld mag identiteit kopen, nooit
+1 regel, en die is niet onderhandelbaar: **geld mag identiteit kopen, nooit
 positie.** Een bedrijf mag betalen voor een eigen pagina, zijn logo, zijn verhaal.
 Betalen voor een hogere plek, langer meedraaien of voorrang in de feed breekt
-"geen algoritmische manipulatie" — punt 5 van de waarden — en dat is precies de
+"geen algoritmische manipulatie", punt 5 van de waarden, en dat is precies de
 belofte waarvoor mensen hier zijn.
 
 De grens van twee advertenties per verkoper op de voorpagina
@@ -468,7 +468,7 @@ bewust vóórdat er iemand betaalt. Haal hem niet weg zonder te beseffen wat je
 daarmee opgeeft.
 
 Of er überhaupt geld gevraagd wordt aan bedrijven, is op 20-08 in consultatie
-gegaan — `GOVERNANCE.md` schrijft dat voor bij geldvragen. De teksten staan in
+gegaan, `GOVERNANCE.md` schrijft dat voor bij geldvragen. De teksten staan in
 `launch/consultatie-bedrijven-en-geld.md`. **De terugkoppeling is verplicht:**
 consultatie zonder gevolg is erger dan niets vragen, en dat staat in je eigen
 governance.
@@ -478,21 +478,21 @@ governance.
 ## Geen moderatie vooraf meer (22-08-2026)
 
 `features.moderation` staat **uit**. Een advertentie is meteen zichtbaar; de
-wachtrij `pending_review` is een doorgeefluik van één regel in `Wizard::submit()`,
+wachtrij `pending_review` is een doorgeefluik van 1 regel in `Wizard::submit()`,
 zodat de state machine de enige route naar `published` blijft en
 `ListingPublished` netjes vuurt.
 
 Aanleiding: Rob Turks advertentie stond dagen te wachten terwijl het product al
-elders verkocht was. Bij het omzetten stonden er nog twee in de wachtrij — één
+elders verkocht was. Bij het omzetten stonden er nog twee in de wachtrij, 1
 sinds 30 juli, **23 dagen**. De wachtrij beschermde tegen rommel die we nog nooit
 gezien hadden en kostte ondertussen echte verkopers.
 
 **Wat blijft:** melden, afwijzen, offline halen, bannen. Alleen de poort vóóraf is
 weg, niet het gereedschap erna. Een advertentie met een afwijzingsgeschiedenis
-(`moderation_notes` gevuld) publiceert nooit vanzelf — dat oordeel van een mens
+(`moderation_notes` gevuld) publiceert nooit vanzelf, dat oordeel van een mens
 telt zwaarder dan de vlag.
 
-**Terugdraaien is één configregel**, `FEATURE_MODERATION=true`, geen deploy. Dat is
+**Terugdraaien is 1 configregel**, `FEATURE_MODERATION=true`, geen deploy. Dat is
 met opzet: dit codepad is niet verwijderd. De teksten in de wizard, de FAQ en op
 /wat-mag-erop volgen de vlag, dus ze blijven kloppen als je hem omzet.
 
@@ -500,7 +500,7 @@ met opzet: dit codepad is niet verwijderd. De teksten in de wizard, de FAQ en op
 werd nergens op meldingen gealarmeerd; ze stonden alleen in Filament, waar je voor
 moet inloggen. Zonder poort vooraf is een gebruikersmelding het enige wat ons nog
 waarschuwt, en de dagelijkse mail is de enige zichtbaarheid die dit platform heeft.
-Alarmeert vanaf de eerste melding, niet vanaf een drempel — er wordt hier zo weinig
+Alarmeert vanaf de eerste melding, niet vanaf een drempel, er wordt hier zo weinig
 gemeld dat elke melding er een is om vandaag te bekijken. **Haal dat signaal nooit
 weg zolang de moderatievlag uit staat**; dan is "we merken het vanzelf" een lege
 bewering.
@@ -508,13 +508,13 @@ bewering.
 ## Afhankelijkheden en `composer audit`
 
 De CI-job `security` draait `composer audit` en `npm audit`, en die poort is
-scherp: hij faalt op élk advies. Dat werkte ook — hij stond vanaf 6 augustus
-rood op twaalf adviezen in guzzle en commonmark — maar niemand keek, ruim twee
+scherp: hij faalt op élk advies. Dat werkte ook, hij stond vanaf 6 augustus
+rood op twaalf adviezen in guzzle en commonmark, maar niemand keek, ruim twee
 weken lang. Sinds 22-08 openen Dependabot-PR's (`.github/dependabot.yml`) die
 updates uit zichzelf, wekelijks en gegroepeerd; beveiligingsupdates komen los.
 
 **Drie Laravel-adviezen stonden bewust genegeerd** in `config.audit.ignore` in
-`composer.json`, mét reden per stuk — er bestond geen 11.x-fix. De ernstigste
+`composer.json`, mét reden per stuk, er bestond geen 11.x-fix. De ernstigste
 was een CRLF-injectie in de standaard e-mailvalidatie (CVE-2026-48019, high),
 pas opgelost vanaf Laravel **12.60**. Precies zoals hier destijds afgesproken
 ("verdwijnt de reden, dan horen de regels er in dezelfde PR uit"): de upgrade
@@ -579,7 +579,7 @@ scope van #50 gehouden.
 - **Zakelijke verkopers**: gebouwd op 20-08 (`seller_type` op `users`, instelling op
   `/profile/verkopen`, mededeling op de advertentie). Ontwerp in
   `docs/superpowers/specs/2026-08-19-zakelijke-verkoper-design.md`. Het label is een
-  feitelijke mededeling, **geen keurmerk** — het KvK-nummer wordt niet geverifieerd,
+  feitelijke mededeling, **geen keurmerk**, het KvK-nummer wordt niet geverifieerd,
   en afwezigheid van het label is evenmin een claim.
 
   **De ToS-tekst is geschreven op 31-08** en zit in artikel 6 van
@@ -613,41 +613,41 @@ scope van #50 gehouden.
   staat → aparte advertenties. Die grens staat in de hint bij het veld en hoort daar.
 - **Feature flags** in `config/cloudmarktplaats.php`. `features.deals` staat aan op
   productie (geen env-override).
-- **De koper koppelen aan een verkoop**: "Markeer als verkocht" is één knop en legt
+- **De koper koppelen aan een verkoop**: "Markeer als verkocht" is 1 knop en legt
   altijd een `transaction` vast, ook zonder koper. De koper vult zichzelf in via
   een claim-link (`/deal/{token}`, 30 dagen, eenmalig) die de **verkoper zelf** in
-  zijn antwoordmail plakt — wij kennen het adres van de koper niet en kunnen hem
+  zijn antwoordmail plakt, wij kennen het adres van de koper niet en kunnen hem
   dus niet mailen. Ontwerp in
   `docs/superpowers/specs/2026-08-21-koper-koppeling-design.md`. Het oude
   gebruikersnaamveld vroeg om iets wat de verkoper structureel niet kon weten; dat
   meldde een verkoper zelf op 21-08.
 
-## Support is één persoon, en dat moet ergens staan
+## Support is 1 persoon, en dat moet ergens staan
 
 Op 21-08 zegde een lid zijn account op met: geen verwijderknop, geen supportadres,
 en een GitHub-melding die 29 dagen onbeantwoord bleef. Alle drie klopten. De
-duurste van de drie was de derde: er stond **nergens** dat hier één onbetaalde
+duurste van de drie was de derde: er stond **nergens** dat hier 1 onbetaalde
 maintainer zit, dus hij mocht redelijkerwijs aannemen dat iemand meekeek.
 
 Dat staat nu in `SUPPORT.md`, in de FAQ en onder het contactblok in de footer.
-**Houd die drie gelijk** als de situatie verandert — een verwachting die je één
+**Houd die drie gelijk** als de situatie verandert, een verwachting die je 1
 keer uitspreekt en daarna laat verlopen is erger dan geen verwachting.
 
 Afgehandeld op 21-08: account gewist (rijen én fotobestanden geverifieerd),
 bevestigingsmail door Nick zelf verstuurd, en issues #9, #10 en #11 beantwoord
-en gesloten. **Niet nogmaals mailen** — zie de waarschuwing onder "Mail".
+en gesloten. **Niet nogmaals mailen**, zie de waarschuwing onder "Mail".
 
 De les die breder geldt: dit platform verkoopt "elke claim is in code te
 controleren". Het privacybeleid beloofde al maanden dat een advertentie blijft
 "tot je hem verwijdert" én dat je recht op verwijdering hebt, terwijl beide
 knoppen niet bestonden. **Als je een belofte in een juridisch document zet, zoek
-dan de code die hem waarmaakt — of haal de belofte eruit.**
+dan de code die hem waarmaakt, of haal de belofte eruit.**
 
 ## Verwijderen: wat de code echt doet
 
 - `Listing` én `User` gebruiken **SoftDeletes**. Een gewone `delete()` zet alleen
   `deleted_at`, en dan vuren de ON DELETE CASCADEs *niet*. Van buiten ziet dat er
-  identiek uit — weg uit elke query — terwijl de rijen en de foto's blijven staan.
+  identiek uit, weg uit elke query, terwijl de rijen en de foto's blijven staan.
   Erasure is `forceDelete()`, en dat is precies wat de tests afdwingen.
 - `PhotoFileEraser` wist per **map**, niet per samengestelde bestandsnaam. De
   extensie van `original.{ext}` komt uit de `mime`-kolom, en op de oudste
@@ -677,13 +677,13 @@ dan de code die hem waarmaakt — of haal de belofte eruit.**
   is precies de fotobug die in juli zes dagen onzichtbaar bleef. Bij een concept
   mag het wel.
 
-- **`Wizard::saveDraft()` degradeerde stilletjes** — opgelost 22-08. De
+- **`Wizard::saveDraft()` degradeerde stilletjes**, opgelost 22-08. De
   step-1-payload bevatte `'state' => 'draft'` en ging via `fill()->save()`, dus
   buiten de state machine om: wie een *gepubliceerde* advertentie ging bewerken
   haalde hem stil offline, en brak hij het bewerken af dan bleef dat zo. Drie
   rijen stonden zo op `draft` mét een gevulde `published_at`; die zijn
   teruggezet. Nu krijgt alleen een *nieuwe* advertentie `draft` mee, en een
-  bestaande houdt zijn toestand — tenzij de moderatievlag aan staat, want dan
+  bestaande houdt zijn toestand, tenzij de moderatievlag aan staat, want dan
   hoort een bewerking wél opnieuw langs een mens.
 
   Let op de tweede helft: `submit()` slaat de overgang over als de advertentie al
@@ -692,7 +692,7 @@ dan de code die hem waarmaakt — of haal de belofte eruit.**
 
 ## Mail
 
-SMTP is Hostinger, geauthenticeerd als `noreply@cloudmarktplaats.nl` — een andere
+SMTP is Hostinger, geauthenticeerd als `noreply@cloudmarktplaats.nl`, een andere
 afzender wordt vermoedelijk geweigerd. Zet daarom `replyTo` op
 `info@cloudmarktplaats.nl` bij alles wat een antwoord verdient.
 
@@ -703,20 +703,20 @@ deur uit doet.
 **Stempelen mag de klok van de rij niet vooruitzetten.** Doe zo'n update via
 `DB::table(...)`, niet via `Listing::query()->update()`: die laatste zet ook
 `updated_at`. Op 23-08 vielen tien vastgelopen concepten daardoor uit de meting
-`concepten_zonder_foto` — die telt alleen concepten ouder dan 24 uur — en meldde
+`concepten_zonder_foto`, die telt alleen concepten ouder dan 24 uur, en meldde
 de dagelijkse mail "Geen signalen" terwijl er niets was opgelost. Een mail
 versturen is geen activiteit van de verkoper. Twee tests in
 `DailyIntegrityCheckTest` houden dit vast.
 
 **Een commando dat mensen mailt, noteert dát ook.** `listings:notify-photo-bug`
 deed dat niet, en op 22-08 was daardoor niet meer vast te stellen of de lichting
-van 14 juli de mail ooit gekregen had — dus ook niet of opnieuw draaien dezelfde
+van 14 juli de mail ooit gekregen had, dus ook niet of opnieuw draaien dezelfde
 mensen twee keer zou lastigvallen. Sinds 22-08 stempelt hij
 `photo_bug_notified_at`, ná een geslaagde verzending en nooit tijdens een
 `--dry-run` (stempelen op een proefdraai slaat de echte mail voorgoed over).
 Bouw je een nieuwe eenmalige mailronde, neem die markering dan meteen mee.
 
-Terugkerende mail loopt via `listings:remind-drafts` (dagelijks 10:00, één
+Terugkerende mail loopt via `listings:remind-drafts` (dagelijks 10:00, 1
 herinnering per concept via `draft_reminded_at`). Draai hem **altijd eerst met
 `--dry-run`**: rommelconcepten zijn niet automatisch te herkennen, daar hoort een
 mens naar te kijken. `--exclude=<user-id>` slaat iemand over.
@@ -743,7 +743,7 @@ profiel van een geverifieerd lid. Bouw geen pad dat daar omheen gaat.
 
 **De rem op de nieuwsbrief staat in `mail_editions`, niet op de abonneerij.**
 Eerder las hij `max(updates_sent_at)` over de abonnees, en die rijen verdwijnen
-hard: `AccountRemovalService` doet `forceDelete()` en de FK cascadeert. Eén lid
+hard: `AccountRemovalService` doet `forceDelete()` en de FK cascadeert. 1 lid
 dat zijn account wiste, wiste zo de stempel van de hele nieuwsbrief mee en
 zette de rem weer open. `updates_sent_at` blijft "wanneer kreeg deze persoon
 iets", maar is niet meer de bron van de rem. Elke volgende
@@ -782,17 +782,17 @@ van de identiteitsprovider, zonder klik van de gebruiker in onze mail.
 
 ## Waar de strategie ligt
 
-`launch/` staat in `.gitignore` en hoort daar te blijven — dat is werkmateriaal, geen
+`launch/` staat in `.gitignore` en hoort daar te blijven, dat is werkmateriaal, geen
 publiek document.
 
-- `launch/doelgroep-personas.md` — zeven persona's met behoeften, angsten en
+- `launch/doelgroep-personas.md`: zeven persona's met behoeften, angsten en
   pleziertjes, onderbouwd met echte LinkedIn-reacties en platformcijfers
-- `launch/social-strategie-2026-08.md` — postplan met kant-en-klare copy, en de vijf
+- `launch/social-strategie-2026-08.md`: postplan met kant-en-klare copy, en de vijf
   regels die uit het gemeten bereik volgen
-- `launch/social-media-posts.md` — archief van de lanceercampagne
+- `launch/social-media-posts.md`: archief van de lanceercampagne
 
 Kern daaruit: posts die over de lezer gaan halen 10–25× het bereik van posts over het
-platform. En de aanbodkant zit op LinkedIn, de vraagkant op Tweakers/Reddit/Discord —
+platform. En de aanbodkant zit op LinkedIn, de vraagkant op Tweakers/Reddit/Discord,
 alleen op LinkedIn posten levert verkopers zonder kopers.
 
 ## Toon
