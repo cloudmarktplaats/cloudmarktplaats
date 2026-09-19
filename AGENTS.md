@@ -522,6 +522,44 @@ naar Laravel 12 (03-09-2026) en door naar 13.12+ heeft alle drie gefixt, en de
 ignore-regels zijn in diezelfde PR's verwijderd. `composer audit` faalt sindsdien
 weer op elk advies, zonder uitzondering.
 
+## Dependency-ronde en Arjan als vaste bijdrager (17-09-2026)
+
+Vier PR's van arjankapteijn verwerkt, allemaal getest vóór merge en waar nodig
+gedeployd. Arjan Kapteijn (PHP/Laravel-dev, eerste externe bijdrager sinds de
+grote Laravel 13-PR #39) levert nu vaker via zijn fork; behandel zijn PR's als
+serieuze bijdragen, niet als ruis.
+
+- **#47 markdown in beschrijvingen**: `Str::markdown()` met `html_input: strip`
+  en `allow_unsafe_links: false` in `Detail::descriptionHtml()`, vervangt het
+  oude `nl2br(e())`. De CSP (`img-src 'self' data: blob:`) blokkeert bovendien
+  remote tracking-pixels in een beschrijving, dus de "geen trackers"-belofte
+  blijft dubbel afgedekt.
+- **#51 soft-break-regressie**: CommonMark maakt van een enkele `\n` een soft
+  break (witruimte), niet een `<br>`; verkopers schrijven 1 feit per regel zonder
+  witregels, dus alles plakte aan elkaar. Gefixt met `renderer.soft_break =>
+  "<br />\n"`. Arjan ving dit op zijn eigen advertentie. Getoetst met een `<br>`-test.
+- **#45 composer-groep**: Laravel 13.30.1 -> **13.31.0** (+ livewire + dev-tools).
+  `composer.lock` wijzigde, dus via het framework-upgrade-recept gedeployd
+  (838 tests, pint, phpstan groen). Productie draait nu 13.31.0.
+- **#44 autoprefixer** 10.5.4 -> 10.5.6 (build-time only) + **#49 MinIO**.
+
+**MinIO Community Edition is dood.** MinIO Inc. haalde `minio/minio` op 11-09 van
+Docker Hub. De dev/CI-stack wijst nu naar `quay.io/minio/minio` op een bevroren
+tag (`RELEASE.2025-09-07T16-13-09Z`). Dit raakt alleen `docker-compose.yml`
+(dev/CI), **niet** `docker-compose.prod.yml`; productie-opslag stond er los van.
+De tag krijgt nooit meer een update, dus ooit naar een actief onderhouden
+S3-alternatief (Garage of SeaweedFS).
+
+**Rollbackpunten op productie op te ruimen als het rustig blijft:** naast
+`vendor.voor-laravel13` + `composer.*.voor-laravel13` (van 11-09) staat er nu ook
+`vendor.voor-13.31` + `composer.*.voor-13.31`. Beide sets weg zodra de week
+zonder klachten voorbij is.
+
+**Issue #50 open:** filterbaar categorie-overzicht om te bladeren (Arjans
+suggestie). De ltree-categorieboom en `/c/{path}`-scoping liggen er al; het is
+vooral UI. Meilisearch/Scout kan later los via `SearchInterface`, bewust buiten
+scope van #50 gehouden.
+
 ## Beslissingen die vastliggen
 
 - **Scope van wat er verkocht mag worden**: `docs/scope.md`, gepubliceerd op
