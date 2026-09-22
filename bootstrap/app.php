@@ -94,6 +94,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // voor de dagelijkse check van 07:30 zodat het getal in die mail de
         // stand na het opruimen is.
         $schedule->command('mail:purge-unconfirmed')->dailyAt('03:30');
+
+        // Nieuws-reader: elke 20 minuten de feeds ophalen en cachen. De reader
+        // leest alleen uit de cache, dus een trage bron vertraagt de pagina nooit.
+        $schedule->command('news:fetch')->everyTwentyMinutes();
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
