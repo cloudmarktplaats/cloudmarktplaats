@@ -25,6 +25,7 @@ use App\Livewire\Listings\Detail as ListingDetail;
 use App\Livewire\Listings\Mine as ListingsMine;
 use App\Livewire\Listings\Wizard as ListingWizard;
 use App\Livewire\Mail\Subscribe as MailSubscribe;
+use App\Livewire\News\Reader as NewsReader;
 use App\Livewire\Profile\Deals as ProfileDeals;
 use App\Livewire\Profile\DeleteAccount;
 use App\Livewire\Profile\Invites as ProfileInvites;
@@ -65,6 +66,9 @@ Route::view('/roadmap', 'pages.roadmap')->name('roadmap');
 
 // Homelab-showcase: publieke feed, posten vereist login (flag-gated in mount()).
 Route::get('/homelabs', HomelabFeed::class)->name('homelabs');
+
+// Nieuws-reader: publieke feed, bronkeuze en gelezen-status vereisen login.
+Route::get('/nieuws', NewsReader::class)->name('nieuws');
 
 // Homelab-detailpagina: eigen, deelbare url per post. Homelab-ulids worden
 // lowercase opgeslagen (HomelabPost::booted()), anders dan de uppercase

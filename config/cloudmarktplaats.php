@@ -17,6 +17,7 @@ return [
         'ipfs_pinning' => env('FEATURE_IPFS', false),
         'umami_analytics' => env('FEATURE_UMAMI', false),
         'homelab_feed' => env('FEATURE_HOMELAB_FEED', true),
+        'news_reader' => env('FEATURE_NEWS_READER', true),
         'invites' => env('FEATURE_INVITES', true),
         'stats' => env('FEATURE_STATS', true),
         'trust' => env('FEATURE_TRUST', true),

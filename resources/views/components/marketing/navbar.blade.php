@@ -11,6 +11,7 @@
             {{-- Subtle wayfinding links; the grid and auth CTAs stay the focus. --}}
             <a href="{{ route('donate') }}" class="hidden text-sm text-cmp-muted hover:text-cmp-signal sm:inline">{{ __('Doneren') }}</a>
             <a href="{{ route('roadmap') }}" class="hidden text-sm text-cmp-muted hover:text-cmp-text sm:inline">{{ __('Roadmap') }}</a>
+            <a href="{{ route('nieuws') }}" class="hidden text-sm text-cmp-muted hover:text-cmp-text sm:inline">{{ __('Nieuws') }}</a>
             <span class="hidden sm:inline-flex items-center gap-1 font-mono text-[11px] text-cmp-faint">
                 <a href="{{ route('locale.switch', 'nl') }}" @class(['hover:text-cmp-ink', 'text-cmp-ink font-medium' => app()->getLocale() === 'nl'])>NL</a>
                 <span aria-hidden="true">·</span>

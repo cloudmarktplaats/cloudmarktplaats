@@ -804,5 +804,11 @@
     "Zet erbij hoe je gewist hebt, hoeveel draaiuren erop staan en wat SMART zegt. Dat is voor een koper belangrijker dan de prijs.": "Add how you wiped it, how many power-on hours it has and what SMART says. That matters more to a buyer than the price.",
     "Zo wis je een schijf echt": "This is how you really wipe a drive",
     "→ Data van je schijf wissen": "→ Wiping data from your drive",
-    "Data van je schijf wissen": "Wiping data from your drive"
+    "Data van je schijf wissen": "Wiping data from your drive",
+    "Nieuws": "News",
+    "NL-tech nieuws,": "NL tech news,",
+    "zonder trackers.": "without trackers.",
+    "Wij halen de feeds zelf op en tonen alleen titel, samenvatting en link. Je browser praat nooit met de bron, dus er lekt geen IP en er staat geen tracker in beeld.": "We fetch the feeds ourselves and show only the title, summary and link. Your browser never talks to the source, so no IP leaks and no tracker is loaded.",
+    "Met een account kies je zelf je bronnen en houdt de reader bij wat je al las.": "With an account you pick your own sources, and the reader keeps track of what you already read.",
+    "Nog geen nieuws opgehaald. Kom zo terug.": "No news fetched yet. Check back soon."
 }
