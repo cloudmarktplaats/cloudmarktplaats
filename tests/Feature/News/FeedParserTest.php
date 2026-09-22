@@ -63,3 +63,48 @@ it('skips an item without a link', function () {
 
     expect((new FeedParser)->parse($xml))->toBe([]);
 });
+
+it('skips an item with a javascript: link', function () {
+    $xml = <<<'XML'
+    <?xml version="1.0" encoding="UTF-8"?>
+    <rss version="2.0"><channel>
+      <item>
+        <title>Kwaadaardig item</title>
+        <link>javascript:alert(1)</link>
+      </item>
+    </channel></rss>
+    XML;
+
+    expect((new FeedParser)->parse($xml))->toBe([]);
+});
+
+it('skips an item with a data: link', function () {
+    $xml = <<<'XML'
+    <?xml version="1.0" encoding="UTF-8"?>
+    <rss version="2.0"><channel>
+      <item>
+        <title>Kwaadaardig item</title>
+        <link>data:text/html,&lt;script&gt;alert(1)&lt;/script&gt;</link>
+      </item>
+    </channel></rss>
+    XML;
+
+    expect((new FeedParser)->parse($xml))->toBe([]);
+});
+
+it('parses an item with an uppercase HTTPS scheme', function () {
+    $xml = <<<'XML'
+    <?xml version="1.0" encoding="UTF-8"?>
+    <rss version="2.0"><channel>
+      <item>
+        <title>Hoofdletters scheme</title>
+        <link>HTTPS://example.test/nas</link>
+      </item>
+    </channel></rss>
+    XML;
+
+    $items = (new FeedParser)->parse($xml);
+
+    expect($items)->toHaveCount(1)
+        ->and($items[0]['url'])->toBe('HTTPS://example.test/nas');
+});

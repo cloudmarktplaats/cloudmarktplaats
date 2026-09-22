@@ -65,12 +65,18 @@ class FeedParser
     {
         // RSS: <link>url</link>. Atom: <link href="url"/>.
         $rss = trim((string) $node->link);
+        $candidate = $rss !== '' ? $rss : trim((string) ($node->link['href'] ?? ''));
 
-        if ($rss !== '') {
-            return $rss;
-        }
+        return $this->isHttpUrl($candidate) ? $candidate : '';
+    }
 
-        return trim((string) ($node->link['href'] ?? ''));
+    /**
+     * Alleen http(s)-links zijn toegestaan; feeds zijn extern en niet
+     * vertrouwd, dus een javascript:/data:/relatieve link wordt geweerd.
+     */
+    private function isHttpUrl(string $url): bool
+    {
+        return Str::startsWith(Str::lower($url), ['http://', 'https://']);
     }
 
     private function summary(SimpleXMLElement $node): ?string
