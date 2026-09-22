@@ -39,6 +39,16 @@ it('names a way out when smartctl returns nothing', function () {
         ->assertSee('draaiuren onbekend');
 });
 
+// Issue #43: de pagina leunde volledig op Linux. Windows kan drie stappen native;
+// de firmware-wis niet, en dat eerlijk zeggen is het punt, geen tool verzinnen.
+it('gives the Windows way and is honest about what it cannot do', function () {
+    $this->get('/data-wissen')
+        ->assertOk()
+        ->assertSee('Get-StorageReliabilityCounter')
+        ->assertSee('clean all')
+        ->assertSee('dit kan Windows niet zelf');
+});
+
 it('links the wipe page from the footer and from the scope page', function () {
     $this->get('/')->assertOk()->assertSee(route('wipe'), false);
     $this->get('/wat-mag-erop')->assertOk()->assertSee(route('wipe'), false);

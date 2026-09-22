@@ -87,6 +87,39 @@
         ],
     ];
 
+    // Peter HJ van Eijk vroeg naar de "hoe", een Fedora-gebruiker (issue #43) naar
+    // Windows. De pagina leunde volledig op Linux. Windows kan drie van de vier
+    // stappen native, maar de firmware-wis (Secure Erase, crypto erase) heeft het
+    // niet, en dat eerlijk zeggen is meer waard dan een tool aanraden die we niet
+    // kunnen controleren. Overschrijven van een SSD staat al bij "wat niet werkt".
+    $windows = [
+        [
+            __('Welke schijf is het'),
+            __('Draai in een PowerShell als administrator. Het serienummer koppel je aan de sticker op de schijf; schijf 0 is bijna altijd je eigen systeemschijf.'),
+            'Get-PhysicalDisk | Select-Object DeviceId, FriendlyName, SerialNumber, @{n=\'GB\';e={[int]($_.Size/1GB)}}',
+        ],
+        [
+            __('Draaiuren en gezondheid'),
+            __('Windows leest geen SMART-attributen zoals smartctl, maar de opslaglaag houdt wel draaiuren, slijtage en leesfouten bij. Komt hier niets uit, zet dan "draaiuren onbekend" in je advertentie, net als bij smartctl.'),
+            'Get-PhysicalDisk | Get-StorageReliabilityCounter | Select-Object DeviceId, PowerOnHours, Wear, ReadErrorsUncorrected',
+        ],
+        [
+            __('HDD wissen (nullen over de hele schijf)'),
+            __('clean all schrijft nullen over elke sector, niet alleen de inhoudsopgave. Op een grote harde schijf duurt dat uren. Controleer het schijfnummer tegen de grootte hierboven voordat je select intypt, want clean all kent geen weg terug.'),
+            "diskpart\nlist disk\nselect disk 1\nclean all",
+        ],
+        [
+            __('SSD of NVMe: dit kan Windows niet zelf'),
+            __('Een firmware-wis (Secure Erase, crypto erase) zit niet in Windows. Overschrijven werkt op een SSD niet, dat staat hieronder bij "wat niet werkt". Start voor de firmware-wis van een Linux-USB en volg stap 3 hierboven, of gebruik de tool van de fabrikant (Samsung Magician, Crucial Storage Executive, WD Dashboard).'),
+            null,
+        ],
+        [
+            __('Controleren dat er nullen staan'),
+            __('Windows heeft geen ingebouwde hexdump. Controleer met dezelfde Linux-USB (stap 4 hierboven) of met een schijf-editor die ruwe sectoren leest. Zonder controle weet je niet of je de juiste schijf te pakken had.'),
+            null,
+        ],
+    ];
+
     $nietDoen = [
         [__('Snel formatteren of de partitie verwijderen'), __('Dat wist de inhoudsopgave, niet de data. Een herstelprogramma van 20 euro haalt het terug.')],
         [__('7 of 35 keer overschrijven'), __('DoD 5220.22-M en Gutmann komen uit het MFM/RLL-tijdperk. Op moderne schijven kost het een dag en levert het niets op boven 1 pass.')],
@@ -193,6 +226,26 @@
             </p>
             <pre class="mt-3 overflow-x-auto rounded-sm bg-cmp-ink p-3 font-mono text-xs text-white"><code>sudo hdparm -I /dev/sda | grep -i frozen
 sudo systemctl suspend</code></pre>
+        </div>
+
+        {{-- Windows kan het grootste deel native, maar niet de firmware-wis. Dat
+             hoort hier, direct achter de methodes, en niet weggemoffeld. --}}
+        <div class="mb-14 rounded-sm border border-cmp-border bg-cmp-bg2 p-6">
+            <h2 class="text-base font-bold tracking-display-tight">{{ __('En je draait Windows') }}</h2>
+            <p class="mt-2 text-sm text-cmp-muted leading-relaxed">
+                {{ __('De commando\'s hierboven zijn Linux. Op Windows doe je het vaststellen, uitlezen en het wissen van een harde schijf met wat er ingebouwd zit. De firmware-wis van een SSD of NVMe zit er niet in; daarvoor pak je een Linux-USB of de tool van de fabrikant.') }}
+            </p>
+            <dl class="mt-4 space-y-4">
+                @foreach ($windows as [$geval, $uitleg, $cmd])
+                    <div class="border-t border-cmp-border pt-3">
+                        <dt class="text-sm font-bold tracking-display-tight">{{ $geval }}</dt>
+                        <dd class="text-sm text-cmp-muted mt-1 leading-relaxed">{{ $uitleg }}</dd>
+                        @if ($cmd)
+                            <dd><pre class="mt-2 overflow-x-auto rounded-sm bg-cmp-ink p-3 font-mono text-xs text-white"><code>{{ $cmd }}</code></pre></dd>
+                        @endif
+                    </div>
+                @endforeach
+            </dl>
         </div>
 
         <h2 class="cmp-section-label mb-4">{{ __('Wat niet werkt') }}</h2>
