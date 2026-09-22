@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             CategorySeeder::class,
             LegalDocumentSeeder::class,
             DemoUserSeeder::class,
+            FeedSourceSeeder::class,
         ]);
     }
 }
