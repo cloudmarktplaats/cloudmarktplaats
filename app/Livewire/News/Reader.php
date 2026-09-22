@@ -42,15 +42,18 @@ class Reader extends Component
      */
     private function selectedSourceIds(Collection $active): array
     {
+        $activeIds = $this->toIntList($active->pluck('id')->all());
         $user = auth()->user();
 
         if ($user === null) {
-            return $this->toIntList($active->pluck('id')->all());
+            return $activeIds;
         }
 
         $chosen = $this->toIntList($user->feedSources()->pluck('feed_sources.id')->all());
+        $chosenActive = array_values(array_intersect($chosen, $activeIds));
 
-        return $chosen === [] ? $this->toIntList($active->pluck('id')->all()) : $chosen;
+        // Geen keuze, of elke gekozen bron is intussen gedeactiveerd: toon alles.
+        return $chosenActive === [] ? $activeIds : $chosenActive;
     }
 
     /**
@@ -75,6 +78,13 @@ class Reader extends Component
 
         if ($user->feedSources()->count() === 0) {
             $user->feedSources()->sync($this->sources()->pluck('id')->all());
+        }
+
+        // Het laatste vinkje mag niet uit: een lege pivot betekent "geen keuze
+        // = alles", dus dat zou terugklappen naar alle bronnen. Minstens 1 blijft.
+        $selected = $this->toIntList($user->feedSources()->pluck('feed_sources.id')->all());
+        if ($selected === [$sourceId]) {
+            return;
         }
 
         $user->feedSources()->toggle([$sourceId]);

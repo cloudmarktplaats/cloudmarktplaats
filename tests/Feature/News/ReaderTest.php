@@ -37,3 +37,11 @@ it('returns 404 when the feature flag is off', function () {
 
     $this->get('/nieuws')->assertNotFound();
 });
+
+// Follow-up review #5: staat de vlag uit, dan hoort de link ook niet in nav of
+// footer te staan, anders adverteert de site een pagina die 404't.
+it('hides the nav and footer link when the feature flag is off', function () {
+    config(['cloudmarktplaats.features.news_reader' => false]);
+
+    $this->get('/')->assertOk()->assertDontSee(route('nieuws'), false);
+});

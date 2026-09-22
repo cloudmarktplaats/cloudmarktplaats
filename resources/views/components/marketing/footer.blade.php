@@ -27,7 +27,9 @@
                     @if (config('cloudmarktplaats.features.homelab_feed'))
                         <li><a href="{{ route('homelabs') }}" class="hover:text-cmp-text">{{ __('Homelabs') }}</a></li>
                     @endif
-                    <li><a href="{{ route('nieuws') }}" class="hover:text-cmp-text">{{ __('Nieuws') }}</a></li>
+                    @if (config('cloudmarktplaats.features.news_reader'))
+                        <li><a href="{{ route('nieuws') }}" class="hover:text-cmp-text">{{ __('Nieuws') }}</a></li>
+                    @endif
                     <li><a href="{{ route('register') }}" class="hover:text-cmp-text">{{ __('Account aanmaken') }}</a></li>
                     <li><a href="{{ route('login') }}" class="hover:text-cmp-text">{{ __('Inloggen') }}</a></li>
                 </ul>
