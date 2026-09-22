@@ -97,7 +97,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Nieuws-reader: elke 20 minuten de feeds ophalen en cachen. De reader
         // leest alleen uit de cache, dus een trage bron vertraagt de pagina nooit.
-        $schedule->command('news:fetch')->everyTwentyMinutes();
+        $schedule->command('news:fetch')->cron('*/20 * * * *');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
