@@ -16,6 +16,29 @@
         @endguest
     </header>
 
+    @auth
+        <div class="mb-8 flex flex-wrap items-center gap-2">
+            @foreach ($sources as $source)
+                @php($on = in_array($source->id, $selectedSourceIds, true))
+                <button type="button" wire:click="toggleSource({{ $source->id }})"
+                    @class([
+                        'rounded-sm border px-3 py-1.5 text-sm transition',
+                        'border-cmp-blue bg-cmp-blue/10 text-cmp-text' => $on,
+                        'border-cmp-border text-cmp-muted hover:text-cmp-text' => ! $on,
+                    ])>
+                    {{ $source->name }}
+                    @if (($unreadCounts[$source->id] ?? 0) > 0)
+                        <span class="ml-1 font-mono text-[11px] text-cmp-blue">{{ $unreadCounts[$source->id] }}</span>
+                    @endif
+                </button>
+            @endforeach
+            <button type="button" wire:click="markAllRead"
+                class="ml-auto font-mono text-[11px] text-cmp-muted hover:text-cmp-text">
+                {{ __('markeer alles gelezen') }}
+            </button>
+        </div>
+    @endauth
+
     <ul class="border-t border-cmp-border" role="list">
         @forelse ($items as $item)
             <li class="border-b border-cmp-border py-5">

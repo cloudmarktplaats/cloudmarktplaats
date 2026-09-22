@@ -405,6 +405,7 @@
     "Vertrouwen": "Trust",
     "Advertentie": "Listing",
     "Deal bevestigen": "Confirm deal",
+    "markeer alles gelezen": "mark all as read",
     "Beveilig je account met een eenmalige TOTP-code uit je authenticator-app (zoals Aegis, 1Password, Bitwarden, Google Authenticator).": "Secure your account with a one-time TOTP code from your authenticator app (such as Aegis, 1Password, Bitwarden, Google Authenticator).",
     "2FA is actief op je account.": "2FA is active on your account.",
     "Recovery-codes opnieuw genereren": "Regenerate recovery codes",
