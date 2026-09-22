@@ -80,6 +80,10 @@ JS-bundels en twee manifest-kopieën (`manifest.json.voor-2026-09-01`,
 `manifest.json.voor-axios-verwijdering`). Dat zijn de rollbackpunten van
 01-09. Weg als de week zonder klachten voorbij is.
 
+Sinds de 13.31 → 13.32-upgrade van 22-09 staan er ook `composer.json.voor-1332`,
+`composer.lock.voor-1332` en `vendor.voor-1332` (94 MB) op prod. Weg als 13.32
+zonder klachten draait.
+
 Kwaliteitspoorten vóór elke deploy, alle drie groen:
 
 ```bash
@@ -127,6 +131,18 @@ Laravel 11 → 13-upgrade van 11-09:
    en houdt anders de oude code vast).
 5. `php artisan up`, en dan pas meten.
 
+**De piped tar-stream hoort als éérste in het remote script, vóór elke `docker
+compose exec`.** `tar czf - <files> | ssh ... "pct exec 214 -- bash -lc '...'"`
+stuurt de tar over stdin. Zet je een `docker compose exec -T ...` (bijvoorbeeld
+`artisan down`) vóór `tar xzf -`, dan tapt die exec stdin af en krijgt `tar` een
+afgekapte stream (`gzip: stdin: unexpected end of file`). Op 22-09 stond prod
+daardoor even in maintenance terwijl er niets gesynct was. Fix: `tar xzf -` als
+eerste commando na `cd`, en `</dev/null` achter élke exec-call erna. Het
+rollbackpunt (`cp` van composer.json/lock/vendor) mag ervóór, `cp` leest geen stdin.
+Composer zit trouwens in de prod-container (`/usr/bin/composer`), dus je hoeft
+geen 94 MB vendor over de lijn te sturen: sync alleen composer.json + composer.lock
+en draai `composer install --no-dev` in de container.
+
 `--no-dev` houdt Laravel Boost en de MCP-server van productie af. Dat hoort zo:
 die staan in `require-dev` en horen daar te blijven.
 
@@ -134,6 +150,30 @@ die staan in `require-dev` en horen daar te blijven.
 `datetime`-cast dan als `string`. Los dat op het model op met een letterlijke
 `@return array{...}`-shape boven `casts()`, zie `app/Models/Transaction.php`,
 niet met een omweg op de aanroepplek.
+
+## De nieuws-reader (22-09-2026)
+
+`/nieuws` toont NL-tech feeds die de server zelf ophaalt en cachet; de browser
+praat nooit met de bron, dus geen IP-lek en geen tracker. De 9 bronnen staan in
+`FeedSourceSeeder` (live geverifieerd op 22-09; Techzine, Hardware.info en AG
+Connect vielen af, zie de spec). `news:fetch` draait elke 20 min
+(`cron('*/20 * * * *')` in `bootstrap/app.php`), elke bron in een eigen try/catch
+met `last_error`, en snoeit items ouder dan 60 dagen. De reader leest alleen uit
+de cache, dus een trage bron vertraagt de pagina nooit. Vlag: `news_reader`
+(default aan). Spec + plan staan in `docs/superpowers/`.
+
+De eerste deploy was geen gewone file-sync: 4 nieuwe tabellen (`migrate`), de
+bronnen seeden (`php artisan db:seed --class=FeedSourceSeeder --force`, idempotent
+op slug), `route:cache` omdat `routes/web.php` wijzigde, en `npm run build` +
+`public/build` meesturen omdat er nieuwe Tailwind-classes bij kwamen (de chips,
+`bg-cmp-blue/10`). Daarna 1x `news:fetch` zodat de pagina niet leeg opent.
+
+**`everyTwentyMinutes()` bestaat niet in Laravel** (de frequenties springen van
+15 naar 30). Zo'n verkeerde methode in de `withSchedule`-closure gooit pas een
+`BadMethodCallException` als `schedule:list`/`schedule:run` draait, en dan valt
+élke cronjob uit, ook de IP-retentie. De tests van de feature zelf vangen het
+niet, want die roepen `schedule:list` niet aan; `TrafficLogRotationTest` wel.
+Gebruik `cron('*/20 * * * *')`.
 
 ## Livewire kill-switches
 
